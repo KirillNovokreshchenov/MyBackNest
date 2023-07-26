@@ -1,39 +1,40 @@
 import { Injectable } from '@nestjs/common';
-import { UserViewModel } from '../api/view-model/user-view-model';
+import { UserViewModel } from '../api/view-model/UserViewModel';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from '../domain/user.schema';
 import { Model } from 'mongoose';
-import { QueryModel } from '../../models/QueryModel';
-import { QueryInputModel } from '../api/input-model/QueryInputModel';
-import { userFilter } from '../helpersUser/user-filter';
+import { userFilter } from '../users-helpers/user-filter';
 import { skipPages } from '../../helpers/skip-pages';
 import { sortQuery } from '../../helpers/sort-query';
-import { UserViewModelAll } from '../api/view-model/user-view-model-all';
+import { UserViewModelAll } from '../api/view-model/UserViewModelAll';
 import { pagesCount } from '../../helpers/pages-count';
+import { UserQueryModel } from './models/UserQueryModel';
+import { UserQueryInputType } from '../api/input-model/UserQueryInputType';
 
 @Injectable()
 export class UsersQueryRepository {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
   async findUserById(userId): Promise<UserViewModel | null> {
-    const findUser: UserDocument | null = await this.userModel.findOne(userId);
+    const findUser = await this.userModel.findById(userId).lean();
     if (!findUser) return null;
 
     return new UserViewModel(findUser);
   }
 
-  async findAllUsers(dataQuery: QueryInputModel) {
-    const query = new QueryModel(dataQuery);
+  async findAllUsers(dataQuery: UserQueryInputType) {
+    const query = new UserQueryModel(dataQuery);
 
     const filter = userFilter(query.searchLoginTerm, query.searchEmailTerm);
 
     const totalCount = await this.userModel.countDocuments(filter);
     const countPages = pagesCount(totalCount, query.pageSize);
     const sort = sortQuery(query.sortDirection, query.sortBy);
+    const skip = skipPages(query.pageNumber, query.pageSize);
 
     const allUsers = await this.userModel
       .find(filter)
       .sort(sort)
-      .skip(skipPages(query.pageNumber, query.pageSize))
+      .skip(skip)
       .limit(query.pageSize)
       .lean();
 

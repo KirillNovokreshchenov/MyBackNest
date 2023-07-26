@@ -12,10 +12,10 @@ import {
 import { UsersService } from '../application/users.service';
 import { UsersQueryRepository } from '../infrastructure/users.query.repository';
 import { CreateUserDto } from '../application/dto/CreateUserDto';
-import { UserViewModel } from './view-model/user-view-model';
-import { QueryInputModel } from './input-model/QueryInputModel';
-import { UserViewModelAll } from './view-model/user-view-model-all';
+import { UserViewModel } from './view-model/UserViewModel';
+import { UserViewModelAll } from './view-model/UserViewModelAll';
 import { Types } from 'mongoose';
+import { UserQueryInputType } from './input-model/UserQueryInputType';
 
 @Controller('users')
 export class UsersController {
@@ -26,7 +26,7 @@ export class UsersController {
 
   @Get()
   async findAllUsers(
-    @Query() dataQuery: QueryInputModel,
+    @Query() dataQuery: UserQueryInputType,
   ): Promise<UserViewModelAll> {
     return await this.usersQueryRepository.findAllUsers(dataQuery);
   }
@@ -34,8 +34,9 @@ export class UsersController {
   async createUser(@Body() dto: CreateUserDto): Promise<UserViewModel> {
     const userId = await this.usersService.createUserByAdmin(dto);
     const newUser = await this.usersQueryRepository.findUserById(userId);
-    if (!newUser)
+    if (!newUser) {
       throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
     return newUser;
   }
   @Delete('/:id')

@@ -31,7 +31,7 @@ export const UserSchema = SchemaFactory.createForClass(User);
 
 export type UserModelStaticType = {
   createNewUser: (
-    newUser: CreateUserDto,
+    userDto: CreateUserDto,
     UserModel: UserModelType,
   ) => Promise<UserDocument>;
 };
