@@ -63,7 +63,8 @@ export class Post {
     blogName: string,
     PostModel: PostModelType,
   ) {
-    return new PostModel({ ...postDto, blogName });
+    const blogId = new Types.ObjectId(postDto.blogId);
+    return new PostModel({ ...postDto, blogId, blogName });
   }
 }
 

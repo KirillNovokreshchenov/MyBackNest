@@ -36,12 +36,16 @@ export class PostsController {
     return await this.queryPostsRepository.findPost(new Types.ObjectId(id));
   }
 
-  // @Get('/:id/comments')
-  // async findCommentsForPost(@Param('id') id: string) {
-  //   const comments = await this.queryCommentsRepository.findAllComments(
-  //     new Types.ObjectId(id),
-  //   );
-  // }
+  @Get('/:id/comments')
+  async findCommentsForPost(
+    @Param('id') id: string,
+    @Query() dataQuery: QueryInputType,
+  ) {
+    return await this.queryCommentsRepository.findAllComments(
+      dataQuery,
+      new Types.ObjectId(id),
+    );
+  }
   @Post()
   async createPost(@Body() dto: CreatePostDto): Promise<PostViewModel> {
     const postId = await this.postsService.createPost(dto);

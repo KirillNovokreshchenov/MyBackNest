@@ -19,20 +19,25 @@ export class PostsQueryRepository {
     return new PostViewModel(post);
   }
 
-  async findAllPost(dataQuery: QueryInputType) {
+  async findAllPost(dataQuery: QueryInputType, blogId?: Types.ObjectId) {
     const query = new QueryModel(dataQuery);
 
-    const totalCount = await this.PostModel.countDocuments();
+    const filter: { blogId?: Types.ObjectId } = {};
+    if (blogId) {
+      filter.blogId = blogId;
+    }
+
+    const totalCount = await this.PostModel.countDocuments(filter);
     const countPages = pagesCount(totalCount, query.pageSize);
     const sort = sortQuery(query.sortDirection, query.sortBy);
     const skip = skipPages(query.pageNumber, query.pageSize);
 
-    const allPosts = await this.PostModel.find()
+    const allPosts = await this.PostModel.find(filter)
       .sort(sort)
       .skip(skip)
       .limit(query.pageSize)
       .lean();
-    console.log(allPosts);
+
     const mapPosts = allPosts.map((post) => new PostViewModel(post));
 
     return new PostViewModelAll(

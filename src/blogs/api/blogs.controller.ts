@@ -17,18 +17,23 @@ import { BlogViewModel } from './view-model/BlogViewModel';
 import { Types } from 'mongoose';
 import { BlogQueryInputType } from './input-model/BlogQueryInputType';
 import { UpdateBlogDto } from '../application/dto/UpdateBlogDto';
+import { CreatePostDto } from '../../posts/application/dto/CreatePostDto';
+import { PostsService } from '../../posts/application/posts.service';
+import { PostsQueryRepository } from '../../posts/infrastructure/posts.query.repository';
+import { QueryInputType } from '../../models/QueryInputType';
 
 @Controller('blogs')
 export class BlogsController {
   constructor(
     protected blogsService: BlogsService,
     protected blogsQueryRepository: BlogsQueryRepository,
+    protected postsService: PostsService,
+    protected queryPostsRepository: PostsQueryRepository,
   ) {}
 
   @Get()
   async findAllBlogs(@Query() dataQuery: BlogQueryInputType) {
-    const blogs = await this.blogsQueryRepository.findAllBlogs(dataQuery);
-    return blogs;
+    return await this.blogsQueryRepository.findAllBlogs(dataQuery);
   }
   @Get('/:id')
   async findBlogById(@Param('id') id: string): Promise<BlogViewModel> {
@@ -40,6 +45,17 @@ export class BlogsController {
     }
     return findBlog;
   }
+
+  @Get('/:id/posts')
+  async findAllPostsForBlog(
+    @Param('id') id: string,
+    @Query() dataQuery: QueryInputType,
+  ) {
+    return await this.queryPostsRepository.findAllPost(
+      dataQuery,
+      new Types.ObjectId(id),
+    );
+  }
   @Post()
   async createBlog(@Body() dto: CreateBlogDto): Promise<BlogViewModel> {
     const blogId = await this.blogsService.createBlog(dto);
@@ -49,7 +65,22 @@ export class BlogsController {
     }
     return newBlog;
   }
-
+  @Post('/:id/posts')
+  async createPostForBlog(
+    @Param('id') blogId: string,
+    @Body() dto: CreatePostDto,
+  ) {
+    dto.blogId = blogId;
+    const postId = await this.postsService.createPost(dto);
+    if (!postId) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
+    const newPost = await this.queryPostsRepository.findPost(postId);
+    if (!newPost)
+      throw new HttpException(
+        'INTERNAL SERVERERROR',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    return newPost;
+  }
   @Put('/:id')
   async updateBlog(@Param('id') id: string, @Body() dto: UpdateBlogDto) {
     const blogIsUpdate = await this.blogsService.updateBlog(
