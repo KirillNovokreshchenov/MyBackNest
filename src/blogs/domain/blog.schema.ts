@@ -12,9 +12,9 @@ export class Blog {
   description: string;
   @Prop({ required: true })
   websiteUrl: string;
-  @Prop({ default: new Date() })
+  @Prop({ required: true })
   createdAt: Date;
-  @Prop({ default: true })
+  @Prop({ default: false })
   isMembership: boolean;
 
   updateBlog(dto: UpdateBlogDto) {
@@ -26,7 +26,7 @@ export class Blog {
     blogDto: CreateBlogDto,
     BlogModel: BlogModelType,
   ): BlogDocument {
-    return new BlogModel(blogDto);
+    return new BlogModel({ ...blogDto, createdAt: new Date() });
   }
 }
 

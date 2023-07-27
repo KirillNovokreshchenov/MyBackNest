@@ -40,7 +40,7 @@ export class Post {
   blogId: Types.ObjectId;
   @Prop({ required: true })
   blogName: string;
-  @Prop({ default: new Date() })
+  @Prop({ required: true })
   createdAt: Date;
   @Prop({ default: {}, type: LikesInfoSchema })
   likesInfo: LikesInfo;
@@ -64,7 +64,12 @@ export class Post {
     PostModel: PostModelType,
   ) {
     const blogId = new Types.ObjectId(postDto.blogId);
-    return new PostModel({ ...postDto, blogId, blogName });
+    return new PostModel({
+      ...postDto,
+      blogId,
+      blogName,
+      createdAt: new Date(),
+    });
   }
 }
 

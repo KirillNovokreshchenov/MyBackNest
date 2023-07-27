@@ -13,7 +13,7 @@ export class Comment {
   userLogin: string;
   @Prop({ required: true })
   postId: Types.ObjectId;
-  @Prop({ default: new Date() })
+  @Prop({ required: true })
   createdAt: Date;
   @Prop({ default: {}, type: LikesInfoSchema })
   likesInfo: LikesInfo;

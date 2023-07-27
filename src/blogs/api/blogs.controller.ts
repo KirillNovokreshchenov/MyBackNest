@@ -51,6 +51,11 @@ export class BlogsController {
     @Param('id') id: string,
     @Query() dataQuery: QueryInputType,
   ) {
+    const blog = await this.blogsQueryRepository.findBlog(
+      new Types.ObjectId(id),
+    );
+
+    if (!blog) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
     return await this.queryPostsRepository.findAllPost(
       dataQuery,
       new Types.ObjectId(id),

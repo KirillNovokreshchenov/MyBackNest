@@ -33,7 +33,11 @@ export class PostsController {
   }
   @Get('/:id')
   async findPost(@Param('id') id: string) {
-    return await this.queryPostsRepository.findPost(new Types.ObjectId(id));
+    const post = await this.queryPostsRepository.findPost(
+      new Types.ObjectId(id),
+    );
+    if (!post) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
+    return post;
   }
 
   @Get('/:id/comments')
@@ -41,6 +45,8 @@ export class PostsController {
     @Param('id') id: string,
     @Query() dataQuery: QueryInputType,
   ) {
+    const post = this.queryPostsRepository.findPost(new Types.ObjectId(id));
+    if (!post) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
     return await this.queryCommentsRepository.findAllComments(
       dataQuery,
       new Types.ObjectId(id),

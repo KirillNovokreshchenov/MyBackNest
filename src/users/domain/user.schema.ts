@@ -12,7 +12,7 @@ export class User {
   password: string;
   @Prop({ required: true })
   email: string;
-  @Prop({ default: new Date() })
+  @Prop({ required: true })
   createdAt: Date;
   async createHash(password: string): Promise<string> {
     return UserAdapter.hashPassword(password);
@@ -21,7 +21,7 @@ export class User {
     userDto: CreateUserDto,
     UserModel: UserModelType,
   ): Promise<UserDocument> {
-    const newUser = new UserModel(userDto);
+    const newUser = new UserModel({ ...userDto, createdAt: new Date() });
     newUser.password = await newUser.createHash(newUser.password);
     return newUser;
   }
