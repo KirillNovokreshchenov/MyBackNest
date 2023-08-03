@@ -4,6 +4,10 @@ import { Blog, BlogModelType } from '../blogs/domain/blog.schema';
 import { Post, PostModelType } from '../posts/domain/post.schema';
 import { User, UserModelType } from '../users/domain/user.schema';
 import { Comment, CommentModelType } from '../comments/domain/comment.schema';
+import {
+  PasswordRecovery,
+  PasswordRecoveryType,
+} from '../auth/domain/password-recovery.schema';
 
 @Controller('testing')
 export class TestingController {
@@ -12,6 +16,8 @@ export class TestingController {
     @InjectModel(Post.name) private PostModel: PostModelType,
     @InjectModel(User.name) private UserModel: UserModelType,
     @InjectModel(Comment.name) private CommentModel: CommentModelType,
+    @InjectModel(PasswordRecovery.name)
+    private passwordRecoveryModel: PasswordRecoveryType,
   ) {}
   @Delete('/all-data')
   async deleteAllData() {
@@ -19,7 +25,8 @@ export class TestingController {
     const user = this.UserModel.deleteMany();
     const blog = this.BlogModel.deleteMany();
     const post = this.PostModel.deleteMany();
-    await Promise.all([comment, user, blog, post]);
+    const recovery = this.passwordRecoveryModel.deleteMany();
+    await Promise.all([comment, user, blog, post, recovery]);
     throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
   }
 }

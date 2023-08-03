@@ -16,6 +16,7 @@ import { UserViewModel } from './view-model/UserViewModel';
 import { UserViewModelAll } from './view-model/UserViewModelAll';
 import { Types } from 'mongoose';
 import { UserQueryInputType } from './input-model/UserQueryInputType';
+import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
 
 @Controller('users')
 export class UsersController {
@@ -30,6 +31,7 @@ export class UsersController {
   ): Promise<UserViewModelAll> {
     return await this.usersQueryRepository.findAllUsers(dataQuery);
   }
+
   @Post()
   async createUser(@Body() dto: CreateUserDto): Promise<UserViewModel> {
     const userId = await this.usersService.createUserByAdmin(dto);
@@ -40,10 +42,10 @@ export class UsersController {
     return newUser;
   }
   @Delete('/:id')
-  async deleteUser(@Param('id') id: string): Promise<HttpException> {
-    const userIsDeleted = await this.usersService.deleteUser(
-      new Types.ObjectId(id),
-    );
+  async deleteUser(
+    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
+  ): Promise<HttpException> {
+    const userIsDeleted = await this.usersService.deleteUser(id);
     if (userIsDeleted) {
       throw new HttpException('No Content', HttpStatus.NO_CONTENT);
     } else {

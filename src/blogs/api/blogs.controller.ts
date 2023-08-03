@@ -17,10 +17,13 @@ import { BlogViewModel } from './view-model/BlogViewModel';
 import { Types } from 'mongoose';
 import { BlogQueryInputType } from './input-model/BlogQueryInputType';
 import { UpdateBlogDto } from '../application/dto/UpdateBlogDto';
-import { CreatePostDto } from '../../posts/application/dto/CreatePostDto';
 import { PostsService } from '../../posts/application/posts.service';
 import { PostsQueryRepository } from '../../posts/infrastructure/posts.query.repository';
 import { QueryInputType } from '../../models/QueryInputType';
+import { PostViewModelAll } from '../../posts/api/view-models/PostViewModelAll';
+import { CreatePostForBlogDto } from '../application/dto/CreatePostForBlogDto';
+import { BlogViewModelAll } from './view-model/BlogViewModelAll';
+import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
 
 @Controller('blogs')
 export class BlogsController {
@@ -32,14 +35,16 @@ export class BlogsController {
   ) {}
 
   @Get()
-  async findAllBlogs(@Query() dataQuery: BlogQueryInputType) {
+  async findAllBlogs(
+    @Query() dataQuery: BlogQueryInputType,
+  ): Promise<BlogViewModelAll> {
     return await this.blogsQueryRepository.findAllBlogs(dataQuery);
   }
   @Get('/:id')
-  async findBlogById(@Param('id') id: string): Promise<BlogViewModel> {
-    const findBlog = await this.blogsQueryRepository.findBlog(
-      new Types.ObjectId(id),
-    );
+  async findBlogById(
+    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
+  ): Promise<BlogViewModel> {
+    const findBlog = await this.blogsQueryRepository.findBlog(id);
     if (!findBlog) {
       throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
     }
@@ -48,13 +53,10 @@ export class BlogsController {
 
   @Get('/:id/posts')
   async findAllPostsForBlog(
-    @Param('id') id: string,
+    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
     @Query() dataQuery: QueryInputType,
-  ) {
-    const blog = await this.blogsQueryRepository.findBlog(
-      new Types.ObjectId(id),
-    );
-
+  ): Promise<PostViewModelAll> {
+    const blog = await this.blogsQueryRepository.findBlog(id);
     if (!blog) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
     return await this.queryPostsRepository.findAllPost(
       dataQuery,
@@ -73,10 +75,9 @@ export class BlogsController {
   @Post('/:id/posts')
   async createPostForBlog(
     @Param('id') blogId: string,
-    @Body() dto: CreatePostDto,
+    @Body() dto: CreatePostForBlogDto,
   ) {
-    dto.blogId = blogId;
-    const postId = await this.postsService.createPost(dto);
+    const postId = await this.postsService.createPost({ ...dto, blogId });
     if (!postId) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
     const newPost = await this.queryPostsRepository.findPost(postId);
     if (!newPost)
@@ -87,11 +88,11 @@ export class BlogsController {
     return newPost;
   }
   @Put('/:id')
-  async updateBlog(@Param('id') id: string, @Body() dto: UpdateBlogDto) {
-    const blogIsUpdate = await this.blogsService.updateBlog(
-      new Types.ObjectId(id),
-      dto,
-    );
+  async updateBlog(
+    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
+    @Body() dto: UpdateBlogDto,
+  ) {
+    const blogIsUpdate = await this.blogsService.updateBlog(id, dto);
 
     if (!blogIsUpdate)
       throw new HttpException('NOT FOUND', HttpStatus.NOT_FOUND);
@@ -100,10 +101,8 @@ export class BlogsController {
   }
 
   @Delete('/:id')
-  async deleteBlog(@Param('id') id: string) {
-    const blogIsDeleted = await this.blogsService.deleteBlog(
-      new Types.ObjectId(id),
-    );
+  async deleteBlog(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
+    const blogIsDeleted = await this.blogsService.deleteBlog(id);
     if (!blogIsDeleted)
       throw new HttpException('NOT FOUND', HttpStatus.NOT_FOUND);
     throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);

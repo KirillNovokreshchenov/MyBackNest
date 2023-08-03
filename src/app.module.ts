@@ -23,12 +23,26 @@ import { CommentsController } from './comments/api/comments.controller';
 import { CommentsQueryRepository } from './comments/infractructure/comments.query.repository';
 import { Comment, CommentSchema } from './comments/domain/comment.schema';
 import { TestingController } from './testing/testing.controller';
+import { AuthController } from './auth/api/auth.controller';
+import { AuthService } from './auth/application/auth.service';
 import configuration from './configuration';
+import { EmailAdapter } from './auth/infrastructure/adapters/email.adapter';
+import { EmailManagers } from './auth/application/managers/email.managers';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { ThrottlerModule } from '@nestjs/throttler';
+import {
+  PasswordRecovery,
+  PasswordRecoverySchema,
+} from './auth/domain/password-recovery.schema';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ load: [configuration] }),
     MongooseModule.forRoot(configuration().mongoUri),
+    ThrottlerModule.forRoot({
+      ttl: 10,
+      limit: 5,
+    }),
     MongooseModule.forFeature([
       {
         name: User.name,
@@ -46,7 +60,22 @@ import configuration from './configuration';
         name: Comment.name,
         schema: CommentSchema,
       },
+      {
+        name: PasswordRecovery.name,
+        schema: PasswordRecoverySchema,
+      },
     ]),
+    MailerModule.forRoot({
+      transport: {
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true, // true for 465, false for other ports
+        auth: {
+          user: 'kirochkaqwerty123@gmail.com', // generated ethereal user
+          pass: 'otzaxohazcnetzvc', // generated ethereal password
+        },
+      },
+    }),
   ],
   controllers: [
     AppController,
@@ -55,6 +84,7 @@ import configuration from './configuration';
     PostsController,
     CommentsController,
     TestingController,
+    AuthController,
   ],
   providers: [
     AppService,
@@ -69,6 +99,9 @@ import configuration from './configuration';
     PostsRepository,
     PostsQueryRepository,
     CommentsQueryRepository,
+    AuthService,
+    EmailAdapter,
+    EmailManagers,
   ],
 })
 export class AppModule {}

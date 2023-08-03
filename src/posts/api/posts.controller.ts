@@ -18,6 +18,7 @@ import { UpdatePostDto } from '../application/dto/UpdatePostDto';
 import { Types } from 'mongoose';
 import { QueryInputType } from '../../models/QueryInputType';
 import { CommentsQueryRepository } from '../../comments/infractructure/comments.query.repository';
+import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
 
 @Controller('posts')
 export class PostsController {
@@ -32,25 +33,20 @@ export class PostsController {
     return await this.queryPostsRepository.findAllPost(dataQuery);
   }
   @Get('/:id')
-  async findPost(@Param('id') id: string) {
-    const post = await this.queryPostsRepository.findPost(
-      new Types.ObjectId(id),
-    );
+  async findPost(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
+    const post = await this.queryPostsRepository.findPost(id);
     if (!post) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
     return post;
   }
 
   @Get('/:id/comments')
   async findCommentsForPost(
-    @Param('id') id: string,
+    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
     @Query() dataQuery: QueryInputType,
   ) {
-    const post = this.queryPostsRepository.findPost(new Types.ObjectId(id));
+    const post = this.queryPostsRepository.findPost(id);
     if (!post) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
-    return await this.queryCommentsRepository.findAllComments(
-      dataQuery,
-      new Types.ObjectId(id),
-    );
+    return await this.queryCommentsRepository.findAllComments(dataQuery, id);
   }
   @Post()
   async createPost(@Body() dto: CreatePostDto): Promise<PostViewModel> {
@@ -65,19 +61,17 @@ export class PostsController {
     return newPost;
   }
   @Put('/:id')
-  async updatePost(@Param('id') id: string, @Body() dto: UpdatePostDto) {
-    const isUpdate = await this.postsService.updatePost(
-      new Types.ObjectId(id),
-      dto,
-    );
+  async updatePost(
+    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
+    @Body() dto: UpdatePostDto,
+  ) {
+    const isUpdate = await this.postsService.updatePost(id, dto);
     if (!isUpdate) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
     throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
   }
   @Delete('/:id')
-  async deletePost(@Param('id') id: string) {
-    const isDeleted = await this.postsService.deletePost(
-      new Types.ObjectId(id),
-    );
+  async deletePost(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
+    const isDeleted = await this.postsService.deletePost(id);
     if (!isDeleted) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
     throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
   }

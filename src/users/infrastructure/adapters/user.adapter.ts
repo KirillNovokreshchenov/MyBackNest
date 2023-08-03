@@ -6,4 +6,8 @@ export class UserAdapter {
     const hash = await bcrypt.hash(password, saltHash);
     return hash;
   }
+  static async compare(password: string, hash: string) {
+    const isValid = await bcrypt.compare(password, hash);
+    return isValid;
+  }
 }
