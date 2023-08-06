@@ -9,6 +9,7 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateBlogDto } from '../application/dto/CreateBlogDto';
 import { BlogsService } from '../application/blogs.service';
@@ -24,6 +25,7 @@ import { PostViewModelAll } from '../../posts/api/view-models/PostViewModelAll';
 import { CreatePostForBlogDto } from '../application/dto/CreatePostForBlogDto';
 import { BlogViewModelAll } from './view-model/BlogViewModelAll';
 import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
+import { BasicAuthGuard } from '../../auth/guards/basic-auth.guard';
 
 @Controller('blogs')
 export class BlogsController {
@@ -63,6 +65,7 @@ export class BlogsController {
       new Types.ObjectId(id),
     );
   }
+  @UseGuards(BasicAuthGuard)
   @Post()
   async createBlog(@Body() dto: CreateBlogDto): Promise<BlogViewModel> {
     const blogId = await this.blogsService.createBlog(dto);
@@ -72,6 +75,7 @@ export class BlogsController {
     }
     return newBlog;
   }
+  @UseGuards(BasicAuthGuard)
   @Post('/:id/posts')
   async createPostForBlog(
     @Param('id') blogId: string,
@@ -87,6 +91,7 @@ export class BlogsController {
       );
     return newPost;
   }
+  @UseGuards(BasicAuthGuard)
   @Put('/:id')
   async updateBlog(
     @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
@@ -99,7 +104,7 @@ export class BlogsController {
 
     throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
   }
-
+  @UseGuards(BasicAuthGuard)
   @Delete('/:id')
   async deleteBlog(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
     const blogIsDeleted = await this.blogsService.deleteBlog(id);

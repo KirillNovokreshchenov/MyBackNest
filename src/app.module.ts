@@ -34,6 +34,16 @@ import {
   PasswordRecovery,
   PasswordRecoverySchema,
 } from './auth/domain/password-recovery.schema';
+import { BasicStrategy } from './auth/strategies/basic.strategy';
+import { JwtModule } from '@nestjs/jwt';
+import { LocalStrategy } from './auth/strategies/local.strategy';
+import { JwtStrategy } from './auth/strategies/jwt.strategy';
+import { Session, SessionSchema } from './sessions/domain/session.schema';
+import { DeviceRepository } from './sessions/infrastructure/device.repository';
+import { JwtRefreshStrategy } from './auth/strategies/jwt.refresh.strategy';
+import { DeviceController } from './sessions/api/device.controller';
+import { DeviceService } from './sessions/application/device.service';
+import { DeviceQueryRepository } from './sessions/infrastructure/device.query.repository';
 
 @Module({
   imports: [
@@ -64,7 +74,19 @@ import {
         name: PasswordRecovery.name,
         schema: PasswordRecoverySchema,
       },
+      {
+        name: Session.name,
+        schema: SessionSchema,
+      },
     ]),
+    JwtModule.register({
+      secret: configuration().secretAT,
+      signOptions: { expiresIn: '30m' },
+    }),
+    JwtModule.register({
+      secret: configuration().secretRT,
+      signOptions: { expiresIn: '60m' },
+    }),
     MailerModule.forRoot({
       transport: {
         host: 'smtp.gmail.com',
@@ -85,6 +107,7 @@ import {
     CommentsController,
     TestingController,
     AuthController,
+    DeviceController,
   ],
   providers: [
     AppService,
@@ -102,6 +125,13 @@ import {
     AuthService,
     EmailAdapter,
     EmailManagers,
+    BasicStrategy,
+    LocalStrategy,
+    JwtStrategy,
+    DeviceRepository,
+    JwtRefreshStrategy,
+    DeviceService,
+    DeviceQueryRepository,
   ],
 })
 export class AppModule {}

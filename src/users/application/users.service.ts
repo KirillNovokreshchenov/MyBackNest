@@ -3,7 +3,7 @@ import { UsersRepository } from '../infrastructure/users.repository';
 import { CreateUserDto } from './dto/CreateUserDto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument, UserModelType } from '../domain/user.schema';
-import { HydratedDocument, Types } from 'mongoose';
+import { Types } from 'mongoose';
 import { EmailManagers } from '../../auth/application/managers/email.managers';
 import { CodeDto } from './dto/CodeDto';
 import { EmailDto } from './dto/EmailDto';
@@ -12,7 +12,6 @@ import {
   PasswordRecoveryType,
 } from '../../auth/domain/password-recovery.schema';
 import { NewPasswordDto } from '../../auth/application/dto/NewPasswordDto';
-import { LoginDto } from '../../auth/application/dto/loginDto';
 
 @Injectable()
 export class UsersService {
@@ -37,18 +36,6 @@ export class UsersService {
     }
     await this.usersRepository.saveUser(newUser);
     return true;
-  }
-
-  async checkCredentials(loginDto: LoginDto) {
-    const user = await this.usersRepository.findUserByEmailOrLogin(
-      loginDto.loginOrEmail,
-    );
-    if (!user) return false;
-    const passwordIsValid = await user.passwordIsValid(
-      loginDto.password,
-      user.password,
-    );
-    return passwordIsValid;
   }
 
   async confirmByEmail(codeDto: CodeDto): Promise<boolean> {

@@ -8,11 +8,12 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { ErrorExceptionFilter } from './filters/error-exception.filter';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.enableCors();
-
+  app.use(cookieParser());
   app.useGlobalFilters(new ErrorExceptionFilter(), new HttpExceptionFilter());
   app.useGlobalPipes(
     new ValidationPipe({

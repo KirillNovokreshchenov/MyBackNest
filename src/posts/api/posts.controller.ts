@@ -9,6 +9,7 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { PostsService } from '../application/posts.service';
 import { PostsQueryRepository } from '../infrastructure/posts.query.repository';
@@ -19,6 +20,7 @@ import { Types } from 'mongoose';
 import { QueryInputType } from '../../models/QueryInputType';
 import { CommentsQueryRepository } from '../../comments/infractructure/comments.query.repository';
 import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
+import { BasicAuthGuard } from '../../auth/guards/basic-auth.guard';
 
 @Controller('posts')
 export class PostsController {
@@ -48,6 +50,7 @@ export class PostsController {
     if (!post) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
     return await this.queryCommentsRepository.findAllComments(dataQuery, id);
   }
+  @UseGuards(BasicAuthGuard)
   @Post()
   async createPost(@Body() dto: CreatePostDto): Promise<PostViewModel> {
     const postId = await this.postsService.createPost(dto);
@@ -60,6 +63,7 @@ export class PostsController {
       );
     return newPost;
   }
+  @UseGuards(BasicAuthGuard)
   @Put('/:id')
   async updatePost(
     @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
@@ -69,6 +73,7 @@ export class PostsController {
     if (!isUpdate) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
     throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
   }
+  @UseGuards(BasicAuthGuard)
   @Delete('/:id')
   async deletePost(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
     const isDeleted = await this.postsService.deletePost(id);
