@@ -59,8 +59,8 @@ import { BlogExistsRule } from './posts/validators/custom-blogId.validator';
     ConfigModule.forRoot({ load: [configuration] }),
     MongooseModule.forRoot(configuration().mongoUri),
     ThrottlerModule.forRoot({
-      // ttl: 10,
-      // limit: 5,
+      ttl: 10,
+      limit: 5,
     }),
     MongooseModule.forFeature([
       {
@@ -98,11 +98,11 @@ import { BlogExistsRule } from './posts/validators/custom-blogId.validator';
     ]),
     JwtModule.register({
       secret: configuration().secretAT,
-      signOptions: { expiresIn: '30m' },
+      signOptions: { expiresIn: '10s' },
     }),
     JwtModule.register({
       secret: configuration().secretRT,
-      signOptions: { expiresIn: '60m' },
+      signOptions: { expiresIn: '20s' },
     }),
     MailerModule.forRoot({
       transport: {
