@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -28,6 +29,7 @@ import { CreateCommentDto } from '../../comments/application/dto/CreateCommentDt
 import { CommentService } from '../../comments/application/comment.service';
 import { JwtLikeAuthGuard } from '../../auth/guards/jwt-like-auth.guard';
 import { LikeStatusDto } from '../../models/LikeStatusDto';
+import { BlogsQueryRepository } from '../../blogs/infrastructure/blogs.query.repository';
 
 @Controller('posts')
 export class PostsController {
@@ -35,6 +37,7 @@ export class PostsController {
     protected postsService: PostsService,
     protected queryPostsRepository: PostsQueryRepository,
     protected queryCommentsRepository: CommentsQueryRepository,
+    protected queryBlogRepo: BlogsQueryRepository,
     protected commentService: CommentService,
   ) {}
   @UseGuards(JwtLikeAuthGuard)
@@ -62,8 +65,8 @@ export class PostsController {
     @Query() dataQuery: QueryInputType,
     @CurrentUserId() userId?: Types.ObjectId,
   ) {
-    const post = this.queryPostsRepository.findPost(postId);
-    if (!post) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
+    const post = await this.queryPostsRepository.findPost(postId);
+    if (!post) throw new NotFoundException();
     return await this.queryCommentsRepository.findAllComments(
       dataQuery,
       postId,
@@ -74,7 +77,10 @@ export class PostsController {
   @Post()
   async createPost(@Body() dto: CreatePostDto): Promise<PostViewModel> {
     const postId = await this.postsService.createPost(dto);
-    if (!postId) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
+    if (!postId)
+      throw new BadRequestException([
+        { message: 'incorrect blogId', field: 'blogId' },
+      ]);
     const newPost = await this.queryPostsRepository.findPost(postId);
     if (!newPost)
       throw new HttpException(
@@ -103,10 +109,16 @@ export class PostsController {
   @UseGuards(BasicAuthGuard)
   @Put('/:id')
   async updatePost(
-    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) postId: Types.ObjectId,
     @Body() dto: UpdatePostDto,
   ) {
-    const isUpdate = await this.postsService.updatePost(id, dto);
+    const blog = this.queryBlogRepo.findBlog(new Types.ObjectId(dto.blogId));
+    if (!blog) {
+      throw new BadRequestException([
+        { message: 'incorrect blogId', field: 'blogId' },
+      ]);
+    }
+    const isUpdate = await this.postsService.updatePost(postId, dto);
     if (!isUpdate) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
     throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
   }

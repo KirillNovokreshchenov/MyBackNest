@@ -1,7 +1,9 @@
 import { IsNotEmpty, IsString, Matches, MaxLength } from 'class-validator';
+import { Transform, TransformFnParams } from 'class-transformer';
 
 export class CreateBlogDto {
   @MaxLength(15)
+  @Transform(({ value }: TransformFnParams) => value.trim())
   @IsNotEmpty()
   @IsString()
   name: string;
