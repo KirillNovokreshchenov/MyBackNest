@@ -60,23 +60,23 @@ export class CommentsQueryRepository {
       .limit(query.pageSize)
       .lean();
 
-    const mapComments = await Promise.all(
-      allComments.map(async (comment) => {
-        const commentId = comment._id;
-        const like = await this.CommentLikeModel.findOne({
-          userId,
-          commentId,
-        }).lean();
-        return new CommentViewModel(comment, like?.likeStatus);
-      }),
-    );
+    const mapComments = allComments.map(async (comment) => {
+      const commentId = comment._id;
+      const like = await this.CommentLikeModel.findOne({
+        userId,
+        commentId,
+      }).lean();
+      return new CommentViewModel(comment, like?.likeStatus);
+    });
+
+    const mapComment = await Promise.all(mapComments);
 
     return new CommentViewModelAll(
       countPages,
       query.pageNumber,
       query.pageSize,
       totalCount,
-      mapComments,
+      mapComment,
     );
   }
 }
