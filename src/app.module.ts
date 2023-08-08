@@ -44,6 +44,14 @@ import { JwtRefreshStrategy } from './auth/strategies/jwt.refresh.strategy';
 import { DeviceController } from './sessions/api/device.controller';
 import { DeviceService } from './sessions/application/device.service';
 import { DeviceQueryRepository } from './sessions/infrastructure/device.query.repository';
+import { CommentService } from './comments/application/comment.service';
+import { CommentsRepository } from './comments/infractructure/comments.repository';
+import { PostLike, PostLikeSchema } from './posts/domain/post-like.schema';
+import {
+  CommentLike,
+  CommentLikeSchema,
+} from './comments/domain/comment-like.schema';
+import { JwtLikeStrategy } from './auth/strategies/jwt.like.strategy';
 
 @Module({
   imports: [
@@ -77,6 +85,14 @@ import { DeviceQueryRepository } from './sessions/infrastructure/device.query.re
       {
         name: Session.name,
         schema: SessionSchema,
+      },
+      {
+        name: PostLike.name,
+        schema: PostLikeSchema,
+      },
+      {
+        name: CommentLike.name,
+        schema: CommentLikeSchema,
       },
     ]),
     JwtModule.register({
@@ -132,6 +148,9 @@ import { DeviceQueryRepository } from './sessions/infrastructure/device.query.re
     JwtRefreshStrategy,
     DeviceService,
     DeviceQueryRepository,
+    CommentService,
+    CommentsRepository,
+    JwtLikeStrategy,
   ],
 })
 export class AppModule {}

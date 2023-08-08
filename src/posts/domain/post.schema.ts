@@ -2,28 +2,15 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { CreatePostDto } from '../application/dto/CreatePostDto';
 import { UpdatePostDto } from '../application/dto/UpdatePostDto';
+import { LIKE_STATUS } from '../../models/LikeStatusEnum';
+import { PostLikeDocument, PostLikeModelType } from './post-like.schema';
 
-@Schema()
-export class UsersLikes {
-  @Prop({ required: true })
-  userId: Types.ObjectId;
-  @Prop({ required: true })
-  userLogin: number;
-  @Prop({ default: new Date() })
-  addedAt: Date;
-  @Prop({ required: true })
-  likeStatus: number;
-}
-
-export const UsersLikesSchema = SchemaFactory.createForClass(UsersLikes);
 @Schema()
 export class LikesInfo {
   @Prop({ default: 0 })
   likesCount: number;
   @Prop({ default: 0 })
   dislikesCount: number;
-  @Prop({ default: [], type: [UsersLikesSchema] })
-  usersLikes: UsersLikes[];
 }
 
 export const LikesInfoSchema = SchemaFactory.createForClass(LikesInfo);
@@ -51,6 +38,45 @@ export class Post {
     this.shortDescription = postDto.shortDescription;
     this.blogId = new Types.ObjectId(postDto.blogId);
     this.blogName = blogName;
+  }
+  createLikeStatus(
+    userId: Types.ObjectId,
+    postId: Types.ObjectId,
+    login: string,
+    likeStatus: LIKE_STATUS,
+    PostLikeModel: PostLikeModelType,
+  ): PostLikeDocument {
+    if (likeStatus === LIKE_STATUS.LIKE) {
+      this.likesInfo.likesCount += 1;
+    } else {
+      this.likesInfo.dislikesCount += 1;
+    }
+    return new PostLikeModel({
+      userId,
+      postId,
+      login,
+      likeStatus,
+      addedAt: new Date(),
+    });
+  }
+  updateLikeNone(oldLike: LIKE_STATUS) {
+    if (oldLike === LIKE_STATUS.LIKE) {
+      this.likesInfo.likesCount -= 1;
+    } else {
+      this.likesInfo.dislikesCount -= 1;
+    }
+  }
+  updateLike(currentLike: LIKE_STATUS, oldLike: PostLikeDocument) {
+    if (currentLike === oldLike.likeStatus) return;
+    if (currentLike === LIKE_STATUS.LIKE) {
+      this.likesInfo.likesCount += 1;
+      this.likesInfo.dislikesCount -= 1;
+      oldLike.likeStatus = LIKE_STATUS.LIKE;
+    } else {
+      this.likesInfo.likesCount -= 1;
+      this.likesInfo.dislikesCount += 1;
+      oldLike.likeStatus = LIKE_STATUS.DISLIKE;
+    }
   }
   static changeBlogName(posts: PostDocument[], blogName: string) {
     posts.map(async (post) => {
@@ -90,6 +116,9 @@ PostSchema.statics = {
 };
 PostSchema.methods = {
   updatePost: Post.prototype.updatePost,
+  createLikeStatus: Post.prototype.createLikeStatus,
+  updateLikeNone: Post.prototype.updateLikeNone,
+  updateLike: Post.prototype.updateLike,
 };
 
 export type PostDocument = HydratedDocument<Post>;

@@ -1,11 +1,6 @@
 import { Post } from '../../domain/post.schema';
 import { LIKE_STATUS } from '../../../models/LikeStatusEnum';
-
-type NewestLikes = {
-  addedAt: Date;
-  userId: string;
-  login: string;
-};
+import { NewestLikes } from './NewestLikeModel';
 
 type ExtendedLikesInfo = {
   likesCount: number;
@@ -23,7 +18,7 @@ export class PostViewModel {
   blogName: string;
   createdAt: Date;
   extendedLikesInfo: ExtendedLikesInfo;
-  constructor(post: Post) {
+  constructor(post: Post, lastLikes: NewestLikes[], likeStatus?: LIKE_STATUS) {
     this.id = post._id.toString();
     this.title = post.title;
     this.shortDescription = post.shortDescription;
@@ -34,8 +29,8 @@ export class PostViewModel {
     this.extendedLikesInfo = {
       likesCount: post.likesInfo.likesCount,
       dislikesCount: post.likesInfo.dislikesCount,
-      myStatus: LIKE_STATUS.NONE,
-      newestLikes: [],
+      myStatus: likeStatus || LIKE_STATUS.NONE,
+      newestLikes: lastLikes,
     };
   }
 }

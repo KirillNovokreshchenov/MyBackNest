@@ -26,6 +26,8 @@ import { CreatePostForBlogDto } from '../application/dto/CreatePostForBlogDto';
 import { BlogViewModelAll } from './view-model/BlogViewModelAll';
 import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
 import { BasicAuthGuard } from '../../auth/guards/basic-auth.guard';
+import { JwtLikeAuthGuard } from '../../auth/guards/jwt-like-auth.guard';
+import { CurrentUserId } from '../../auth/decorators/create-param-current-id.decarator';
 
 @Controller('blogs')
 export class BlogsController {
@@ -52,18 +54,19 @@ export class BlogsController {
     }
     return findBlog;
   }
-
+  @UseGuards(JwtLikeAuthGuard)
   @Get('/:id/posts')
   async findAllPostsForBlog(
-    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) blogId: Types.ObjectId,
     @Query() dataQuery: QueryInputType,
+    @CurrentUserId() userId?: Types.ObjectId,
   ): Promise<PostViewModelAll> {
-    const blog = await this.blogsQueryRepository.findBlog(id);
+    const blog = await this.blogsQueryRepository.findBlog(blogId);
     if (!blog) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
-    return await this.queryPostsRepository.findAllPost(
-      dataQuery,
-      new Types.ObjectId(id),
-    );
+    return await this.queryPostsRepository.findAllPost(dataQuery, {
+      userId,
+      blogId,
+    });
   }
   @UseGuards(BasicAuthGuard)
   @Post()

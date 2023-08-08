@@ -8,6 +8,12 @@ import {
   PasswordRecovery,
   PasswordRecoveryType,
 } from '../auth/domain/password-recovery.schema';
+import { Session, SessionModelType } from '../sessions/domain/session.schema';
+import {
+  CommentLike,
+  CommentLikeModelType,
+} from '../comments/domain/comment-like.schema';
+import { PostLike, PostLikeModelType } from '../posts/domain/post-like.schema';
 
 @Controller('testing')
 export class TestingController {
@@ -18,6 +24,10 @@ export class TestingController {
     @InjectModel(Comment.name) private CommentModel: CommentModelType,
     @InjectModel(PasswordRecovery.name)
     private passwordRecoveryModel: PasswordRecoveryType,
+    @InjectModel(Session.name) private SessionModel: SessionModelType,
+    @InjectModel(CommentLike.name)
+    private CommentLikeModel: CommentLikeModelType,
+    @InjectModel(PostLike.name) private PostLikeModel: PostLikeModelType,
   ) {}
   @Delete('/all-data')
   async deleteAllData() {
@@ -26,7 +36,19 @@ export class TestingController {
     const blog = this.BlogModel.deleteMany();
     const post = this.PostModel.deleteMany();
     const recovery = this.passwordRecoveryModel.deleteMany();
-    await Promise.all([comment, user, blog, post, recovery]);
+    const session = this.SessionModel.deleteMany();
+    const commentLike = this.CommentLikeModel.deleteMany();
+    const postLike = this.PostLikeModel.deleteMany();
+    await Promise.all([
+      comment,
+      user,
+      blog,
+      post,
+      recovery,
+      session,
+      commentLike,
+      postLike,
+    ]);
     throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
   }
 }

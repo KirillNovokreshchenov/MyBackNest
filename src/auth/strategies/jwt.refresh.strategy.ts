@@ -25,7 +25,6 @@ export class JwtRefreshStrategy extends PassportStrategy(Strategy) {
   }
 
   private static extractJWTFromCookie(req: Request) {
-    debugger;
     if (req.cookies && req.cookies.refreshToken) {
       return req.cookies.refreshToken;
     }

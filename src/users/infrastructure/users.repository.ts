@@ -46,4 +46,8 @@ export class UsersRepository {
   ): Promise<PasswordRecoveryDocument | null> {
     return this.passwordRecoveryModel.findOne({ recoveryCode });
   }
+
+  findUserById(userId: Types.ObjectId): Promise<UserDocument | null> {
+    return this.UserModel.findById(userId);
+  }
 }

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
-import { Comment, CommentModelType } from '../domain/comment.schema';
+import {
+  Comment,
+  CommentDocument,
+  CommentModelType,
+} from '../domain/comment.schema';
 import { CommentViewModel } from '../api/view-models/CommentViewModel';
 import { QueryInputType } from '../../models/QueryInputType';
 import { QueryModel } from '../../models/QueryModel';
@@ -9,46 +13,62 @@ import { pagesCount } from '../../helpers/pages-count';
 import { sortQuery } from '../../helpers/sort-query';
 import { skipPages } from '../../helpers/skip-pages';
 import { CommentViewModelAll } from '../api/view-models/CommentViewModelAll';
+import {
+  CommentLike,
+  CommentLikeModelType,
+} from '../domain/comment-like.schema';
 
 @Injectable()
 export class CommentsQueryRepository {
   constructor(
     @InjectModel(Comment.name) private CommentModel: CommentModelType,
+    @InjectModel(CommentLike.name)
+    private CommentLikeModel: CommentLikeModelType,
   ) {}
   async findComment(
     commentId: Types.ObjectId,
+    userId?: Types.ObjectId,
   ): Promise<CommentViewModel | null> {
-    const comment: Comment | null = await this.CommentModel.findById(
+    const like = await this.CommentLikeModel.findOne({
+      userId,
+      commentId,
+    }).lean();
+    console.log(like);
+    const comment: CommentDocument | null = await this.CommentModel.findById(
       commentId,
     ).lean();
 
     if (!comment) return null;
-    return new CommentViewModel(comment);
+    return new CommentViewModel(comment, like?.likeStatus);
   }
 
   async findAllComments(
     dataQuery: QueryInputType,
-    postId?: Types.ObjectId,
+    postId: Types.ObjectId,
+    userId?: Types.ObjectId,
   ): Promise<CommentViewModelAll> {
     const query = new QueryModel(dataQuery);
-    const filter: { postId?: Types.ObjectId } = {};
-    if (postId) {
-      filter.postId = postId;
-    }
 
-    const totalCount = await this.CommentModel.countDocuments(filter);
+    const totalCount = await this.CommentModel.countDocuments({ postId });
     const countPages = pagesCount(totalCount, query.pageSize);
     const sort = sortQuery(query.sortDirection, query.sortBy);
     const skip = skipPages(query.pageNumber, query.pageSize);
 
-    const allComments = await this.CommentModel.find(filter)
+    const allComments = await this.CommentModel.find({ postId })
       .sort(sort)
       .skip(skip)
       .limit(query.pageSize)
       .lean();
-    console.log(allComments);
-    const mapComments = allComments.map(
-      (comment) => new CommentViewModel(comment),
+
+    const mapComments = await Promise.all(
+      allComments.map(async (comment) => {
+        const commentId = comment._id;
+        const like = await this.CommentLikeModel.findOne({
+          userId,
+          commentId,
+        }).lean();
+        return new CommentViewModel(comment, like?.likeStatus);
+      }),
     );
 
     return new CommentViewModelAll(

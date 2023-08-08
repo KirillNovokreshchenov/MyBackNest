@@ -16,7 +16,7 @@ export class CommentViewModel {
   commentatorInfo: CommentatorInfo;
   createdAt: Date;
   likesInfo: CommentLikeInfo;
-  constructor(comment: Comment) {
+  constructor(comment: Comment, likeStatus?: LIKE_STATUS) {
     this.id = comment._id.toString();
     this.content = comment.content;
     this.commentatorInfo = {
@@ -27,7 +27,7 @@ export class CommentViewModel {
     this.likesInfo = {
       likesCount: comment.likesInfo.likesCount,
       dislikesCount: comment.likesInfo.dislikesCount,
-      myStatus: LIKE_STATUS.NONE,
+      myStatus: likeStatus || LIKE_STATUS.NONE,
     };
   }
 }
