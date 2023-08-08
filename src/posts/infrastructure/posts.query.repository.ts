@@ -53,22 +53,23 @@ export class PostsQueryRepository {
       .limit(query.pageSize)
       .lean();
 
-    const mapPosts = allPosts.map(async (post) => {
-      const newestLikes = await this._newestLikes(post._id);
-      const like = await this.PostLikeModel.findOne({
-        userId: postFilter.userId,
-        postId: post._id,
-      }).lean();
-      return new PostViewModel(post, newestLikes, like?.likeStatus);
-    });
-    const mapPost = await Promise.all(mapPosts);
+    const mapPosts = await Promise.all(
+      allPosts.map(async (post) => {
+        const newestLikes = await this._newestLikes(post._id);
+        const like = await this.PostLikeModel.findOne({
+          userId: postFilter.userId,
+          postId: post._id,
+        }).lean();
+        return new PostViewModel(post, newestLikes, like?.likeStatus);
+      }),
+    );
 
     return new PostViewModelAll(
       countPages,
       query.pageNumber,
       query.pageSize,
       totalCount,
-      mapPost,
+      mapPosts,
     );
   }
   async _newestLikes(postId: Types.ObjectId) {
