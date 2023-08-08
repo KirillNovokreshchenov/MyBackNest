@@ -12,6 +12,7 @@ import { PostViewModelAll } from '../api/view-models/PostViewModelAll';
 import { PostFilterType } from './types/filter-query.types';
 import { PostLike, PostLikeModelType } from '../domain/post-like.schema';
 import { NewestLikes } from '../api/view-models/NewestLikeModel';
+import { LIKE_STATUS } from '../../models/LikeStatusEnum';
 
 @Injectable()
 export class PostsQueryRepository {
@@ -72,7 +73,10 @@ export class PostsQueryRepository {
     );
   }
   async _newestLikes(postId: Types.ObjectId) {
-    const newestLikes = await this.PostLikeModel.find({ postId })
+    const newestLikes = await this.PostLikeModel.find({
+      postId,
+      likeStatus: LIKE_STATUS.LIKE,
+    })
       .sort({ addedAt: -1 })
       .limit(3)
       .lean();
