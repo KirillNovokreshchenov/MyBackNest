@@ -52,6 +52,7 @@ import {
   CommentLikeSchema,
 } from './comments/domain/comment-like.schema';
 import { JwtLikeStrategy } from './auth/strategies/jwt.like.strategy';
+import { BlogExistsRule } from './posts/validators/custom-blogId.validator';
 
 @Module({
   imports: [
@@ -151,6 +152,7 @@ import { JwtLikeStrategy } from './auth/strategies/jwt.like.strategy';
     CommentService,
     CommentsRepository,
     JwtLikeStrategy,
+    BlogExistsRule,
   ],
 })
 export class AppModule {}
