@@ -58,8 +58,8 @@ import { JwtLikeStrategy } from './auth/strategies/jwt.like.strategy';
     ConfigModule.forRoot({ load: [configuration] }),
     MongooseModule.forRoot(configuration().mongoUri),
     ThrottlerModule.forRoot({
-      ttl: 10,
-      limit: 5,
+      // ttl: 10,
+      // limit: 5,
     }),
     MongooseModule.forFeature([
       {
