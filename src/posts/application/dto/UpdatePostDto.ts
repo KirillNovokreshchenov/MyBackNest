@@ -1,5 +1,6 @@
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength, Validate } from 'class-validator';
 import { Transform, TransformFnParams } from 'class-transformer';
+import { BlogExistsRule } from '../../validators/custom-blogId.validator';
 
 export class UpdatePostDto {
   @MaxLength(30)
@@ -17,6 +18,7 @@ export class UpdatePostDto {
   @IsNotEmpty()
   @IsString()
   content: string;
+  @Validate(BlogExistsRule)
   @IsNotEmpty()
   @IsString()
   blogId: string;

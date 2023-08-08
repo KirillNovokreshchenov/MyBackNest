@@ -9,9 +9,11 @@ import {
 } from '@nestjs/common';
 import { ErrorExceptionFilter } from './filters/error-exception.filter';
 import cookieParser from 'cookie-parser';
+import { useContainer } from 'class-validator';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
   app.enableCors();
   app.use(cookieParser());
   app.useGlobalFilters(new ErrorExceptionFilter(), new HttpExceptionFilter());
