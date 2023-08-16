@@ -62,7 +62,6 @@ export class AuthController {
       httpOnly: true,
       secure: true,
     });
-    // throw new HttpException(tokens.accessToken, HttpStatus.OK);
     return tokens.accessToken;
   }
   @UseGuards(RefreshJwtAuthGuard)

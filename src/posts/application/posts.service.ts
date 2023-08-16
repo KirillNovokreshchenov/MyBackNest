@@ -9,12 +9,16 @@ import { LikeStatusDto } from '../../models/LikeStatusDto';
 import { LIKE_STATUS } from '../../models/LikeStatusEnum';
 import { PostLike, PostLikeModelType } from '../domain/post-like.schema';
 import { UsersRepository } from '../../users/infrastructure/users.repository';
+import { PostParamInputType } from '../../blogs/api/input-model/PostParamInputType';
+import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
+import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
 
 @Injectable()
 export class PostsService {
   constructor(
     protected postsRepository: PostsRepository,
     protected usersRepo: UsersRepository,
+    protected blogsRepo: BlogsRepository,
     @InjectModel(Post.name) private PostModel: PostModelType,
     @InjectModel(PostLike.name) private PostLikeModel: PostLikeModelType,
   ) {}
@@ -34,24 +38,28 @@ export class PostsService {
   }
 
   async updatePost(
-    postId: Types.ObjectId,
+    PostAnBlogId: PostParamInputType,
+    userId: Types.ObjectId,
     postDto: UpdatePostDto,
-  ): Promise<boolean> {
-    const post: PostDocument | null =
-      await this.postsRepository.findPostDocument(postId);
-    if (!post) return false;
-    const blogName = await this.postsRepository.findBlogName(
-      new Types.ObjectId(postDto.blogId),
-    );
-    if (!blogName) return false;
+  ): Promise<RESPONSE_OPTIONS> {
+    const blog = await this.blogsRepo.findBlogById(PostAnBlogId.blogId);
+    if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (blog.blogOwnerInfo.userId !== userId) return RESPONSE_OPTIONS.FORBIDDEN;
 
-    post.updatePost(postDto, blogName);
+    const post = await this.postsRepository.findPostDocument(
+      PostAnBlogId.postId,
+    );
+    if (!post) return RESPONSE_OPTIONS.NOT_FOUND;
+    post.updatePost(postDto);
     await this.postsRepository.savePost(post);
-    return true;
+    return RESPONSE_OPTIONS.NO_CONTENT;
   }
 
-  async deletePost(postId: Types.ObjectId): Promise<boolean> {
-    return this.postsRepository.deletePost(postId);
+  async deletePost(
+    PostAnBlogId: PostParamInputType,
+    userId: Types.ObjectId,
+  ): Promise<boolean> {
+    return this.postsRepository.deletePost(PostAnBlogId.postId);
   }
 
   async updateLikeStatus(

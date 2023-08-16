@@ -18,8 +18,8 @@ export class UpdatePostDto {
   @IsNotEmpty()
   @IsString()
   content: string;
-  @Validate(BlogExistsRule)
-  @IsNotEmpty()
-  @IsString()
-  blogId: string;
+  // @Validate(BlogExistsRule)
+  // @IsNotEmpty()
+  // @IsString()
+  // blogId: string;
 }

@@ -2,7 +2,14 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { CreateBlogDto } from '../application/dto/CreateBlogDto';
 import { UpdateBlogDto } from '../application/dto/UpdateBlogDto';
-
+@Schema()
+export class BlogOwnerInfo {
+  @Prop({ required: true })
+  userId: Types.ObjectId;
+  @Prop({ required: true })
+  userLogin: string;
+}
+const BlogOwnerInfoSchema = SchemaFactory.createForClass(BlogOwnerInfo);
 @Schema()
 export class Blog {
   _id: Types.ObjectId;
@@ -16,7 +23,8 @@ export class Blog {
   createdAt: Date;
   @Prop({ default: false })
   isMembership: boolean;
-
+  @Prop({ required: true, type: BlogOwnerInfoSchema })
+  blogOwnerInfo: BlogOwnerInfo;
   updateBlog(dto: UpdateBlogDto) {
     this.name = dto.name;
     this.description = dto.description;
@@ -24,9 +32,18 @@ export class Blog {
   }
   static createNewBlog(
     blogDto: CreateBlogDto,
+    userId: Types.ObjectId,
+    userLogin: string,
     BlogModel: BlogModelType,
   ): BlogDocument {
-    return new BlogModel({ ...blogDto, createdAt: new Date() });
+    return new BlogModel({
+      ...blogDto,
+      createdAt: new Date(),
+      blogOwnerInfo: {
+        userId: userId,
+        userLogin: userLogin,
+      },
+    });
   }
 }
 
@@ -35,6 +52,8 @@ export const BlogSchema = SchemaFactory.createForClass(Blog);
 export type BlogModelStaticType = {
   createNewBlog: (
     blogDto: CreateBlogDto,
+    userId: Types.ObjectId,
+    userLogin: string,
     BlogModel: BlogModelType,
   ) => BlogDocument;
 };

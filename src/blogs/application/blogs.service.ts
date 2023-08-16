@@ -15,8 +15,18 @@ export class BlogsService {
     @InjectModel(Post.name) private PostModel: PostModelType,
   ) {}
 
-  async createBlog(blogDto: CreateBlogDto): Promise<Types.ObjectId> {
-    const newBlog = this.BlogModel.createNewBlog(blogDto, this.BlogModel);
+  async createBlog(
+    blogDto: CreateBlogDto,
+    userId: Types.ObjectId,
+  ): Promise<Types.ObjectId | null> {
+    const foundUser = await this.blogsRepository.findUserForBlog(userId);
+    if (!foundUser) return null;
+    const newBlog = this.BlogModel.createNewBlog(
+      blogDto,
+      userId,
+      foundUser.login,
+      this.BlogModel,
+    );
     await this.blogsRepository.saveBlog(newBlog);
     return newBlog._id;
   }

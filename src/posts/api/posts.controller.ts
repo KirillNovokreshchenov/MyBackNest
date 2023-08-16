@@ -106,22 +106,22 @@ export class PostsController {
     return this.queryCommentsRepository.findComment(commentId);
   }
 
-  @UseGuards(BasicAuthGuard)
-  @Put('/:id')
-  async updatePost(
-    @Param('id', ParseObjectIdPipe) postId: Types.ObjectId,
-    @Body() dto: UpdatePostDto,
-  ) {
-    const blog = this.queryBlogRepo.findBlog(new Types.ObjectId(dto.blogId));
-    if (!blog) {
-      throw new BadRequestException([
-        { message: 'incorrect blogId', field: 'blogId' },
-      ]);
-    }
-    const isUpdate = await this.postsService.updatePost(postId, dto);
-    if (!isUpdate) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
-    throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
-  }
+  // @UseGuards(BasicAuthGuard)
+  // @Put('/:id')
+  // async updatePost(
+  //   @Param('id', ParseObjectIdPipe) postId: Types.ObjectId,
+  //   @Body() dto: UpdatePostDto,
+  // ) {
+  //   const blog = this.queryBlogRepo.findBlog(new Types.ObjectId(dto.blogId));
+  //   if (!blog) {
+  //     throw new BadRequestException([
+  //       { message: 'incorrect blogId', field: 'blogId' },
+  //     ]);
+  //   }
+  //   const isUpdate = await this.postsService.updatePost(postId, dto);
+  //   if (!isUpdate) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
+  //   throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
+  // }
   @UseGuards(JwtAuthGuard)
   @Put('/:id/like-status')
   async updateLikeStatus(

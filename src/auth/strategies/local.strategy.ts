@@ -2,7 +2,6 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-local';
 import { AuthService } from '../application/auth.service';
-import { RealIP } from 'nestjs-real-ip';
 import { Request } from 'express';
 
 @Injectable()

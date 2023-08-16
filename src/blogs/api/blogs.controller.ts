@@ -68,16 +68,16 @@ export class BlogsController {
       blogId,
     });
   }
-  @UseGuards(BasicAuthGuard)
-  @Post()
-  async createBlog(@Body() dto: CreateBlogDto): Promise<BlogViewModel> {
-    const blogId = await this.blogsService.createBlog(dto);
-    const newBlog = await this.blogsQueryRepository.findBlog(blogId);
-    if (!newBlog) {
-      throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    return newBlog;
-  }
+  // @UseGuards(BasicAuthGuard)
+  // @Post()
+  // async createBlog(@Body() dto: CreateBlogDto): Promise<BlogViewModel> {
+  //   const blogId = await this.blogsService.createBlog(dto);
+  //   const newBlog = await this.blogsQueryRepository.findBlog(blogId);
+  //   if (!newBlog) {
+  //     throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
+  //   }
+  //   return newBlog;
+  // }
   @UseGuards(BasicAuthGuard)
   @Post('/:id/posts')
   async createPostForBlog(

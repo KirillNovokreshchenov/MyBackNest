@@ -3,12 +3,14 @@ import { Blog, BlogDocument, BlogModelType } from '../domain/blog.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { Post, PostModelType } from '../../posts/domain/post.schema';
+import { User, UserModelType } from '../../users/domain/user.schema';
 
 @Injectable()
 export class BlogsRepository {
   constructor(
     @InjectModel(Blog.name) private BlogModel: BlogModelType,
     @InjectModel(Post.name) private PostModel: PostModelType,
+    @InjectModel(User.name) private UserModel: UserModelType,
   ) {}
 
   async saveBlog(newBlog: BlogDocument) {
@@ -25,5 +27,9 @@ export class BlogsRepository {
   async deleteBlog(blogId: Types.ObjectId): Promise<boolean> {
     const res = await this.BlogModel.deleteOne(blogId);
     return res.deletedCount === 1;
+  }
+
+  async findUserForBlog(userId: Types.ObjectId) {
+    return this.UserModel.findById(userId);
   }
 }

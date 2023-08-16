@@ -32,12 +32,10 @@ export class Post {
   @Prop({ default: {}, type: LikesInfoSchema })
   likesInfo: LikesInfo;
 
-  updatePost(postDto: UpdatePostDto, blogName: string) {
+  updatePost(postDto: UpdatePostDto) {
     this.title = postDto.title;
     this.content = postDto.content;
     this.shortDescription = postDto.shortDescription;
-    this.blogId = new Types.ObjectId(postDto.blogId);
-    this.blogName = blogName;
   }
   createLikeStatus(
     userId: Types.ObjectId,

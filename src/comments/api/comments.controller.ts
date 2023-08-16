@@ -2,9 +2,7 @@ import {
   Body,
   Controller,
   Delete,
-  ForbiddenException,
   Get,
-  HttpCode,
   HttpException,
   HttpStatus,
   NotFoundException,
@@ -23,6 +21,7 @@ import { CurrentUserId } from '../../auth/decorators/create-param-current-id.dec
 import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
 import { LikeStatusDto } from '../../models/LikeStatusDto';
 import { JwtLikeAuthGuard } from '../../auth/guards/jwt-like-auth.guard';
+import { switchError } from '../../helpers/switch-error';
 
 @Controller('comments')
 export class CommentsController {
@@ -55,14 +54,7 @@ export class CommentsController {
       commentId,
       commentDto,
     );
-    switch (isUpdated) {
-      case RESPONSE_OPTIONS.NOT_FOUND:
-        throw new NotFoundException();
-      case RESPONSE_OPTIONS.FORBIDDEN:
-        throw new ForbiddenException();
-      case RESPONSE_OPTIONS.NO_CONTENT:
-        throw new HttpException('No content', HttpStatus.NO_CONTENT);
-    }
+    switchError(isUpdated);
   }
   @UseGuards(JwtAuthGuard)
   @Put('/:id/like-status')
@@ -90,13 +82,6 @@ export class CommentsController {
       userId,
       commentId,
     );
-    switch (isDeleted) {
-      case RESPONSE_OPTIONS.NOT_FOUND:
-        throw new NotFoundException();
-      case RESPONSE_OPTIONS.FORBIDDEN:
-        throw new ForbiddenException();
-      case RESPONSE_OPTIONS.NO_CONTENT:
-        throw new HttpException('No content', HttpStatus.NO_CONTENT);
-    }
+    switchError(isDeleted);
   }
 }

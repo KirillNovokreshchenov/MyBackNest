@@ -51,8 +51,8 @@ import {
   CommentLike,
   CommentLikeSchema,
 } from './comments/domain/comment-like.schema';
-import { JwtLikeStrategy } from './auth/strategies/jwt.like.strategy';
 import { BlogExistsRule } from './posts/validators/custom-blogId.validator';
+import { BloggerController } from './blogs/api/blogger.controller';
 
 @Module({
   imports: [
@@ -98,20 +98,20 @@ import { BlogExistsRule } from './posts/validators/custom-blogId.validator';
     ]),
     JwtModule.register({
       secret: configuration().secretAT,
-      signOptions: { expiresIn: '10s' },
+      signOptions: { expiresIn: '60m' },
     }),
     JwtModule.register({
       secret: configuration().secretRT,
-      signOptions: { expiresIn: '20s' },
+      signOptions: { expiresIn: '90m' },
     }),
     MailerModule.forRoot({
       transport: {
         host: 'smtp.gmail.com',
         port: 465,
-        secure: true, // true for 465, false for other ports
+        secure: true,
         auth: {
-          user: 'kirochkaqwerty123@gmail.com', // generated ethereal user
-          pass: 'otzaxohazcnetzvc', // generated ethereal password
+          user: 'kirochkaqwerty123@gmail.com',
+          pass: 'otzaxohazcnetzvc',
         },
       },
     }),
@@ -125,6 +125,7 @@ import { BlogExistsRule } from './posts/validators/custom-blogId.validator';
     TestingController,
     AuthController,
     DeviceController,
+    BloggerController,
   ],
   providers: [
     AppService,
@@ -151,7 +152,6 @@ import { BlogExistsRule } from './posts/validators/custom-blogId.validator';
     DeviceQueryRepository,
     CommentService,
     CommentsRepository,
-    JwtLikeStrategy,
     BlogExistsRule,
   ],
 })
