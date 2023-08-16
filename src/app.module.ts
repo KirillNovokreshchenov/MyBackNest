@@ -53,6 +53,7 @@ import {
 } from './comments/domain/comment-like.schema';
 import { BlogExistsRule } from './posts/validators/custom-blogId.validator';
 import { BloggerController } from './blogs/api/blogger.controller';
+import { SaController } from './blogs/api/sa.controller';
 
 @Module({
   imports: [
@@ -126,6 +127,7 @@ import { BloggerController } from './blogs/api/blogger.controller';
     AuthController,
     DeviceController,
     BloggerController,
+    SaController,
   ],
   providers: [
     AppService,

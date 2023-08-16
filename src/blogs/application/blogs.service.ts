@@ -6,6 +6,7 @@ import { Blog, BlogDocument, BlogModelType } from '../domain/blog.schema';
 import { Types } from 'mongoose';
 import { UpdateBlogDto } from './dto/UpdateBlogDto';
 import { Post, PostModelType } from '../../posts/domain/post.schema';
+import { BlogUserIdInputType } from '../api/input-model/BlogUserIdInputType';
 
 @Injectable()
 export class BlogsService {
@@ -51,5 +52,20 @@ export class BlogsService {
   async deleteBlog(blogId: Types.ObjectId): Promise<boolean> {
     const isDeleted = await this.blogsRepository.deleteBlog(blogId);
     return isDeleted;
+  }
+
+  async bindBlog(blogAndUserId: BlogUserIdInputType) {
+    const blog = await this.blogsRepository.findBlogById(blogAndUserId.blogId);
+    if (!blog) return false;
+    const user = await this.blogsRepository.findUserForBlog(
+      blogAndUserId.userId,
+    );
+    if (!user) return false;
+    if (!blog.blogOwnerInfo) {
+      return false;
+    } else {
+      blog.bindUser(user._id, user.login);
+      return true;
+    }
   }
 }

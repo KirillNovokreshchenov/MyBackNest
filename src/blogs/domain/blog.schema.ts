@@ -30,6 +30,12 @@ export class Blog {
     this.description = dto.description;
     this.websiteUrl = dto.websiteUrl;
   }
+  bindUser(userId: Types.ObjectId, login: string) {
+    this.blogOwnerInfo = {
+      userId: userId,
+      userLogin: login,
+    };
+  }
   static createNewBlog(
     blogDto: CreateBlogDto,
     userId: Types.ObjectId,
@@ -63,6 +69,7 @@ BlogSchema.statics = {
 };
 BlogSchema.methods = {
   updateBlog: Blog.prototype.updateBlog,
+  bindUser: Blog.prototype.bindUser,
 };
 export type BlogDocument = HydratedDocument<Blog>;
 export type BlogModelType = Model<BlogDocument> & BlogModelStaticType;

@@ -30,9 +30,8 @@ export class PostsRepository {
     return this.PostModel.findById(postId);
   }
 
-  async deletePost(postId: Types.ObjectId): Promise<boolean> {
-    const res = await this.PostModel.deleteOne(postId);
-    return res.deletedCount === 1;
+  async deletePost(postId: Types.ObjectId) {
+    await this.PostModel.deleteOne(postId);
   }
 
   async findLikeStatus(

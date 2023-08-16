@@ -138,11 +138,11 @@ export class PostsController {
     throw new HttpException('No content', HttpStatus.NO_CONTENT);
   }
 
-  @UseGuards(BasicAuthGuard)
-  @Delete('/:id')
-  async deletePost(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
-    const isDeleted = await this.postsService.deletePost(id);
-    if (!isDeleted) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
-    throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
-  }
+  // @UseGuards(BasicAuthGuard)
+  // @Delete('/:id')
+  // async deletePost(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
+  //   const isDeleted = await this.postsService.deletePost(id);
+  //   if (!isDeleted) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
+  //   throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
+  // }
 }

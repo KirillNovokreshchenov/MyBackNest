@@ -31,7 +31,7 @@ import { PostsQueryRepository } from '../../posts/infrastructure/posts.query.rep
 import { QueryInputType } from '../../models/QueryInputType';
 import { PostViewModelAll } from '../../posts/api/view-models/PostViewModelAll';
 import { UpdatePostDto } from '../../posts/application/dto/UpdatePostDto';
-import { PostParamInputType } from './input-model/PostParamInputType';
+import { BlogPostIdInputType } from './input-model/BlogPostIdInputType';
 import { switchError } from '../../helpers/switch-error';
 
 @Controller('blogger/blogs')
@@ -115,7 +115,7 @@ export class BloggerController {
 
   @Put('/:blogId/posts/:postId')
   async updatePost(
-    @Param(ParseObjectIdPipe) PostAnBlogId: PostParamInputType,
+    @Param(ParseObjectIdPipe) PostAnBlogId: BlogPostIdInputType,
     @Body() postDto: UpdatePostDto,
     @CurrentUserId() userId: Types.ObjectId,
   ) {
@@ -128,11 +128,10 @@ export class BloggerController {
   }
   @Delete('/:blogId/posts/:postId')
   async deletePost(
-    @Param(ParseObjectIdPipe) PostAnBlogId: PostParamInputType,
+    @Param(ParseObjectIdPipe) PostAnBlogId: BlogPostIdInputType,
     @CurrentUserId() userId: Types.ObjectId,
   ) {
     const isDeleted = await this.postsService.deletePost(PostAnBlogId, userId);
-    if (!isDeleted) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
-    throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
+    switchError(isDeleted);
   }
 }

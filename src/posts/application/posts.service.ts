@@ -9,7 +9,7 @@ import { LikeStatusDto } from '../../models/LikeStatusDto';
 import { LIKE_STATUS } from '../../models/LikeStatusEnum';
 import { PostLike, PostLikeModelType } from '../domain/post-like.schema';
 import { UsersRepository } from '../../users/infrastructure/users.repository';
-import { PostParamInputType } from '../../blogs/api/input-model/PostParamInputType';
+import { BlogPostIdInputType } from '../../blogs/api/input-model/BlogPostIdInputType';
 import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
 import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
 
@@ -38,7 +38,7 @@ export class PostsService {
   }
 
   async updatePost(
-    PostAnBlogId: PostParamInputType,
+    PostAnBlogId: BlogPostIdInputType,
     userId: Types.ObjectId,
     postDto: UpdatePostDto,
   ): Promise<RESPONSE_OPTIONS> {
@@ -56,10 +56,14 @@ export class PostsService {
   }
 
   async deletePost(
-    PostAnBlogId: PostParamInputType,
+    PostAnBlogId: BlogPostIdInputType,
     userId: Types.ObjectId,
-  ): Promise<boolean> {
-    return this.postsRepository.deletePost(PostAnBlogId.postId);
+  ): Promise<RESPONSE_OPTIONS> {
+    const blog = await this.blogsRepo.findBlogById(PostAnBlogId.blogId);
+    if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (blog.blogOwnerInfo.userId !== userId) return RESPONSE_OPTIONS.FORBIDDEN;
+    await this.postsRepository.deletePost(PostAnBlogId.postId);
+    return RESPONSE_OPTIONS.NO_CONTENT;
   }
 
   async updateLikeStatus(
