@@ -54,6 +54,7 @@ import {
 import { BlogExistsRule } from './posts/validators/custom-blogId.validator';
 import { BloggerController } from './blogs/api/blogger.controller';
 import { SaController } from './blogs/api/sa.controller';
+import { SaUsersController } from './users/api/sa-users.controller';
 
 @Module({
   imports: [
@@ -128,6 +129,7 @@ import { SaController } from './blogs/api/sa.controller';
     DeviceController,
     BloggerController,
     SaController,
+    SaUsersController,
   ],
   providers: [
     AppService,

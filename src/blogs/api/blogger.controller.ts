@@ -88,8 +88,12 @@ export class BloggerController {
   async createPostForBlog(
     @Param('id') blogId: string,
     @Body() dto: CreatePostForBlogDto,
+    @CurrentUserId() userId: Types.ObjectId,
   ) {
-    const postId = await this.postsService.createPost({ ...dto, blogId });
+    const postId = await this.postsService.createPost(
+      { ...dto, blogId },
+      userId,
+    );
     if (!postId) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
     const newPost = await this.queryPostsRepository.findPost(postId);
     if (!newPost)

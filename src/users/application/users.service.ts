@@ -12,13 +12,24 @@ import {
   PasswordRecoveryType,
 } from '../../auth/domain/password-recovery.schema';
 import { NewPasswordDto } from '../../auth/application/dto/NewPasswordDto';
+import { BanDto } from './dto/BanDto';
+import { DeviceRepository } from '../../sessions/infrastructure/device.repository';
+import { PostModelType } from '../../posts/domain/post.schema';
+import { CommentModelType } from '../../comments/domain/comment.schema';
+import { PostLikeModelType } from '../../posts/domain/post-like.schema';
+import { CommentLikeModelType } from '../../comments/domain/comment-like.schema';
 
 @Injectable()
 export class UsersService {
   constructor(
     protected usersRepository: UsersRepository,
     protected emailManager: EmailManagers,
+    protected deviceRepo: DeviceRepository,
     @InjectModel(User.name) private UserModel: UserModelType,
+    @InjectModel(User.name) private PostModel: PostModelType,
+    @InjectModel(User.name) private CommentModel: CommentModelType,
+    @InjectModel(User.name) private PostLikeModel: PostLikeModelType,
+    @InjectModel(User.name) private CommentLikeModel: CommentLikeModelType,
     @InjectModel(PasswordRecovery.name)
     private passwordRecoveryModel: PasswordRecoveryType,
   ) {}
@@ -117,4 +128,16 @@ export class UsersService {
       return false;
     }
   }
+
+  async userBan(userId: Types.ObjectId, banDto: BanDto) {
+    const user = await this.usersRepository.findUserById(userId);
+    if (!user) return false;
+    user.userBan(banDto);
+    await this.usersRepository.saveUser(user);
+    await this.deviceRepo.deleteAllSessionsBan(userId);
+    return true;
+  }
+  async _banPostsUser(userId: Types.ObjectId) {}
+  async _banCommentsUser(userId: Types.ObjectId) {}
+  async _banLikesUser(userId: Types.ObjectId) {}
 }

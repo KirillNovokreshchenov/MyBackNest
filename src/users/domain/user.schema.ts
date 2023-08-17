@@ -8,6 +8,18 @@ import {
   EmailConfirmation,
   EmailConfirmationSchema,
 } from '../../auth/domain/email-confirmation.schema';
+import { BanDto } from '../application/dto/BanDto';
+
+@Schema()
+export class BanInfo {
+  @Prop({ required: true })
+  isBanned: boolean;
+  @Prop({ required: true })
+  banDate: Date;
+  @Prop({ required: true })
+  banReason: string;
+}
+const BanInfoSchema = SchemaFactory.createForClass(BanInfo);
 
 @Schema()
 export class User {
@@ -22,14 +34,17 @@ export class User {
   createdAt: Date;
   @Prop({ type: EmailConfirmationSchema, required: false })
   emailConfirmation: EmailConfirmation;
-
+  @Prop({ required: false, type: BanInfoSchema })
+  banInfo: BanInfo;
   async createHash(password: string, user: UserDocument) {
     user.password = await UserAdapter.hashPassword(password);
   }
   async passwordIsValid(password: string, userHash: string): Promise<boolean> {
     return UserAdapter.compare(password, userHash);
   }
-
+  userBan(banDto: BanDto) {
+    this.banInfo = { ...banDto, banDate: new Date() };
+  }
   createEmailConfirm() {
     this.emailConfirmation = {
       confirmationCode: uuidv4(),
@@ -75,6 +90,7 @@ UserSchema.methods = {
   createEmailConfirm: User.prototype.createEmailConfirm,
   canBeConfirmed: User.prototype.canBeConfirmed,
   passwordIsValid: User.prototype.passwordIsValid,
+  userBan: User.prototype.userBan,
 };
 
 UserSchema.statics = {

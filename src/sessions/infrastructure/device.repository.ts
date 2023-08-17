@@ -48,4 +48,8 @@ export class DeviceRepository {
   async deleteSession(deviceId: Types.ObjectId) {
     await this.SessionModel.deleteOne({ deviceId });
   }
+
+  async deleteAllSessionsBan(userId: Types.ObjectId) {
+    await this.SessionModel.deleteMany({ userId });
+  }
 }

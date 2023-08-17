@@ -10,12 +10,43 @@ import { blogFilter } from '../blogs-helpers/blog-filter';
 import { pagesCount } from '../../helpers/pages-count';
 import { sortQuery } from '../../helpers/sort-query';
 import { skipPages } from '../../helpers/skip-pages';
+import { BlogByAdminViewModel } from '../api/view-model/BlogByAdminViewModel';
 
 @Injectable()
 export class BlogsQueryRepository {
   constructor(@InjectModel(Blog.name) private BlogModel: BlogModelType) {}
 
   async findAllBlogs(dataQuery: BlogQueryInputType) {
+    const dataAllBlogs = await this._dataAllBlogs(dataQuery);
+    const mapBlogs = dataAllBlogs.allBlogs.map(
+      (blog) => new BlogViewModel(blog),
+    );
+
+    return new BlogViewModelAll(
+      dataAllBlogs.countPages,
+      dataAllBlogs.pageNumber,
+      dataAllBlogs.pageSize,
+      dataAllBlogs.totalCount,
+      mapBlogs,
+    );
+  }
+
+  async findAllBlogsByAdmin(dataQuery: BlogQueryInputType) {
+    const dataAllBlogs = await this._dataAllBlogs(dataQuery);
+    const mapBlogs = dataAllBlogs.allBlogs.map(
+      (blog) => new BlogByAdminViewModel(blog),
+    );
+
+    return new BlogViewModelAll(
+      dataAllBlogs.countPages,
+      dataAllBlogs.pageNumber,
+      dataAllBlogs.pageSize,
+      dataAllBlogs.totalCount,
+      mapBlogs,
+    );
+  }
+
+  async _dataAllBlogs(dataQuery: BlogQueryInputType) {
     const query = new BlogQueryModel(dataQuery);
 
     const filter = blogFilter(query.searchNameTerm);
@@ -30,16 +61,13 @@ export class BlogsQueryRepository {
       .skip(skip)
       .limit(query.pageSize)
       .lean();
-
-    const mapBlogs = allBlogs.map((blog) => new BlogViewModel(blog));
-
-    return new BlogViewModelAll(
-      countPages,
-      query.pageNumber,
-      query.pageSize,
+    return {
       totalCount,
-      mapBlogs,
-    );
+      countPages,
+      allBlogs,
+      pageNumber: query.pageNumber,
+      pageSize: query.pageSize,
+    };
   }
 
   async findBlog(blogId: Types.ObjectId): Promise<BlogViewModel | null> {

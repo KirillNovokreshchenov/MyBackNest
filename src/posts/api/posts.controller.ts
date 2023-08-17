@@ -73,22 +73,22 @@ export class PostsController {
       userId,
     );
   }
-  @UseGuards(BasicAuthGuard)
-  @Post()
-  async createPost(@Body() dto: CreatePostDto): Promise<PostViewModel> {
-    const postId = await this.postsService.createPost(dto);
-    if (!postId)
-      throw new BadRequestException([
-        { message: 'incorrect blogId', field: 'blogId' },
-      ]);
-    const newPost = await this.queryPostsRepository.findPost(postId);
-    if (!newPost)
-      throw new HttpException(
-        'INTERNAL SERVERERROR',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    return newPost;
-  }
+  // @UseGuards(BasicAuthGuard)
+  // @Post()
+  // async createPost(@Body() dto: CreatePostDto): Promise<PostViewModel> {
+  //   const postId = await this.postsService.createPost(dto);
+  //   if (!postId)
+  //     throw new BadRequestException([
+  //       { message: 'incorrect blogId', field: 'blogId' },
+  //     ]);
+  //   const newPost = await this.queryPostsRepository.findPost(postId);
+  //   if (!newPost)
+  //     throw new HttpException(
+  //       'INTERNAL SERVERERROR',
+  //       HttpStatus.INTERNAL_SERVER_ERROR,
+  //     );
+  //   return newPost;
+  // }
 
   @UseGuards(JwtAuthGuard)
   @Post('/:id/comments')

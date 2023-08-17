@@ -23,7 +23,10 @@ export class PostsService {
     @InjectModel(PostLike.name) private PostLikeModel: PostLikeModelType,
   ) {}
 
-  async createPost(postDto: CreatePostDto): Promise<Types.ObjectId | null> {
+  async createPost(
+    postDto: CreatePostDto,
+    userId: Types.ObjectId,
+  ): Promise<Types.ObjectId | null> {
     const blogName = await this.postsRepository.findBlogName(
       new Types.ObjectId(postDto.blogId),
     );
@@ -32,6 +35,7 @@ export class PostsService {
       postDto,
       blogName,
       this.PostModel,
+      userId,
     );
     await this.postsRepository.savePost(newPost);
     return newPost._id;

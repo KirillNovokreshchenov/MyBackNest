@@ -17,6 +17,8 @@ export const LikesInfoSchema = SchemaFactory.createForClass(LikesInfo);
 @Schema()
 export class Post {
   _id: Types.ObjectId;
+  @Prop()
+  userId: Types.ObjectId;
   @Prop({ required: true })
   title: string;
   @Prop({ required: true })
@@ -86,6 +88,7 @@ export class Post {
     postDto: CreatePostDto,
     blogName: string,
     PostModel: PostModelType,
+    userId: Types.ObjectId,
   ) {
     const blogId = new Types.ObjectId(postDto.blogId);
     return new PostModel({
@@ -93,6 +96,7 @@ export class Post {
       blogId,
       blogName,
       createdAt: new Date(),
+      userId: userId,
     });
   }
 }
@@ -104,6 +108,7 @@ export type PostModelStaticType = {
     postDto: CreatePostDto,
     blogName: string,
     PostModel: PostModelType,
+    userId: Types.ObjectId,
   ) => PostDocument;
   changeBlogName: (posts: PostDocument[], blogName: string) => void;
 };

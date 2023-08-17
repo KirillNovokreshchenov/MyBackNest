@@ -17,7 +17,7 @@ import { BlogQueryInputType } from './input-model/BlogQueryInputType';
 import { BlogsQueryRepository } from '../infrastructure/blogs.query.repository';
 import { BlogViewModelAll } from './view-model/BlogViewModelAll';
 
-@Controller('blogs')
+@Controller('sa/blogs')
 @UseGuards(BasicAuthGuard)
 export class SaController {
   constructor(
@@ -29,7 +29,7 @@ export class SaController {
   async findAllBlogsByAdmin(
     @Query() dataQuery: BlogQueryInputType,
   ): Promise<BlogViewModelAll> {
-    return await this.blogsQueryRepository.findAllBlogs(dataQuery);
+    return await this.blogsQueryRepository.findAllBlogsByAdmin(dataQuery);
   }
   @Post('/:blogId/bind-with-user/:userId')
   async bindBlog(@Param(ParseObjectIdPipe) blogAndUserId: BlogUserIdInputType) {

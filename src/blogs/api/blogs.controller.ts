@@ -78,41 +78,41 @@ export class BlogsController {
   //   }
   //   return newBlog;
   // }
-  @UseGuards(BasicAuthGuard)
-  @Post('/:id/posts')
-  async createPostForBlog(
-    @Param('id') blogId: string,
-    @Body() dto: CreatePostForBlogDto,
-  ) {
-    const postId = await this.postsService.createPost({ ...dto, blogId });
-    if (!postId) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
-    const newPost = await this.queryPostsRepository.findPost(postId);
-    if (!newPost)
-      throw new HttpException(
-        'INTERNAL SERVERERROR',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    return newPost;
-  }
-  @UseGuards(BasicAuthGuard)
-  @Put('/:id')
-  async updateBlog(
-    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
-    @Body() dto: UpdateBlogDto,
-  ) {
-    const blogIsUpdate = await this.blogsService.updateBlog(id, dto);
-
-    if (!blogIsUpdate)
-      throw new HttpException('NOT FOUND', HttpStatus.NOT_FOUND);
-
-    throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
-  }
-  @UseGuards(BasicAuthGuard)
-  @Delete('/:id')
-  async deleteBlog(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
-    const blogIsDeleted = await this.blogsService.deleteBlog(id);
-    if (!blogIsDeleted)
-      throw new HttpException('NOT FOUND', HttpStatus.NOT_FOUND);
-    throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
-  }
+  // @UseGuards(BasicAuthGuard)
+  // @Post('/:id/posts')
+  // async createPostForBlog(
+  //   @Param('id') blogId: string,
+  //   @Body() dto: CreatePostForBlogDto,
+  // ) {
+  //   const postId = await this.postsService.createPost({ ...dto, blogId });
+  //   if (!postId) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
+  //   const newPost = await this.queryPostsRepository.findPost(postId);
+  //   if (!newPost)
+  //     throw new HttpException(
+  //       'INTERNAL SERVERERROR',
+  //       HttpStatus.INTERNAL_SERVER_ERROR,
+  //     );
+  //   return newPost;
+  // }
+  // @UseGuards(BasicAuthGuard)
+  // @Put('/:id')
+  // async updateBlog(
+  //   @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
+  //   @Body() dto: UpdateBlogDto,
+  // ) {
+  //   const blogIsUpdate = await this.blogsService.updateBlog(id, dto);
+  //
+  //   if (!blogIsUpdate)
+  //     throw new HttpException('NOT FOUND', HttpStatus.NOT_FOUND);
+  //
+  //   throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
+  // }
+  // @UseGuards(BasicAuthGuard)
+  // @Delete('/:id')
+  // async deleteBlog(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
+  //   const blogIsDeleted = await this.blogsService.deleteBlog(id);
+  //   if (!blogIsDeleted)
+  //     throw new HttpException('NOT FOUND', HttpStatus.NOT_FOUND);
+  //   throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
+  // }
 }
