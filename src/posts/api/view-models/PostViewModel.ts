@@ -30,7 +30,7 @@ export class PostViewModel {
       likesCount: post.likesInfo.likesCount,
       dislikesCount: post.likesInfo.dislikesCount,
       myStatus: likeStatus || LIKE_STATUS.NONE,
-      newestLikes: lastLikes,
+      newestLikes: lastLikes || [],
     };
   }
 }

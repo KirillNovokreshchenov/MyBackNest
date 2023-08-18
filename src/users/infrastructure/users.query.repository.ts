@@ -30,7 +30,11 @@ export class UsersQueryRepository {
   async findAllUsers(dataQuery: UserQueryInputType) {
     const query = new UserQueryModel(dataQuery);
 
-    const filter = userFilter(query.searchLoginTerm, query.searchEmailTerm);
+    const filter = userFilter(
+      query.searchLoginTerm,
+      query.searchEmailTerm,
+      query.banStatus,
+    );
 
     const totalCount = await this.userModel.countDocuments(filter);
     const countPages = pagesCount(totalCount, query.pageSize);

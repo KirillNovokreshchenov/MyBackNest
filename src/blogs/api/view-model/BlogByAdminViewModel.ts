@@ -5,6 +5,9 @@ export class BlogByAdminViewModel extends BlogViewModel {
   blogOwnerInfo: BlogOwnerInfo;
   constructor(blog: Blog) {
     super(blog);
-    this.blogOwnerInfo = blog.blogOwnerInfo;
+    this.blogOwnerInfo = {
+      userId: blog.blogOwnerInfo.userId,
+      userLogin: blog.blogOwnerInfo.userLogin,
+    };
   }
 }

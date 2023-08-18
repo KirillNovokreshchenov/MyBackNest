@@ -1,9 +1,13 @@
+import { BanStatus } from './ban-status-enum';
+
 export function userFilter(
   searchLoginTerm: string | null,
   searchEmailTerm: string | null,
+  banStatus: BanStatus,
 ) {
+  let filter = {};
   if (searchLoginTerm && searchEmailTerm) {
-    return {
+    filter = {
       $or: [
         { login: { $regex: searchLoginTerm, $options: 'i' } },
         { email: { $regex: searchEmailTerm, $options: 'i' } },
@@ -11,10 +15,15 @@ export function userFilter(
     };
   }
   if (searchLoginTerm) {
-    return { login: { $regex: searchLoginTerm, $options: 'i' } };
+    filter = { login: { $regex: searchLoginTerm, $options: 'i' } };
   }
   if (searchEmailTerm) {
-    return { email: { $regex: searchEmailTerm, $options: 'i' } };
+    filter = { email: { $regex: searchEmailTerm, $options: 'i' } };
   }
-  return {};
+  if (banStatus === BanStatus.BANNED) {
+    filter['banInfo.isBanned'] = { $ne: false };
+  } else if (banStatus === BanStatus.NOT_BANNED) {
+    filter['banInfo.isBanned'] = { $ne: true };
+  }
+  return filter;
 }

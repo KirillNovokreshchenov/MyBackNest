@@ -36,7 +36,7 @@ export class CommentsQueryRepository {
     }).lean();
     console.log(like);
     const comment: CommentDocument | null = await this.CommentModel.findOne({
-      commentId,
+      _id: commentId,
       isBanned: { $ne: true },
     }).lean();
 

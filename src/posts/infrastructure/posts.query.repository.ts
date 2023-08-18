@@ -31,7 +31,7 @@ export class PostsQueryRepository {
       isBanned: { $ne: true },
     }).lean();
     const post: Post | null = await this.PostModel.findOne({
-      postId,
+      _id: postId,
       isBanned: { $ne: true },
     }).lean();
     if (!post) return null;
