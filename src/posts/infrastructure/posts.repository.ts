@@ -46,4 +46,12 @@ export class PostsRepository {
   async deleteLikeStatus(_id: Types.ObjectId) {
     await this.PostLikeModel.deleteOne({ _id });
   }
+
+  async findPostsBan(userId: Types.ObjectId) {
+    return this.PostModel.find({ userId });
+  }
+
+  async findLikesBan(userId: Types.ObjectId) {
+    return this.PostLikeModel.find({ userId });
+  }
 }

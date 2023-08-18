@@ -13,12 +13,20 @@ export class CommentLike {
   likeStatus: LIKE_STATUS;
   @Prop({ required: true })
   addedAt: Date;
+  @Prop({ required: false })
+  isBanned: boolean;
+
+  isBannedLike() {
+    this.isBanned = true;
+  }
 }
 
 export const CommentLikeSchema = SchemaFactory.createForClass(CommentLike);
 export type CommentLikeModelStaticType = {};
 CommentLikeSchema.statics = {};
-CommentLikeSchema.methods = {};
+CommentLikeSchema.methods = {
+  isBannedLike: CommentLike.prototype.isBannedLike,
+};
 
 export type CommentLikeDocument = HydratedDocument<CommentLike>;
 export type CommentLikeModelType = Model<CommentLikeDocument> &

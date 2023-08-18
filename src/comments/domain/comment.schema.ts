@@ -24,11 +24,15 @@ export class Comment {
   createdAt: Date;
   @Prop({ default: {}, type: LikesInfoSchema })
   likesInfo: LikesInfo;
+  @Prop({ required: true })
+  isBanned: boolean;
 
   updateComment(commentDto: UpdateCommentDto) {
     this.content = commentDto.content;
   }
-
+  isBannedComment() {
+    this.isBanned = true;
+  }
   static createComment(
     userId: Types.ObjectId,
     postId: Types.ObjectId,
@@ -103,6 +107,7 @@ CommentSchema.methods = {
   createLikeStatus: Comment.prototype.createLikeStatus,
   updateLike: Comment.prototype.updateLike,
   updateLikeNone: Comment.prototype.updateLikeNone,
+  isBannedComment: Comment.prototype.isBannedComment,
 };
 
 export type CommentDocument = HydratedDocument<Comment>;

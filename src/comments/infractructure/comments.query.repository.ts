@@ -32,11 +32,13 @@ export class CommentsQueryRepository {
     const like = await this.CommentLikeModel.findOne({
       userId,
       commentId,
+      isBanned: { $ne: true },
     }).lean();
     console.log(like);
-    const comment: CommentDocument | null = await this.CommentModel.findById(
+    const comment: CommentDocument | null = await this.CommentModel.findOne({
       commentId,
-    ).lean();
+      isBanned: { $ne: true },
+    }).lean();
 
     if (!comment) return null;
     return new CommentViewModel(comment, like?.likeStatus);
@@ -49,12 +51,18 @@ export class CommentsQueryRepository {
   ): Promise<CommentViewModelAll> {
     const query = new QueryModel(dataQuery);
 
-    const totalCount = await this.CommentModel.countDocuments({ postId });
+    const totalCount = await this.CommentModel.countDocuments({
+      postId,
+      isBanned: { $ne: true },
+    });
     const countPages = pagesCount(totalCount, query.pageSize);
     const sort = sortQuery(query.sortDirection, query.sortBy);
     const skip = skipPages(query.pageNumber, query.pageSize);
 
-    const allComments = await this.CommentModel.find({ postId })
+    const allComments = await this.CommentModel.find({
+      postId,
+      isBanned: { $ne: true },
+    })
       .sort(sort)
       .skip(skip)
       .limit(query.pageSize)
@@ -66,6 +74,7 @@ export class CommentsQueryRepository {
         const like = await this.CommentLikeModel.findOne({
           userId,
           commentId,
+          isBanned: { $ne: true },
         }).lean();
         return new CommentViewModel(comment, like?.likeStatus);
       }),

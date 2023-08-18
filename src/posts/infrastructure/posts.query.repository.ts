@@ -28,8 +28,12 @@ export class PostsQueryRepository {
     const like = await this.PostLikeModel.findOne({
       userId,
       postId,
+      isBanned: { $ne: true },
     }).lean();
-    const post: Post | null = await this.PostModel.findById(postId).lean();
+    const post: Post | null = await this.PostModel.findOne({
+      postId,
+      isBanned: { $ne: true },
+    }).lean();
     if (!post) return null;
     return new PostViewModel(post, newestLikes, like?.likeStatus);
   }
@@ -37,10 +41,11 @@ export class PostsQueryRepository {
   async findAllPost(dataQuery: QueryInputType, postFilter: PostFilterType) {
     const query = new QueryModel(dataQuery);
 
-    const filter: { blogId?: Types.ObjectId } = {};
+    const filter: { blogId?: Types.ObjectId; isBanned?: any } = {};
     if (postFilter.blogId) {
       filter.blogId = postFilter.blogId;
     }
+    filter.isBanned = { $ne: true };
 
     const totalCount = await this.PostModel.countDocuments(filter);
     const countPages = pagesCount(totalCount, query.pageSize);
@@ -59,6 +64,7 @@ export class PostsQueryRepository {
         const like = await this.PostLikeModel.findOne({
           userId: postFilter.userId,
           postId: post._id,
+          isBanned: { $ne: true },
         }).lean();
         return new PostViewModel(post, newestLikes, like?.likeStatus);
       }),
@@ -76,6 +82,7 @@ export class PostsQueryRepository {
     const newestLikes = await this.PostLikeModel.find({
       postId,
       likeStatus: LIKE_STATUS.LIKE,
+      isBanned: { $ne: true },
     })
       .sort({ addedAt: -1 })
       .limit(3)

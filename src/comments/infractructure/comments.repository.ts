@@ -45,4 +45,12 @@ export class CommentsRepository {
   async deleteLikeStatus(_id: Types.ObjectId) {
     await this.CommentLikeModel.deleteOne({ _id });
   }
+
+  findCommentsBan(userId: Types.ObjectId) {
+    return this.CommentModel.find({ userId });
+  }
+
+  async findLikesBan(userId: Types.ObjectId) {
+    return this.CommentLikeModel.find({ userId });
+  }
 }

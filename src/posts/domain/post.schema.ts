@@ -33,11 +33,16 @@ export class Post {
   createdAt: Date;
   @Prop({ default: {}, type: LikesInfoSchema })
   likesInfo: LikesInfo;
+  @Prop({ required: false })
+  isBanned: boolean;
 
   updatePost(postDto: UpdatePostDto) {
     this.title = postDto.title;
     this.content = postDto.content;
     this.shortDescription = postDto.shortDescription;
+  }
+  isBannedPost() {
+    this.isBanned = true;
   }
   createLikeStatus(
     userId: Types.ObjectId,
@@ -122,6 +127,7 @@ PostSchema.methods = {
   createLikeStatus: Post.prototype.createLikeStatus,
   updateLikeNone: Post.prototype.updateLikeNone,
   updateLike: Post.prototype.updateLike,
+  isBannedPost: Post.prototype.isBannedPost,
 };
 
 export type PostDocument = HydratedDocument<Post>;

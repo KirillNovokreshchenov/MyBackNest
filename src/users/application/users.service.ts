@@ -14,10 +14,8 @@ import {
 import { NewPasswordDto } from '../../auth/application/dto/NewPasswordDto';
 import { BanDto } from './dto/BanDto';
 import { DeviceRepository } from '../../sessions/infrastructure/device.repository';
-import { PostModelType } from '../../posts/domain/post.schema';
-import { CommentModelType } from '../../comments/domain/comment.schema';
-import { PostLikeModelType } from '../../posts/domain/post-like.schema';
-import { CommentLikeModelType } from '../../comments/domain/comment-like.schema';
+import { PostsRepository } from '../../posts/infrastructure/posts.repository';
+import { CommentsRepository } from '../../comments/infractructure/comments.repository';
 
 @Injectable()
 export class UsersService {
@@ -26,12 +24,10 @@ export class UsersService {
     protected emailManager: EmailManagers,
     protected deviceRepo: DeviceRepository,
     @InjectModel(User.name) private UserModel: UserModelType,
-    @InjectModel(User.name) private PostModel: PostModelType,
-    @InjectModel(User.name) private CommentModel: CommentModelType,
-    @InjectModel(User.name) private PostLikeModel: PostLikeModelType,
-    @InjectModel(User.name) private CommentLikeModel: CommentLikeModelType,
     @InjectModel(PasswordRecovery.name)
     private passwordRecoveryModel: PasswordRecoveryType,
+    protected postRepo: PostsRepository,
+    protected commentsRepo: CommentsRepository,
   ) {}
 
   async createUserByRegistration(userDto: CreateUserDto): Promise<boolean> {
@@ -135,9 +131,35 @@ export class UsersService {
     user.userBan(banDto);
     await this.usersRepository.saveUser(user);
     await this.deviceRepo.deleteAllSessionsBan(userId);
+    await this._banPostsUser(userId);
+    await this._banCommentsUser(userId);
+    await this._banLikesUser(userId);
     return true;
   }
-  async _banPostsUser(userId: Types.ObjectId) {}
-  async _banCommentsUser(userId: Types.ObjectId) {}
-  async _banLikesUser(userId: Types.ObjectId) {}
+  async _banPostsUser(userId: Types.ObjectId) {
+    const posts = await this.postRepo.findPostsBan(userId);
+    posts.map((post) => {
+      post.isBannedPost();
+      this.postRepo.savePost(post);
+    });
+  }
+  async _banCommentsUser(userId: Types.ObjectId) {
+    const comments = await this.commentsRepo.findCommentsBan(userId);
+    comments.map((comment) => {
+      comment.isBannedComment();
+      this.commentsRepo.saveComment(comment);
+    });
+  }
+  async _banLikesUser(userId: Types.ObjectId) {
+    const likesComment = await this.commentsRepo.findLikesBan(userId);
+    likesComment.map((like) => {
+      like.isBannedLike();
+      this.commentsRepo.saveStatus(like);
+    });
+    const likesPost = await this.postRepo.findLikesBan(userId);
+    likesPost.map((like) => {
+      like.isBannedLike();
+      this.postRepo.saveStatus(like);
+    });
+  }
 }

@@ -14,12 +14,19 @@ export class PostLike {
   likeStatus: LIKE_STATUS;
   @Prop({ required: true })
   addedAt: Date;
+  @Prop({ required: false })
+  isBanned: boolean;
+  isBannedLike() {
+    this.isBanned = true;
+  }
 }
 
 export const PostLikeSchema = SchemaFactory.createForClass(PostLike);
 export type PostLikeModelStaticType = {};
 PostLikeSchema.statics = {};
-PostLikeSchema.methods = {};
+PostLikeSchema.methods = {
+  isBannedLike: PostLike.prototype.isBannedLike,
+};
 
 export type PostLikeDocument = HydratedDocument<PostLike>;
 export type PostLikeModelType = Model<PostLikeDocument> &
