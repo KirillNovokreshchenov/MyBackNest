@@ -165,25 +165,28 @@ export class UsersService {
   }
   async _banUnbanLikesUser(userId: Types.ObjectId, isBanned: boolean) {
     const likesComment = await this.commentsRepo.findLikesBan(userId);
-    likesComment.map(async (like) => {
-      like.isBannedLike();
-      const comment = await this.commentsRepo.findComment(like.commentId);
-      if (comment) {
-        comment.countBan(like.likeStatus, isBanned);
-        await this.commentsRepo.saveComment(comment);
-      }
-
-      await this.commentsRepo.saveStatus(like);
-    });
+    await Promise.all(
+      likesComment.map(async (like) => {
+        like.isBannedLike();
+        const comment = await this.commentsRepo.findComment(like.commentId);
+        if (comment) {
+          comment.countBan(like.likeStatus, isBanned);
+          await this.commentsRepo.saveComment(comment);
+        }
+        await this.commentsRepo.saveStatus(like);
+      }),
+    );
     const likesPost = await this.postRepo.findLikesBan(userId);
-    likesPost.map(async (like) => {
-      like.isBannedLike();
-      const post = await this.postRepo.findPostDocument(like.postId);
-      if (post) {
-        post.countBan(like.likeStatus, isBanned);
-        await this.postRepo.savePost(post);
-      }
-      await this.postRepo.saveStatus(like);
-    });
+    await Promise.all(
+      likesPost.map(async (like) => {
+        like.isBannedLike();
+        const post = await this.postRepo.findPostDocument(like.postId);
+        if (post) {
+          post.countBan(like.likeStatus, isBanned);
+          await this.postRepo.savePost(post);
+        }
+        await this.postRepo.saveStatus(like);
+      }),
+    );
   }
 }
