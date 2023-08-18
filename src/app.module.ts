@@ -61,8 +61,8 @@ import { SaUsersController } from './users/api/sa-users.controller';
     ConfigModule.forRoot({ load: [configuration] }),
     MongooseModule.forRoot(configuration().mongoUri),
     ThrottlerModule.forRoot({
-      ttl: 10,
-      limit: 5,
+      // ttl: 10,
+      // limit: 5,
     }),
     MongooseModule.forFeature([
       {
