@@ -54,6 +54,7 @@ export class PostsService {
       PostAnBlogId.postId,
     );
     if (!post) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (post.userId !== userId) return RESPONSE_OPTIONS.FORBIDDEN;
     post.updatePost(postDto);
     await this.postsRepository.savePost(post);
     return RESPONSE_OPTIONS.NO_CONTENT;
@@ -66,6 +67,11 @@ export class PostsService {
     const blog = await this.blogsRepo.findBlogById(PostAnBlogId.blogId);
     if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
     if (blog.blogOwnerInfo.userId !== userId) return RESPONSE_OPTIONS.FORBIDDEN;
+    const post = await this.postsRepository.findPostDocument(
+      PostAnBlogId.postId,
+    );
+    if (!post) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (post.userId !== userId) return RESPONSE_OPTIONS.FORBIDDEN;
     await this.postsRepository.deletePost(PostAnBlogId.postId);
     return RESPONSE_OPTIONS.NO_CONTENT;
   }

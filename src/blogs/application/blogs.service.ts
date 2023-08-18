@@ -7,6 +7,7 @@ import { Types } from 'mongoose';
 import { UpdateBlogDto } from './dto/UpdateBlogDto';
 import { Post, PostModelType } from '../../posts/domain/post.schema';
 import { BlogUserIdInputType } from '../api/input-model/BlogUserIdInputType';
+import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
 
 @Injectable()
 export class BlogsService {
@@ -34,24 +35,33 @@ export class BlogsService {
 
   async updateBlog(
     blogId: Types.ObjectId,
+    userId: Types.ObjectId,
     blogDto: UpdateBlogDto,
-  ): Promise<boolean> {
+  ): Promise<RESPONSE_OPTIONS> {
     const blog: BlogDocument | null = await this.blogsRepository.findBlogById(
       blogId,
     );
-    if (!blog) return false;
+    if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (blog.blogOwnerInfo.userId !== userId) return RESPONSE_OPTIONS.FORBIDDEN;
 
     const posts = await this.blogsRepository.findPostsByBlogName(blog.name);
     this.PostModel.changeBlogName(posts, blogDto.name);
 
     await blog.updateBlog(blogDto);
     await this.blogsRepository.saveBlog(blog);
-    return true;
+    return RESPONSE_OPTIONS.NO_CONTENT;
   }
 
-  async deleteBlog(blogId: Types.ObjectId): Promise<boolean> {
-    const isDeleted = await this.blogsRepository.deleteBlog(blogId);
-    return isDeleted;
+  async deleteBlog(
+    blogId: Types.ObjectId,
+    userId: Types.ObjectId,
+  ): Promise<RESPONSE_OPTIONS> {
+    const blog = await this.blogsRepository.findBlogById(blogId);
+    if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (blog.blogOwnerInfo.userId !== userId) return RESPONSE_OPTIONS.FORBIDDEN;
+
+    await this.blogsRepository.deleteBlog(blogId);
+    return RESPONSE_OPTIONS.NO_CONTENT;
   }
 
   async bindBlog(blogAndUserId: BlogUserIdInputType) {

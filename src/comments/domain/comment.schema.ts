@@ -24,14 +24,33 @@ export class Comment {
   createdAt: Date;
   @Prop({ default: {}, type: LikesInfoSchema })
   likesInfo: LikesInfo;
-  @Prop({ required: true })
+  @Prop({ default: false })
   isBanned: boolean;
 
   updateComment(commentDto: UpdateCommentDto) {
     this.content = commentDto.content;
   }
+  countBan(likeStatus: LIKE_STATUS, isBanned: boolean) {
+    if (isBanned) {
+      if (likeStatus === LIKE_STATUS.LIKE) {
+        this.likesInfo.likesCount -= 1;
+      } else {
+        this.likesInfo.dislikesCount -= 1;
+      }
+    } else {
+      if (likeStatus === LIKE_STATUS.LIKE) {
+        this.likesInfo.likesCount += 1;
+      } else {
+        this.likesInfo.dislikesCount += 1;
+      }
+    }
+  }
   isBannedComment() {
-    this.isBanned = true;
+    if (!this.isBanned) {
+      this.isBanned = true;
+    } else {
+      this.isBanned = false;
+    }
   }
   static createComment(
     userId: Types.ObjectId,
@@ -108,6 +127,7 @@ CommentSchema.methods = {
   updateLike: Comment.prototype.updateLike,
   updateLikeNone: Comment.prototype.updateLikeNone,
   isBannedComment: Comment.prototype.isBannedComment,
+  countBan: Comment.prototype.countBan,
 };
 
 export type CommentDocument = HydratedDocument<Comment>;

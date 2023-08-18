@@ -14,10 +14,14 @@ export class PostLike {
   likeStatus: LIKE_STATUS;
   @Prop({ required: true })
   addedAt: Date;
-  @Prop({ required: false })
+  @Prop({ default: false })
   isBanned: boolean;
   isBannedLike() {
-    this.isBanned = true;
+    if (!this.isBanned) {
+      this.isBanned = true;
+    } else {
+      this.isBanned = false;
+    }
   }
 }
 

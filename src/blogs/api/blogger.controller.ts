@@ -43,8 +43,9 @@ export class BloggerController {
   @Get()
   async findAllBlogs(
     @Query() dataQuery: BlogQueryInputType,
+    @CurrentUserId() userId: Types.ObjectId,
   ): Promise<BlogViewModelAll> {
-    return await this.blogsQueryRepository.findAllBlogs(dataQuery);
+    return await this.blogsQueryRepository.findAllBlogs(dataQuery, userId);
   }
   @Post()
   async createBlog(
@@ -64,22 +65,24 @@ export class BloggerController {
   }
   @Put('/:id')
   async updateBlog(
-    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) blogId: Types.ObjectId,
     @Body() dto: UpdateBlogDto,
+    @CurrentUserId() userId: Types.ObjectId,
   ) {
-    const blogIsUpdate = await this.blogsService.updateBlog(id, dto);
-
-    if (!blogIsUpdate)
-      throw new HttpException('NOT FOUND', HttpStatus.NOT_FOUND);
-
-    throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
+    const blogIsUpdate = await this.blogsService.updateBlog(
+      blogId,
+      userId,
+      dto,
+    );
+    switchError(blogIsUpdate);
   }
   @Delete('/:id')
-  async deleteBlog(@Param('id', ParseObjectIdPipe) id: Types.ObjectId) {
-    const blogIsDeleted = await this.blogsService.deleteBlog(id);
-    if (!blogIsDeleted)
-      throw new HttpException('NOT FOUND', HttpStatus.NOT_FOUND);
-    throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
+  async deleteBlog(
+    @Param('id', ParseObjectIdPipe) blogId: Types.ObjectId,
+    @CurrentUserId() userId: Types.ObjectId,
+  ) {
+    const blogIsDeleted = await this.blogsService.deleteBlog(blogId, userId);
+    switchError(blogIsDeleted);
   }
   @Post('/:id/posts')
   async createPostForBlog(

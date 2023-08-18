@@ -16,8 +16,8 @@ import { BlogByAdminViewModel } from '../api/view-model/BlogByAdminViewModel';
 export class BlogsQueryRepository {
   constructor(@InjectModel(Blog.name) private BlogModel: BlogModelType) {}
 
-  async findAllBlogs(dataQuery: BlogQueryInputType) {
-    const dataAllBlogs = await this._dataAllBlogs(dataQuery);
+  async findAllBlogs(dataQuery: BlogQueryInputType, userId?: Types.ObjectId) {
+    const dataAllBlogs = await this._dataAllBlogs(dataQuery, userId);
     const mapBlogs = dataAllBlogs.allBlogs.map(
       (blog) => new BlogViewModel(blog),
     );
@@ -46,10 +46,10 @@ export class BlogsQueryRepository {
     );
   }
 
-  async _dataAllBlogs(dataQuery: BlogQueryInputType) {
+  async _dataAllBlogs(dataQuery: BlogQueryInputType, userId?: Types.ObjectId) {
     const query = new BlogQueryModel(dataQuery);
 
-    const filter = blogFilter(query.searchNameTerm);
+    const filter = blogFilter(query.searchNameTerm, userId);
 
     const totalCount = await this.BlogModel.countDocuments(filter);
     const countPages = pagesCount(totalCount, query.pageSize);

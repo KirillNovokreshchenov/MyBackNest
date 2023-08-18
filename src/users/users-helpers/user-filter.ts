@@ -13,11 +13,9 @@ export function userFilter(
         { email: { $regex: searchEmailTerm, $options: 'i' } },
       ],
     };
-  }
-  if (searchLoginTerm) {
+  } else if (searchLoginTerm) {
     filter = { login: { $regex: searchLoginTerm, $options: 'i' } };
-  }
-  if (searchEmailTerm) {
+  } else if (searchEmailTerm) {
     filter = { email: { $regex: searchEmailTerm, $options: 'i' } };
   }
   if (banStatus === BanStatus.BANNED) {

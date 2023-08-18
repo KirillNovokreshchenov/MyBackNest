@@ -1,6 +1,15 @@
-export function blogFilter(searchNameTerm: string | null) {
+import { Types } from 'mongoose';
+
+export function blogFilter(
+  searchNameTerm: string | null,
+  userId?: Types.ObjectId,
+) {
+  let filter = {};
   if (searchNameTerm) {
-    return { name: { $regex: searchNameTerm, $options: 'i' } };
+    filter = { name: { $regex: searchNameTerm, $options: 'i' } };
   }
-  return {};
+  if (userId) {
+    filter['blogOwnerInfo.userId'] = userId;
+  }
+  return filter;
 }
