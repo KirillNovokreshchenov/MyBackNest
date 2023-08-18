@@ -12,9 +12,9 @@ export class UserViewModel {
     this.email = user.email;
     this.createdAt = user.createdAt;
     this.banInfo = {
-      isBanned: user.banInfo?.isBanned || false,
-      banDate: user.banInfo?.banDate || '',
-      banReason: user.banInfo?.banReason || '',
+      isBanned: user.banInfo.isBanned,
+      banDate: user.banInfo.banDate,
+      banReason: user.banInfo.banReason,
     };
   }
 }

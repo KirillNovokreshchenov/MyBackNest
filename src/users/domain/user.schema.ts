@@ -12,11 +12,11 @@ import { BanDto } from '../application/dto/BanDto';
 
 @Schema()
 export class BanInfo {
-  @Prop({ required: true })
+  @Prop({ default: false })
   isBanned: boolean;
-  @Prop({ required: true })
+  @Prop({ default: null })
   banDate: Date;
-  @Prop({ required: true })
+  @Prop({ default: null })
   banReason: string;
 }
 const BanInfoSchema = SchemaFactory.createForClass(BanInfo);
@@ -34,7 +34,7 @@ export class User {
   createdAt: Date;
   @Prop({ type: EmailConfirmationSchema, required: false })
   emailConfirmation: EmailConfirmation;
-  @Prop({ required: false, type: BanInfoSchema })
+  @Prop({ default: {}, type: BanInfoSchema })
   banInfo: BanInfo;
   async createHash(password: string, user: UserDocument) {
     user.password = await UserAdapter.hashPassword(password);
