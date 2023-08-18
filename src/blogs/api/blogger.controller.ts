@@ -1,18 +1,15 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
   HttpException,
   HttpStatus,
-  NotFoundException,
   Param,
   Post,
   Put,
   Query,
   UseGuards,
-  UsePipes,
 } from '@nestjs/common';
 import { BlogsQueryRepository } from '../infrastructure/blogs.query.repository';
 import { BlogsService } from '../application/blogs.service';

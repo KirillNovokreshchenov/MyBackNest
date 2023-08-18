@@ -18,7 +18,6 @@ import { UpdateCommentDto } from '../application/dto/UpdateCommentDto';
 import { CommentService } from '../application/comment.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUserId } from '../../auth/decorators/create-param-current-id.decarator';
-import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
 import { LikeStatusDto } from '../../models/LikeStatusDto';
 import { JwtLikeAuthGuard } from '../../auth/guards/jwt-like-auth.guard';
 import { switchError } from '../../helpers/switch-error';

@@ -1,31 +1,23 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
   HttpException,
   HttpStatus,
   Param,
-  Post,
-  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { CreateBlogDto } from '../application/dto/CreateBlogDto';
 import { BlogsService } from '../application/blogs.service';
 import { BlogsQueryRepository } from '../infrastructure/blogs.query.repository';
 import { BlogViewModel } from './view-model/BlogViewModel';
 import { Types } from 'mongoose';
 import { BlogQueryInputType } from './input-model/BlogQueryInputType';
-import { UpdateBlogDto } from '../application/dto/UpdateBlogDto';
 import { PostsService } from '../../posts/application/posts.service';
 import { PostsQueryRepository } from '../../posts/infrastructure/posts.query.repository';
 import { QueryInputType } from '../../models/QueryInputType';
 import { PostViewModelAll } from '../../posts/api/view-models/PostViewModelAll';
-import { CreatePostForBlogDto } from '../application/dto/CreatePostForBlogDto';
 import { BlogViewModelAll } from './view-model/BlogViewModelAll';
 import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
-import { BasicAuthGuard } from '../../auth/guards/basic-auth.guard';
 import { JwtLikeAuthGuard } from '../../auth/guards/jwt-like-auth.guard';
 import { CurrentUserId } from '../../auth/decorators/create-param-current-id.decarator';
 

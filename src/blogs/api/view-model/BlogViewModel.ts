@@ -1,4 +1,4 @@
-import { Blog, BlogOwnerInfo } from '../../domain/blog.schema';
+import { Blog } from '../../domain/blog.schema';
 
 export class BlogViewModel {
   id: string;

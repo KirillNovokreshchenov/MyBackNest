@@ -1,5 +1,4 @@
 import {
-  ValidationArguments,
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator';
@@ -17,7 +16,7 @@ export class BlogExistsRule implements ValidatorConstraintInterface {
     if (!blog) return false;
     return true;
   }
-  defaultMessage(args: ValidationArguments) {
+  defaultMessage() {
     return `Blog doesn't exist`;
   }
 }

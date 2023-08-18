@@ -15,14 +15,10 @@ import {
 } from '@nestjs/common';
 import { PostsService } from '../application/posts.service';
 import { PostsQueryRepository } from '../infrastructure/posts.query.repository';
-import { CreatePostDto } from '../application/dto/CreatePostDto';
-import { PostViewModel } from './view-models/PostViewModel';
-import { UpdatePostDto } from '../application/dto/UpdatePostDto';
 import { Types } from 'mongoose';
 import { QueryInputType } from '../../models/QueryInputType';
 import { CommentsQueryRepository } from '../../comments/infractructure/comments.query.repository';
 import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
-import { BasicAuthGuard } from '../../auth/guards/basic-auth.guard';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { CurrentUserId } from '../../auth/decorators/create-param-current-id.decarator';
 import { CreateCommentDto } from '../../comments/application/dto/CreateCommentDto';
