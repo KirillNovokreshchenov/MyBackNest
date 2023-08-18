@@ -14,10 +14,10 @@ import { BanDto } from '../application/dto/BanDto';
 export class BanInfo {
   @Prop({ default: false })
   isBanned: boolean;
-  @Prop({ default: null })
-  banDate: Date;
-  @Prop({ default: null })
-  banReason: string;
+  @Prop({ default: null, type: Date || null })
+  banDate: Date | null;
+  @Prop({ default: null, type: String || null })
+  banReason: string | null;
 }
 const BanInfoSchema = SchemaFactory.createForClass(BanInfo);
 
@@ -44,6 +44,13 @@ export class User {
   }
   userBan(banDto: BanDto) {
     this.banInfo = { ...banDto, banDate: new Date() };
+  }
+  userUnban() {
+    this.banInfo = {
+      isBanned: false,
+      banDate: null,
+      banReason: null,
+    };
   }
   createEmailConfirm() {
     this.emailConfirmation = {
@@ -91,6 +98,7 @@ UserSchema.methods = {
   canBeConfirmed: User.prototype.canBeConfirmed,
   passwordIsValid: User.prototype.passwordIsValid,
   userBan: User.prototype.userBan,
+  userUnban: User.prototype.userUnban,
 };
 
 UserSchema.statics = {

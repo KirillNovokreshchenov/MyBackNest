@@ -128,29 +128,40 @@ export class UsersService {
   async userBan(userId: Types.ObjectId, banDto: BanDto) {
     const user = await this.usersRepository.findUserById(userId);
     if (!user) return false;
-    user.userBan(banDto);
-    await this.usersRepository.saveUser(user);
-    await this.deviceRepo.deleteAllSessionsBan(userId);
-    await this._banPostsUser(userId);
-    await this._banCommentsUser(userId);
-    await this._banLikesUser(userId);
+    if (banDto.isBanned && !user.banInfo.isBanned) {
+      user.userBan(banDto);
+      await this.usersRepository.saveUser(user);
+      await this.deviceRepo.deleteAllSessionsBan(userId);
+      await this.banUnbanContent(userId);
+      return true;
+    } else if (!banDto.isBanned && user.banInfo.isBanned) {
+      user.userUnban();
+      await this.usersRepository.saveUser(user);
+      await this.banUnbanContent(userId);
+      return true;
+    }
     return true;
   }
-  async _banPostsUser(userId: Types.ObjectId) {
+  async banUnbanContent(userId: Types.ObjectId) {
+    await this._banUnbanPostsUser(userId);
+    await this._banUnbanCommentsUser(userId);
+    await this._banUnbanLikesUser(userId);
+  }
+  async _banUnbanPostsUser(userId: Types.ObjectId) {
     const posts = await this.postRepo.findPostsBan(userId);
     posts.map((post) => {
       post.isBannedPost();
       this.postRepo.savePost(post);
     });
   }
-  async _banCommentsUser(userId: Types.ObjectId) {
+  async _banUnbanCommentsUser(userId: Types.ObjectId) {
     const comments = await this.commentsRepo.findCommentsBan(userId);
     comments.map((comment) => {
       comment.isBannedComment();
       this.commentsRepo.saveComment(comment);
     });
   }
-  async _banLikesUser(userId: Types.ObjectId) {
+  async _banUnbanLikesUser(userId: Types.ObjectId) {
     const likesComment = await this.commentsRepo.findLikesBan(userId);
     likesComment.map((like) => {
       like.isBannedLike();

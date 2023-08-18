@@ -27,7 +27,7 @@ export class AuthService {
     const user = await this.usersRepository.findUserByEmailOrLogin(
       loginDto.loginOrEmail,
     );
-    if (!user || user.banInfo) return null;
+    if (!user || user.banInfo.isBanned) return null;
     const passwordIsValid = await user.passwordIsValid(
       loginDto.password,
       user.password,

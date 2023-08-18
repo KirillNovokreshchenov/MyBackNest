@@ -42,7 +42,11 @@ export class Post {
     this.shortDescription = postDto.shortDescription;
   }
   isBannedPost() {
-    this.isBanned = true;
+    if (!this.isBanned) {
+      this.isBanned = true;
+    } else {
+      this.isBanned = false;
+    }
   }
   createLikeStatus(
     userId: Types.ObjectId,
