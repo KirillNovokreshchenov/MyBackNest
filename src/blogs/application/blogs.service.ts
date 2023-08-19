@@ -60,7 +60,8 @@ export class BlogsService {
   ): Promise<RESPONSE_OPTIONS> {
     const blog = await this.blogsRepository.findBlogById(blogId);
     if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
-    if (blog.blogOwnerInfo.userId !== userId) return RESPONSE_OPTIONS.FORBIDDEN;
+    if (blog.blogOwnerInfo.userId.toString() !== userId.toString())
+      return RESPONSE_OPTIONS.FORBIDDEN;
 
     await this.blogsRepository.deleteBlog(blogId);
     return RESPONSE_OPTIONS.NO_CONTENT;
