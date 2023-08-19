@@ -41,8 +41,10 @@ export class BlogsService {
     const blog: BlogDocument | null = await this.blogsRepository.findBlogById(
       blogId,
     );
+    console.log(blog);
     if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
-    if (blog.blogOwnerInfo.userId !== userId) return RESPONSE_OPTIONS.FORBIDDEN;
+    if (blog.blogOwnerInfo.userId.toString() !== userId.toString())
+      return RESPONSE_OPTIONS.FORBIDDEN;
 
     const posts = await this.blogsRepository.findPostsByBlogName(blog.name);
     this.PostModel.changeBlogName(posts, blogDto.name);
