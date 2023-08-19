@@ -26,14 +26,18 @@ export class PostsService {
   async createPost(
     postDto: CreatePostDto,
     userId: Types.ObjectId,
-  ): Promise<Types.ObjectId | null> {
-    const blogName = await this.postsRepository.findBlogName(
+  ): Promise<
+    Types.ObjectId | RESPONSE_OPTIONS.FORBIDDEN | RESPONSE_OPTIONS.NOT_FOUND
+  > {
+    const blog = await this.blogsRepo.findBlogById(
       new Types.ObjectId(postDto.blogId),
     );
-    if (!blogName) return null;
+    if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (blog.blogOwnerInfo.userId.toString() !== userId.toString())
+      return RESPONSE_OPTIONS.FORBIDDEN;
     const newPost: PostDocument = this.PostModel.createPost(
       postDto,
-      blogName,
+      blog.name,
       this.PostModel,
       userId,
     );

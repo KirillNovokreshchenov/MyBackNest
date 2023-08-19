@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpException,
   HttpStatus,
@@ -30,6 +31,7 @@ import { PostViewModelAll } from '../../posts/api/view-models/PostViewModelAll';
 import { UpdatePostDto } from '../../posts/application/dto/UpdatePostDto';
 import { BlogPostIdInputType } from './input-model/BlogPostIdInputType';
 import { switchError } from '../../helpers/switch-error';
+import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
 
 @Controller('blogger/blogs')
 @UseGuards(JwtAuthGuard)
@@ -94,14 +96,19 @@ export class BloggerController {
       { ...dto, blogId },
       userId,
     );
-    if (!postId) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
-    const newPost = await this.queryPostsRepository.findPost(postId);
-    if (!newPost)
-      throw new HttpException(
-        'INTERNAL SERVERERROR',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    return newPost;
+    if (postId === RESPONSE_OPTIONS.NOT_FOUND) {
+      throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
+    } else if (postId === RESPONSE_OPTIONS.FORBIDDEN) {
+      throw new ForbiddenException();
+    } else {
+      const newPost = await this.queryPostsRepository.findPost(postId);
+      if (!newPost)
+        throw new HttpException(
+          'INTERNAL SERVERERROR',
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+      return newPost;
+    }
   }
   @Get('/:id/posts')
   async findAllPostsForBlog(
