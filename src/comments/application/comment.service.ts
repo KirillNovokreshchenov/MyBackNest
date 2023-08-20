@@ -4,7 +4,7 @@ import { Types } from 'mongoose';
 import { UsersRepository } from '../../users/infrastructure/users.repository';
 import { PostsRepository } from '../../posts/infrastructure/posts.repository';
 import { InjectModel } from '@nestjs/mongoose';
-import { Comment, CommentModelType } from '../domain/comment.schema';
+import { Comment, CommentModelType, PostInfo } from '../domain/comment.schema';
 import { CommentsRepository } from '../infractructure/comments.repository';
 import { UpdateCommentDto } from './dto/UpdateCommentDto';
 import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
@@ -34,12 +34,19 @@ export class CommentService {
     if (!user) return null;
     const post = await this.postRepo.findPostDocument(postId);
     if (!post) return null;
+    const postInfo: PostInfo = {
+      id: post._id,
+      title: post.title,
+      blogId: post.blogId,
+      blogName: post.blogName,
+    };
 
     const comment = await this.CommentModel.createComment(
       userId,
-      postId,
+      post.userId,
       user.login,
       commentDto,
+      postInfo,
       this.CommentModel,
     );
     await this.commentRepo.saveComment(comment);

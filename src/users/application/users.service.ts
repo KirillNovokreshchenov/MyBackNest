@@ -17,6 +17,7 @@ import { DeviceRepository } from '../../sessions/infrastructure/device.repositor
 import { PostsRepository } from '../../posts/infrastructure/posts.repository';
 import { CommentsRepository } from '../../comments/infractructure/comments.repository';
 import { LIKE_STATUS } from '../../models/LikeStatusEnum';
+import { BanUserForBlogDto } from './dto/BanuserForBlogDto';
 
 @Injectable()
 export class UsersService {
@@ -189,4 +190,6 @@ export class UsersService {
       }),
     );
   }
+
+  async userBanForBlog(userId: Types.ObjectId, banDto: BanUserForBlogDto) {}
 }

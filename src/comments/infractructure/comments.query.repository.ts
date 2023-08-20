@@ -17,6 +17,9 @@ import {
   CommentLike,
   CommentLikeModelType,
 } from '../domain/comment-like.schema';
+import { Blog, BlogModelType } from '../../blogs/domain/blog.schema';
+import { Post, PostModelType } from '../../posts/domain/post.schema';
+import { CommentForBlogViewModel } from '../api/view-models/CommentForBlogViewModel';
 
 @Injectable()
 export class CommentsQueryRepository {
@@ -24,6 +27,8 @@ export class CommentsQueryRepository {
     @InjectModel(Comment.name) private CommentModel: CommentModelType,
     @InjectModel(CommentLike.name)
     private CommentLikeModel: CommentLikeModelType,
+    @InjectModel(Blog.name) private BlogModel: BlogModelType,
+    @InjectModel(Post.name) private PostModel: PostModelType,
   ) {}
   async findComment(
     commentId: Types.ObjectId,
@@ -43,6 +48,46 @@ export class CommentsQueryRepository {
     if (!comment) return null;
     return new CommentViewModel(comment, like?.likeStatus);
   }
+  async findAllCommentsForBlogs(
+    dataQuery: QueryInputType,
+    userId: Types.ObjectId,
+  ) {
+    const query = new QueryModel(dataQuery);
+    const totalCount = await this.CommentModel.countDocuments({
+      ownerBlogId: userId,
+      isBanned: { $ne: true },
+    });
+    const countPages = pagesCount(totalCount, query.pageSize);
+    const sort = sortQuery(query.sortDirection, query.sortBy);
+    const skip = skipPages(query.pageNumber, query.pageSize);
+    const allComments = await this.CommentModel.find({
+      ownerBlogId: userId,
+      isBanned: { $ne: true },
+    })
+      .sort(sort)
+      .skip(skip)
+      .limit(query.pageSize)
+      .lean();
+
+    const mapComments = await Promise.all(
+      allComments.map(async (comment) => {
+        const commentId = comment._id;
+        const like = await this.CommentLikeModel.findOne({
+          userId,
+          commentId,
+          isBanned: { $ne: true },
+        }).lean();
+        return new CommentForBlogViewModel(comment, like?.likeStatus);
+      }),
+    );
+    return new CommentViewModelAll(
+      countPages,
+      query.pageNumber,
+      query.pageSize,
+      totalCount,
+      mapComments,
+    );
+  }
 
   async findAllComments(
     dataQuery: QueryInputType,
@@ -52,7 +97,7 @@ export class CommentsQueryRepository {
     const query = new QueryModel(dataQuery);
 
     const totalCount = await this.CommentModel.countDocuments({
-      postId,
+      'postInfo.id': postId,
       isBanned: { $ne: true },
     });
     const countPages = pagesCount(totalCount, query.pageSize);
@@ -60,7 +105,7 @@ export class CommentsQueryRepository {
     const skip = skipPages(query.pageNumber, query.pageSize);
 
     const allComments = await this.CommentModel.find({
-      postId,
+      'postInfo.id': postId,
       isBanned: { $ne: true },
     })
       .sort(sort)

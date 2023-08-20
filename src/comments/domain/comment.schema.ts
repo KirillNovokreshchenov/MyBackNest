@@ -10,6 +10,18 @@ import {
 } from './comment-like.schema';
 
 @Schema()
+export class PostInfo {
+  @Prop({ required: true })
+  id: Types.ObjectId;
+  @Prop({ required: true })
+  title: string;
+  @Prop({ required: true })
+  blogId: Types.ObjectId;
+  @Prop({ required: true })
+  blogName: string;
+}
+const PostInfoSchema = SchemaFactory.createForClass(PostInfo);
+@Schema()
 export class Comment {
   _id: Types.ObjectId;
   @Prop({ required: true })
@@ -17,13 +29,17 @@ export class Comment {
   @Prop({ required: true })
   userId: Types.ObjectId;
   @Prop({ required: true })
-  userLogin: string;
+  ownerBlogId: Types.ObjectId;
   @Prop({ required: true })
-  postId: Types.ObjectId;
+  userLogin: string;
+  // @Prop({ required: true })
+  // postId: Types.ObjectId;
   @Prop({ required: true })
   createdAt: Date;
   @Prop({ default: {}, type: LikesInfoSchema })
   likesInfo: LikesInfo;
+  @Prop({ required: true, type: PostInfoSchema })
+  postInfo: PostInfo;
   @Prop({ default: false })
   isBanned: boolean;
 
@@ -54,16 +70,18 @@ export class Comment {
   }
   static createComment(
     userId: Types.ObjectId,
-    postId: Types.ObjectId,
-    userLogin,
+    ownerBlogId: Types.ObjectId,
+    userLogin: string,
     commentDto: CreateCommentDto,
+    postInfo: PostInfo,
     CommentModel: CommentModelType,
   ) {
     return new CommentModel({
       ...commentDto,
       userId,
-      postId,
+      ownerBlogId,
       userLogin,
+      postInfo,
       createdAt: new Date(),
     });
   }
@@ -111,9 +129,10 @@ export const CommentSchema = SchemaFactory.createForClass(Comment);
 export type CommentModelStaticType = {
   createComment: (
     userId: Types.ObjectId,
-    postId: Types.ObjectId,
+    ownerBlogId: Types.ObjectId,
     userLogin,
     commentDto: CreateCommentDto,
+    postInfo: PostInfo,
     CommentModel: CommentModelType,
   ) => CommentDocument;
 };
