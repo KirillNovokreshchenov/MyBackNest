@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { UserViewModel } from '../api/view-model/UserViewModel';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from '../domain/user.schema';
+import { User, UserDocument, UserModelType } from '../domain/user.schema';
 import { Model, Types } from 'mongoose';
 import { userFilter } from '../users-helpers/user-filter';
 import { skipPages } from '../../helpers/skip-pages';
@@ -11,10 +11,14 @@ import { pagesCount } from '../../helpers/pages-count';
 import { UserQueryModel } from './models/UserQueryModel';
 import { UserQueryInputType } from '../api/input-model/UserQueryInputType';
 import { UserAuthViewModel } from '../../auth/api/view-model/UserAuthViewModel';
+import { Blog, BlogModelType } from '../../blogs/domain/blog.schema';
 
 @Injectable()
 export class UsersQueryRepository {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
+  constructor(
+    @InjectModel(User.name) private userModel: UserModelType,
+    @InjectModel(Blog.name) private BlogModel: BlogModelType,
+  ) {}
   async findUserById(userId): Promise<UserViewModel | null> {
     const foundUser = await this.userModel.findById(userId).lean();
     if (!foundUser) return null;
@@ -56,6 +60,32 @@ export class UsersQueryRepository {
       query.pageSize,
       totalCount,
       mapUsers,
+    );
+  }
+
+  async findBannedUsersForBlogs(
+    dataQuery: UserQueryInputType,
+    blogId: Types.ObjectId,
+  ) {
+    const query = new UserQueryModel(dataQuery);
+    const blog = await this.BlogModel.findById(blogId);
+    if (!blog) return null;
+    const filter = userFilter(
+      query.searchLoginTerm,
+      query.searchEmailTerm,
+      query.banStatus,
+    );
+    const totalCount = blog.bannedUsers.length;
+    const countPages = pagesCount(totalCount, query.pageSize);
+    const sort = sortQuery(query.sortDirection, query.sortBy);
+    const skip = skipPages(query.pageNumber, query.pageSize);
+
+    return new UserViewModelAll(
+      countPages,
+      query.pageNumber,
+      query.pageSize,
+      totalCount,
+      blog.bannedUsers,
     );
   }
 }

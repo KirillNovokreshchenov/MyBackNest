@@ -14,6 +14,7 @@ import {
 } from '../domain/comment-like.schema';
 import { LikeStatusDto } from '../../models/LikeStatusDto';
 import { LIKE_STATUS } from '../../models/LikeStatusEnum';
+import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
 
 @Injectable()
 export class CommentService {
@@ -21,6 +22,7 @@ export class CommentService {
     protected usersRepo: UsersRepository,
     protected postRepo: PostsRepository,
     protected commentRepo: CommentsRepository,
+    protected blogsRepo: BlogsRepository,
     @InjectModel(Comment.name) private CommentModel: CommentModelType,
     @InjectModel(CommentLike.name)
     private CommentLikeModel: CommentLikeModelType,
@@ -34,6 +36,9 @@ export class CommentService {
     if (!user) return null;
     const post = await this.postRepo.findPostDocument(postId);
     if (!post) return null;
+    const blog = await this.blogsRepo.findBlogById(post.blogId);
+    if (!blog) return null;
+    if (blog.userIsBanned(userId)) return null;
     const postInfo: PostInfo = {
       id: post._id,
       title: post.title,

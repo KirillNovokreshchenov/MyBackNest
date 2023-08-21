@@ -53,4 +53,8 @@ export class CommentsRepository {
   async findLikesBan(userId: Types.ObjectId) {
     return this.CommentLikeModel.find({ userId });
   }
+
+  async findCommentsBlogBan(blogId: Types.ObjectId) {
+    return this.CommentModel.find({ 'postInfo.blogId': blogId });
+  }
 }

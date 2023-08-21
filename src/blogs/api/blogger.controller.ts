@@ -37,6 +37,8 @@ import { CommentsQueryRepository } from '../../comments/infractructure/comments.
 import { BanDto } from '../../users/application/dto/BanDto';
 import { BanUserForBlogDto } from '../../users/application/dto/BanuserForBlogDto';
 import { UsersService } from '../../users/application/users.service';
+import { UserQueryInputType } from '../../users/api/input-model/UserQueryInputType';
+import { UsersQueryRepository } from '../../users/infrastructure/users.query.repository';
 
 @Controller('blogger')
 @UseGuards(JwtAuthGuard)
@@ -48,6 +50,7 @@ export class BloggerController {
     private postsService: PostsService,
     private queryPostsRepository: PostsQueryRepository,
     private queryCommentsRepo: CommentsQueryRepository,
+    private queryUsersRepo: UsersQueryRepository,
   ) {}
   @Get('/blogs')
   async findAllBlogs(
@@ -65,6 +68,18 @@ export class BloggerController {
       dataQuery,
       userId,
     );
+  }
+  @Get('users/blog/:id')
+  async findBannedUsers(
+    @Query() dataQuery: UserQueryInputType,
+    @Param('id', ParseObjectIdPipe) blogId: Types.ObjectId,
+  ) {
+    const bannedUsers = await this.queryUsersRepo.findBannedUsersForBlogs(
+      dataQuery,
+      blogId,
+    );
+    if (!bannedUsers) throw new NotFoundException();
+    return bannedUsers;
   }
   @Post('/blogs')
   async createBlog(

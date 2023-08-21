@@ -54,4 +54,8 @@ export class PostsRepository {
   async findLikesBan(userId: Types.ObjectId) {
     return this.PostLikeModel.find({ userId });
   }
+
+  async findPostsBlogBan(blogId: Types.ObjectId) {
+    return this.PostModel.find({ blogId });
+  }
 }

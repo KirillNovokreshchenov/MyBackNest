@@ -18,6 +18,8 @@ import { PostsRepository } from '../../posts/infrastructure/posts.repository';
 import { CommentsRepository } from '../../comments/infractructure/comments.repository';
 import { LIKE_STATUS } from '../../models/LikeStatusEnum';
 import { BanUserForBlogDto } from './dto/BanuserForBlogDto';
+import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
+import { BanBlogDto } from '../../blogs/application/dto/BanBlogDto';
 
 @Injectable()
 export class UsersService {
@@ -30,6 +32,7 @@ export class UsersService {
     private passwordRecoveryModel: PasswordRecoveryType,
     protected postRepo: PostsRepository,
     protected commentsRepo: CommentsRepository,
+    protected blogsRepo: BlogsRepository,
   ) {}
 
   async createUserByRegistration(userDto: CreateUserDto): Promise<boolean> {
@@ -191,5 +194,37 @@ export class UsersService {
     );
   }
 
-  async userBanForBlog(userId: Types.ObjectId, banDto: BanUserForBlogDto) {}
+  async userBanForBlog(userId: Types.ObjectId, banDto: BanUserForBlogDto) {
+    const blog = await this.blogsRepo.findBlogById(
+      new Types.ObjectId(banDto.blogId),
+    );
+    if (!blog) return false;
+    const user = await this.usersRepository.findUserById(userId);
+    if (!user) return false;
+
+    blog.banUnbanUserForBlog(userId, user.login, banDto);
+    await this.blogsRepo.saveBlog(blog);
+    return true;
+  }
+
+  async banBlog(blogId: Types.ObjectId, banBlogDto: BanBlogDto) {
+    const blog = await this.blogsRepo.findBlogById(blogId);
+    if (!blog) return false;
+    blog.banUnbanBlog(banBlogDto);
+    await this.blogsRepo.saveBlog(blog);
+  }
+  async _banUnbanPostsBan(blogId: Types.ObjectId) {
+    const posts = await this.postRepo.findPostsBlogBan(blogId);
+    posts.map((post) => {
+      post.isBannedPost();
+      this.postRepo.savePost(post);
+    });
+  }
+  async _banUnbanCommentsBan(blogId: Types.ObjectId) {
+    const comments = await this.commentsRepo.findCommentsBlogBan(blogId);
+    comments.map((comment) => {
+      comment.isBannedComment();
+      this.commentsRepo.saveComment(comment);
+    });
+  }
 }
