@@ -71,7 +71,10 @@ export class BlogsQueryRepository {
   }
 
   async findBlog(blogId: Types.ObjectId): Promise<BlogViewModel | null> {
-    const blog = await this.BlogModel.findById(blogId).lean();
+    const blog = await this.BlogModel.findById({
+      _id: blogId,
+      'banInfo.isBanned': { $ne: true },
+    }).lean();
     if (!blog) return null;
     return new BlogViewModel(blog);
   }

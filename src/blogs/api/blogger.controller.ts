@@ -113,11 +113,15 @@ export class BloggerController {
   @Put('users/:id/ban')
   async userBanForBlog(
     @Param('id', ParseObjectIdPipe) userId: Types.ObjectId,
+    @CurrentUserId() userBlogOwnerId: Types.ObjectId,
     @Body() banDto: BanUserForBlogDto,
   ) {
-    const isBanned = await this.usersService.userBanForBlog(userId, banDto);
-    if (!isBanned) throw new NotFoundException();
-    throw new HttpException('No content', HttpStatus.NO_CONTENT);
+    const isBanned = await this.usersService.userBanForBlog(
+      userId,
+      userBlogOwnerId,
+      banDto,
+    );
+    switchError(isBanned);
   }
   @Delete('/blogs/:id')
   async deleteBlog(

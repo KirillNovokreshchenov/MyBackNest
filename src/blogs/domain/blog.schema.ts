@@ -17,7 +17,7 @@ const BlogOwnerInfoSchema = SchemaFactory.createForClass(BlogOwnerInfo);
 @Schema({ _id: false })
 export class BannedUser {
   @Prop({ required: true })
-  userId: Types.ObjectId;
+  id: Types.ObjectId;
   @Prop({ required: true })
   login: string;
   @Prop({ required: true })
@@ -82,7 +82,7 @@ export class Blog {
   ) {
     if (banDto.isBanned) {
       this.bannedUsers.push({
-        userId,
+        id: userId,
         login,
         banInfo: {
           isBanned: banDto.isBanned,
@@ -92,14 +92,14 @@ export class Blog {
       });
     } else {
       const filter = this.bannedUsers.filter(
-        (userBanned) => userBanned.userId.toString() !== userId.toString(),
+        (userBanned) => userBanned.id.toString() !== userId.toString(),
       );
       this.bannedUsers = filter;
     }
   }
   userIsBanned(currentUserId: Types.ObjectId) {
     return this.bannedUsers.find(
-      (user) => user.userId.toString() === currentUserId.toString(),
+      (user) => user.id.toString() === currentUserId.toString(),
     );
   }
   static createNewBlog(
