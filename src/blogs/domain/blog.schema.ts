@@ -14,7 +14,7 @@ export class BlogOwnerInfo {
 }
 const BlogOwnerInfoSchema = SchemaFactory.createForClass(BlogOwnerInfo);
 
-@Schema()
+@Schema({ _id: false })
 export class BannedUser {
   @Prop({ required: true })
   userId: Types.ObjectId;
@@ -24,7 +24,7 @@ export class BannedUser {
   banInfo: BanInfo;
 }
 const BannedUserSchema = SchemaFactory.createForClass(BannedUser);
-
+@Schema()
 export class BanBlogInfo {
   @Prop({ default: false })
   isBanned: boolean;

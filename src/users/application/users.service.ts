@@ -212,15 +212,18 @@ export class UsersService {
     if (!blog) return false;
     blog.banUnbanBlog(banBlogDto);
     await this.blogsRepo.saveBlog(blog);
+    await this._banUnbanBlogPosts(blogId);
+    await this._banUnbanBlogComments(blogId);
+    return true;
   }
-  async _banUnbanPostsBan(blogId: Types.ObjectId) {
+  async _banUnbanBlogPosts(blogId: Types.ObjectId) {
     const posts = await this.postRepo.findPostsBlogBan(blogId);
     posts.map((post) => {
       post.isBannedPost();
       this.postRepo.savePost(post);
     });
   }
-  async _banUnbanCommentsBan(blogId: Types.ObjectId) {
+  async _banUnbanBlogComments(blogId: Types.ObjectId) {
     const comments = await this.commentsRepo.findCommentsBlogBan(blogId);
     comments.map((comment) => {
       comment.isBannedComment();

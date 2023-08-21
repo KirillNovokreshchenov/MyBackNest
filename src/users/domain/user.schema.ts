@@ -10,7 +10,7 @@ import {
 } from '../../auth/domain/email-confirmation.schema';
 import { BanDto } from '../application/dto/BanDto';
 
-@Schema()
+@Schema({ _id: false })
 export class BanInfo {
   @Prop({ default: false })
   isBanned: boolean;
