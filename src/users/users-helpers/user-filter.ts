@@ -1,9 +1,11 @@
 import { BanStatus } from './ban-status-enum';
+import { Types } from 'mongoose';
 
 export function userFilter(
   searchLoginTerm: string | null,
   searchEmailTerm: string | null,
   banStatus: BanStatus,
+  blogIdForBannedUsers?: Types.ObjectId,
 ) {
   let filter = {};
   if (searchLoginTerm && searchEmailTerm) {
@@ -22,6 +24,11 @@ export function userFilter(
     filter['banInfo.isBanned'] = { $ne: false };
   } else if (banStatus === BanStatus.NOT_BANNED) {
     filter['banInfo.isBanned'] = { $ne: true };
+  }
+  if (blogIdForBannedUsers) {
+    filter['isBannedForBlogs'] = {
+      $elemMatch: { blogId: blogIdForBannedUsers },
+    };
   }
   return filter;
 }

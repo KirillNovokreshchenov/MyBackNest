@@ -34,7 +34,6 @@ import { BlogPostIdInputType } from './input-model/BlogPostIdInputType';
 import { switchError } from '../../helpers/switch-error';
 import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
 import { CommentsQueryRepository } from '../../comments/infractructure/comments.query.repository';
-import { BanDto } from '../../users/application/dto/BanDto';
 import { BanUserForBlogDto } from '../../users/application/dto/BanuserForBlogDto';
 import { UsersService } from '../../users/application/users.service';
 import { UserQueryInputType } from '../../users/api/input-model/UserQueryInputType';
@@ -73,12 +72,19 @@ export class BloggerController {
   async findBannedUsers(
     @Query() dataQuery: UserQueryInputType,
     @Param('id', ParseObjectIdPipe) blogId: Types.ObjectId,
+    @CurrentUserId() userId: Types.ObjectId,
   ) {
+    const blogCheck = await this.blogsService.blogCheck(blogId, userId);
+    if (blogCheck === RESPONSE_OPTIONS.NOT_FOUND) {
+      throw new NotFoundException();
+    }
+    if (blogCheck === RESPONSE_OPTIONS.FORBIDDEN) {
+      throw new ForbiddenException();
+    }
     const bannedUsers = await this.queryUsersRepo.findBannedUsersForBlogs(
       dataQuery,
       blogId,
     );
-    if (!bannedUsers) throw new NotFoundException();
     return bannedUsers;
   }
   @Post('/blogs')
@@ -113,15 +119,11 @@ export class BloggerController {
   @Put('users/:id/ban')
   async userBanForBlog(
     @Param('id', ParseObjectIdPipe) userId: Types.ObjectId,
-    @CurrentUserId() userBlogOwnerId: Types.ObjectId,
     @Body() banDto: BanUserForBlogDto,
   ) {
-    const isBanned = await this.usersService.userBanForBlog(
-      userId,
-      userBlogOwnerId,
-      banDto,
-    );
-    switchError(isBanned);
+    const isBanned = await this.usersService.userBanForBlog(userId, banDto);
+    if (!isBanned) throw new NotFoundException();
+    throw new HttpException('No content', HttpStatus.NO_CONTENT);
   }
   @Delete('/blogs/:id')
   async deleteBlog(

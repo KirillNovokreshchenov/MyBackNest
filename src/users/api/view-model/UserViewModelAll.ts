@@ -1,6 +1,6 @@
 import { UserViewModel } from './UserViewModel';
 import { ViewModelAll } from '../../../models/ViewModelAll';
-import { BannedUser } from '../../../blogs/domain/blog.schema';
+import { BannedUserForBlogViewModel } from './BannedUserForBlogViewModel';
 
 export class UserViewModelAll extends ViewModelAll {
   constructor(
@@ -8,7 +8,7 @@ export class UserViewModelAll extends ViewModelAll {
     public page,
     public pageSize,
     public totalCount,
-    public items: UserViewModel[] | BannedUser[],
+    public items: UserViewModel[] | BannedUserForBlogViewModel[],
   ) {
     super(pagesCount, page, pageSize, totalCount);
   }

@@ -33,12 +33,12 @@ export class CommentService {
     commentDto: CreateCommentDto,
   ) {
     const user = await this.usersRepo.findUserById(userId);
-    if (!user) return null;
+    if (!user) return RESPONSE_OPTIONS.NOT_FOUND;
     const post = await this.postRepo.findPostDocument(postId);
-    if (!post) return null;
-    const blog = await this.blogsRepo.findBlogById(post.blogId);
-    if (!blog) return null;
-    if (blog.userIsBanned(userId)) return null;
+    if (!post) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (user.userIsBannedForBlog(post.blogId)) {
+      return RESPONSE_OPTIONS.FORBIDDEN;
+    }
     const postInfo: PostInfo = {
       id: post._id,
       title: post.title,

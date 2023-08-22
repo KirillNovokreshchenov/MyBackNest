@@ -81,4 +81,11 @@ export class BlogsService {
       return true;
     }
   }
+
+  async blogCheck(blogId: Types.ObjectId, userId: Types.ObjectId) {
+    const blog = await this.blogsRepository.findBlogById(blogId);
+    if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (blog.blogOwnerInfo.userId.toString() !== userId.toString())
+      return RESPONSE_OPTIONS.FORBIDDEN;
+  }
 }

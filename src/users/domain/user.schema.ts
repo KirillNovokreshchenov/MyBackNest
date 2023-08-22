@@ -9,6 +9,7 @@ import {
   EmailConfirmationSchema,
 } from '../../auth/domain/email-confirmation.schema';
 import { BanDto } from '../application/dto/BanDto';
+import { BanUserForBlogDto } from '../application/dto/BanuserForBlogDto';
 
 @Schema({ _id: false })
 export class BanInfo {
@@ -20,6 +21,14 @@ export class BanInfo {
   banReason: string | null;
 }
 const BanInfoSchema = SchemaFactory.createForClass(BanInfo);
+@Schema()
+export class IsBannedForBlogs {
+  @Prop({ required: true })
+  blogId: Types.ObjectId;
+  @Prop({ required: true })
+  banInfo: BanInfo;
+}
+const IsBannedForBlogsSchema = SchemaFactory.createForClass(IsBannedForBlogs);
 
 @Schema()
 export class User {
@@ -36,11 +45,35 @@ export class User {
   emailConfirmation: EmailConfirmation;
   @Prop({ default: {}, type: BanInfoSchema })
   banInfo: BanInfo;
+  @Prop({ default: [], type: [IsBannedForBlogsSchema] })
+  isBannedForBlogs: IsBannedForBlogs[];
   async createHash(password: string, user: UserDocument) {
     user.password = await UserAdapter.hashPassword(password);
   }
   async passwordIsValid(password: string, userHash: string): Promise<boolean> {
     return UserAdapter.compare(password, userHash);
+  }
+  banUnbanUserForBlog(banDto: BanUserForBlogDto) {
+    if (banDto.isBanned) {
+      this.isBannedForBlogs.push({
+        blogId: new Types.ObjectId(banDto.blogId),
+        banInfo: {
+          isBanned: banDto.isBanned,
+          banDate: new Date(),
+          banReason: banDto.banReason,
+        },
+      });
+    } else {
+      const filter = this.isBannedForBlogs.filter(
+        (user) => user.blogId.toString() !== banDto.blogId,
+      );
+      this.isBannedForBlogs = filter;
+    }
+  }
+  userIsBannedForBlog(blogId: Types.ObjectId) {
+    return this.isBannedForBlogs.find(
+      (user) => user.blogId.toString() === blogId.toString(),
+    );
   }
   userBan(banDto: BanDto) {
     this.banInfo = { ...banDto, banDate: new Date() };
@@ -99,6 +132,8 @@ UserSchema.methods = {
   passwordIsValid: User.prototype.passwordIsValid,
   userBan: User.prototype.userBan,
   userUnban: User.prototype.userUnban,
+  banUnbanUserForBlog: User.prototype.banUnbanUserForBlog,
+  userIsBannedForBlog: User.prototype.userIsBannedForBlog,
 };
 
 UserSchema.statics = {

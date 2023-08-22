@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpException,
   HttpStatus,
@@ -26,6 +27,7 @@ import { CommentService } from '../../comments/application/comment.service';
 import { JwtLikeAuthGuard } from '../../auth/guards/jwt-like-auth.guard';
 import { LikeStatusDto } from '../../models/LikeStatusDto';
 import { BlogsQueryRepository } from '../../blogs/infrastructure/blogs.query.repository';
+import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
 
 @Controller('posts')
 export class PostsController {
@@ -98,7 +100,9 @@ export class PostsController {
       postId,
       commentDto,
     );
-    if (!commentId) throw new NotFoundException();
+    if (commentId === RESPONSE_OPTIONS.NOT_FOUND) throw new NotFoundException();
+    if (commentId === RESPONSE_OPTIONS.FORBIDDEN)
+      throw new ForbiddenException();
     return this.queryCommentsRepository.findComment(commentId);
   }
 

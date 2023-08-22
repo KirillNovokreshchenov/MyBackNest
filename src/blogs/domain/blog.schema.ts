@@ -14,16 +14,6 @@ export class BlogOwnerInfo {
 }
 const BlogOwnerInfoSchema = SchemaFactory.createForClass(BlogOwnerInfo);
 
-@Schema({ _id: false })
-export class BannedUser {
-  @Prop({ required: true })
-  id: Types.ObjectId;
-  @Prop({ required: true })
-  login: string;
-  @Prop({ required: true })
-  banInfo: BanInfo;
-}
-const BannedUserSchema = SchemaFactory.createForClass(BannedUser);
 @Schema()
 export class BanBlogInfo {
   @Prop({ default: false })
@@ -47,8 +37,6 @@ export class Blog {
   isMembership: boolean;
   @Prop({ required: true, type: BlogOwnerInfoSchema })
   blogOwnerInfo: BlogOwnerInfo;
-  @Prop({ default: [], type: [BannedUserSchema] })
-  bannedUsers: BannedUser[];
   @Prop({ default: {}, type: BanBlogInfoSchema })
   banInfo: BanBlogInfo;
   updateBlog(dto: UpdateBlogDto) {
@@ -75,33 +63,7 @@ export class Blog {
       };
     }
   }
-  banUnbanUserForBlog(
-    userId: Types.ObjectId,
-    login: string,
-    banDto: BanUserForBlogDto,
-  ) {
-    if (banDto.isBanned) {
-      this.bannedUsers.push({
-        id: userId,
-        login,
-        banInfo: {
-          isBanned: banDto.isBanned,
-          banDate: new Date(),
-          banReason: banDto.banReason,
-        },
-      });
-    } else {
-      const filter = this.bannedUsers.filter(
-        (userBanned) => userBanned.id.toString() !== userId.toString(),
-      );
-      this.bannedUsers = filter;
-    }
-  }
-  userIsBanned(currentUserId: Types.ObjectId) {
-    return this.bannedUsers.find(
-      (user) => user.id.toString() === currentUserId.toString(),
-    );
-  }
+
   static createNewBlog(
     blogDto: CreateBlogDto,
     userId: Types.ObjectId,
@@ -136,8 +98,6 @@ BlogSchema.statics = {
 BlogSchema.methods = {
   updateBlog: Blog.prototype.updateBlog,
   bindUser: Blog.prototype.bindUser,
-  banUnbanUserForBlog: Blog.prototype.banUnbanUserForBlog,
-  userIsBanned: Blog.prototype.userIsBanned,
   banUnbanBlog: Blog.prototype.banUnbanBlog,
 };
 export type BlogDocument = HydratedDocument<Blog>;

@@ -12,6 +12,7 @@ import { UserQueryModel } from './models/UserQueryModel';
 import { UserQueryInputType } from '../api/input-model/UserQueryInputType';
 import { UserAuthViewModel } from '../../auth/api/view-model/UserAuthViewModel';
 import { Blog, BlogModelType } from '../../blogs/domain/blog.schema';
+import { BannedUserForBlogViewModel } from '../api/view-model/BannedUserForBlogViewModel';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -32,12 +33,54 @@ export class UsersQueryRepository {
   }
 
   async findAllUsers(dataQuery: UserQueryInputType) {
+    const data = await this._dataFindUser(dataQuery);
+
+    const mapUsers = data.users.map((user) => new UserViewModel(user));
+
+    return new UserViewModelAll(
+      data.countPages,
+      data.pageNumber,
+      data.pageSize,
+      data.totalCount,
+      mapUsers,
+    );
+  }
+  async findBannedUsersForBlogs(
+    dataQuery: UserQueryInputType,
+    blogId: Types.ObjectId,
+  ) {
+    const data = await this._dataFindUser(dataQuery, blogId);
+    const mapUsers = data.users.map((user) => {
+      const banInfo = user.isBannedForBlogs.find(
+        (ban) => ban.blogId.toString() === blogId.toString(),
+      );
+      return new BannedUserForBlogViewModel(
+        user._id,
+        user.login,
+        banInfo!.banInfo,
+      );
+    });
+
+    return new UserViewModelAll(
+      data.countPages,
+      data.pageNumber,
+      data.pageSize,
+      data.totalCount,
+      mapUsers,
+    );
+  }
+
+  async _dataFindUser(
+    dataQuery: UserQueryInputType,
+    blogIdForBannedUsers?: Types.ObjectId,
+  ) {
     const query = new UserQueryModel(dataQuery);
 
     const filter = userFilter(
       query.searchLoginTerm,
       query.searchEmailTerm,
       query.banStatus,
+      blogIdForBannedUsers,
     );
 
     const totalCount = await this.userModel.countDocuments(filter);
@@ -51,41 +94,12 @@ export class UsersQueryRepository {
       .skip(skip)
       .limit(query.pageSize)
       .lean();
-
-    const mapUsers = allUsers.map((user) => new UserViewModel(user));
-
-    return new UserViewModelAll(
-      countPages,
-      query.pageNumber,
-      query.pageSize,
+    return {
       totalCount,
-      mapUsers,
-    );
-  }
-
-  async findBannedUsersForBlogs(
-    dataQuery: UserQueryInputType,
-    blogId: Types.ObjectId,
-  ) {
-    const query = new UserQueryModel(dataQuery);
-    const blog = await this.BlogModel.findById(blogId);
-    if (!blog) return null;
-    const filter = userFilter(
-      query.searchLoginTerm,
-      query.searchEmailTerm,
-      query.banStatus,
-    );
-    const totalCount = blog.bannedUsers.length;
-    const countPages = pagesCount(totalCount, query.pageSize);
-    const sort = sortQuery(query.sortDirection, query.sortBy);
-    const skip = skipPages(query.pageNumber, query.pageSize);
-
-    return new UserViewModelAll(
       countPages,
-      query.pageNumber,
-      query.pageSize,
-      totalCount,
-      blog.bannedUsers,
-    );
+      pageNumber: query.pageNumber,
+      pageSize: query.pageSize,
+      users: allUsers,
+    };
   }
 }
