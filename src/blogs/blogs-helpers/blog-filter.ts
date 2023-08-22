@@ -11,6 +11,5 @@ export function blogFilter(
   if (userId) {
     filter['blogOwnerInfo.userId'] = userId;
   }
-  filter['banInfo.isBanned'] = { $ne: true };
   return filter;
 }

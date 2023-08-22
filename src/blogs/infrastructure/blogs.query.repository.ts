@@ -17,7 +17,11 @@ export class BlogsQueryRepository {
   constructor(@InjectModel(Blog.name) private BlogModel: BlogModelType) {}
 
   async findAllBlogs(dataQuery: BlogQueryInputType, userId?: Types.ObjectId) {
-    const dataAllBlogs = await this._dataAllBlogs(dataQuery, userId);
+    const query = new BlogQueryModel(dataQuery);
+    const filter = blogFilter(query.searchNameTerm, userId);
+    filter['banInfo.isBanned'] = { $ne: true };
+    const dataAllBlogs = await this._dataAllBlogs(query, filter, userId);
+
     const mapBlogs = dataAllBlogs.allBlogs.map(
       (blog) => new BlogViewModel(blog),
     );
@@ -32,7 +36,12 @@ export class BlogsQueryRepository {
   }
 
   async findAllBlogsByAdmin(dataQuery: BlogQueryInputType) {
-    const dataAllBlogs = await this._dataAllBlogs(dataQuery);
+    const query = new BlogQueryModel(dataQuery);
+    const filter = blogFilter(query.searchNameTerm);
+
+    const dataAllBlogs = await this._dataAllBlogs(query, filter);
+
+    console.log(dataAllBlogs.allBlogs);
     const mapBlogs = dataAllBlogs.allBlogs.map(
       (blog) => new BlogByAdminViewModel(blog),
     );
@@ -46,11 +55,11 @@ export class BlogsQueryRepository {
     );
   }
 
-  async _dataAllBlogs(dataQuery: BlogQueryInputType, userId?: Types.ObjectId) {
-    const query = new BlogQueryModel(dataQuery);
-
-    const filter = blogFilter(query.searchNameTerm, userId);
-
+  async _dataAllBlogs(
+    query: BlogQueryModel,
+    filter: any,
+    userId?: Types.ObjectId,
+  ) {
     const totalCount = await this.BlogModel.countDocuments(filter);
     const countPages = pagesCount(totalCount, query.pageSize);
     const sort = sortQuery(query.sortDirection, query.sortBy);

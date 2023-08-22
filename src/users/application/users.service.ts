@@ -20,6 +20,7 @@ import { LIKE_STATUS } from '../../models/LikeStatusEnum';
 import { BanUserForBlogDto } from './dto/BanuserForBlogDto';
 import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
 import { BanBlogDto } from '../../blogs/application/dto/BanBlogDto';
+import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
 
 @Injectable()
 export class UsersService {
@@ -194,13 +195,24 @@ export class UsersService {
     );
   }
 
-  async userBanForBlog(userId: Types.ObjectId, banDto: BanUserForBlogDto) {
+  async userBanForBlog(
+    userId: Types.ObjectId,
+    userOwnerBlogId: Types.ObjectId,
+    banDto: BanUserForBlogDto,
+  ) {
+    const blog = await this.blogsRepo.findBlogById(
+      new Types.ObjectId(banDto.blogId),
+    );
+    if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (blog.blogOwnerInfo.userId.toString() !== userOwnerBlogId.toString()) {
+      return RESPONSE_OPTIONS.FORBIDDEN;
+    }
     const user = await this.usersRepository.findUserById(userId);
-    if (!user) return false;
+    if (!user) return RESPONSE_OPTIONS.NOT_FOUND;
 
     user.banUnbanUserForBlog(banDto);
     await this.usersRepository.saveUser(user);
-    return true;
+    return RESPONSE_OPTIONS.NO_CONTENT;
   }
 
   async banBlog(blogId: Types.ObjectId, banBlogDto: BanBlogDto) {
