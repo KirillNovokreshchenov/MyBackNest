@@ -32,6 +32,15 @@ import { CurrentUserId } from '../decorators/create-param-current-id.decarator';
 import { Types } from 'mongoose';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { UsersQueryRepository } from '../../users/infrastructure/users.query.repository';
+import { CommandBus } from '@nestjs/cqrs';
+import { CreateTokensCommand } from '../application/use-cases/create-tokens-use-case';
+import { NewTokensCommand } from '../application/use-cases/new-tokens-use-case';
+import { LogoutCommand } from '../application/use-cases/logout-use-case';
+import { CreateUserByRegistrationCommand } from '../../users/application/use-cases/create-user-by-registration-use-case';
+import { ConfirmByEmailCommand } from '../../users/application/use-cases/confirm-by-email-use-case';
+import { EmailResendingCommand } from '../../users/application/use-cases/email -resending-use-case';
+import { RecoveryPasswordCommand } from '../../users/application/use-cases/recovery -password-use-case';
+import { NewPasswordCommand } from '../../users/application/use-cases/new-password-use-case';
 
 @Controller('auth')
 export class AuthController {
@@ -39,6 +48,7 @@ export class AuthController {
     protected usersService: UsersService,
     protected authService: AuthService,
     protected usersQueryRepo: UsersQueryRepository,
+    private commandBus: CommandBus,
   ) {}
   @UseGuards(JwtAuthGuard)
   @Get('/me')
@@ -57,7 +67,9 @@ export class AuthController {
     @CurrentUser() userData: UserDataType,
     @Res({ passthrough: true }) res: Response,
   ): Promise<TokenViewModel> {
-    const tokens = await this.authService.createTokens(userData);
+    const tokens = await this.commandBus.execute(
+      new CreateTokensCommand(userData),
+    );
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
@@ -71,7 +83,9 @@ export class AuthController {
     @CurrentUserRefresh() userFromRefresh: UserFromRefreshType,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const tokens = await this.authService.newTokens(userFromRefresh);
+    const tokens = await this.commandBus.execute(
+      new NewTokensCommand(userFromRefresh),
+    );
     if (!tokens) throw new UnauthorizedException();
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
@@ -82,15 +96,17 @@ export class AuthController {
   @UseGuards(RefreshJwtAuthGuard)
   @Post('/logout')
   async logout(@CurrentUserRefresh() userFromRefresh: UserFromRefreshType) {
-    const logout = await this.authService.logout(userFromRefresh);
+    const logout = await this.commandBus.execute(
+      new LogoutCommand(userFromRefresh),
+    );
     if (!logout) throw new UnauthorizedException();
     throw new HttpException('No content', HttpStatus.NO_CONTENT);
   }
   @UseGuards(ThrottlerGuard)
   @Post('/registration')
   async registration(@Body(RegistrationPipe) userDto: CreateUserDto) {
-    const userCreate = await this.usersService.createUserByRegistration(
-      userDto,
+    const userCreate = await this.commandBus.execute(
+      new CreateUserByRegistrationCommand(userDto),
     );
     if (userCreate) throw new HttpException('', HttpStatus.NO_CONTENT);
     throw new HttpException('', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -98,7 +114,9 @@ export class AuthController {
   @UseGuards(ThrottlerGuard)
   @Post('/registration-confirmation')
   async registrationConfirmation(@Body() codeDto: CodeDto) {
-    const isConfirmed = await this.usersService.confirmByEmail(codeDto);
+    const isConfirmed = await this.commandBus.execute(
+      new ConfirmByEmailCommand(codeDto),
+    );
     if (!isConfirmed) {
       throw new BadRequestException([
         { message: 'incorrect code', field: 'code' },
@@ -109,7 +127,9 @@ export class AuthController {
   @UseGuards(ThrottlerGuard)
   @Post('/registration-email-resending')
   async emailResending(@Body() emailDto: EmailDto) {
-    const emailResending = await this.usersService.emailResending(emailDto);
+    const emailResending = await this.commandBus.execute(
+      new EmailResendingCommand(emailDto),
+    );
     if (!emailResending) {
       throw new BadRequestException([
         { message: 'incorrect email', field: 'email' },
@@ -120,13 +140,15 @@ export class AuthController {
   @UseGuards(ThrottlerGuard)
   @Post('/password-recovery')
   async passwordRecovery(@Body() emailDto: EmailDto) {
-    await this.usersService.recoveryPassword(emailDto);
+    await this.commandBus.execute(new RecoveryPasswordCommand(emailDto));
     throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
   }
   @UseGuards(ThrottlerGuard)
   @Post('/new-password')
   async newPassword(@Body() newPasswordDto: NewPasswordDto) {
-    const newPassword = await this.usersService.newPassword(newPasswordDto);
+    const newPassword = await this.commandBus.execute(
+      new NewPasswordCommand(newPasswordDto),
+    );
     if (!newPassword) {
       throw new BadRequestException([
         { message: 'incorrect recovery code', field: 'recoveryCode' },

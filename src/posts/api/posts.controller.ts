@@ -1,8 +1,6 @@
 import {
-  BadRequestException,
   Body,
   Controller,
-  Delete,
   ForbiddenException,
   Get,
   HttpException,
@@ -28,6 +26,9 @@ import { JwtLikeAuthGuard } from '../../auth/guards/jwt-like-auth.guard';
 import { LikeStatusDto } from '../../models/LikeStatusDto';
 import { BlogsQueryRepository } from '../../blogs/infrastructure/blogs.query.repository';
 import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
+import { CommandBus } from '@nestjs/cqrs';
+import { UpdateLikeStatusPostCommand } from '../application/use-cases/update-like-status-post-use-case';
+import { CreateCommentCommand } from '../../comments/application/use-cases/create-comment-use-case';
 
 @Controller('posts')
 export class PostsController {
@@ -37,6 +38,7 @@ export class PostsController {
     protected queryCommentsRepository: CommentsQueryRepository,
     protected queryBlogRepo: BlogsQueryRepository,
     protected commentService: CommentService,
+    private commandBus: CommandBus,
   ) {}
   @UseGuards(JwtLikeAuthGuard)
   @Get()
@@ -95,10 +97,8 @@ export class PostsController {
     @Param('id', ParseObjectIdPipe) postId: Types.ObjectId,
     @Body() commentDto: CreateCommentDto,
   ) {
-    const commentId = await this.commentService.createComment(
-      userId,
-      postId,
-      commentDto,
+    const commentId = await this.commandBus.execute(
+      new CreateCommentCommand(userId, postId, commentDto),
     );
     if (commentId === RESPONSE_OPTIONS.NOT_FOUND) throw new NotFoundException();
     if (commentId === RESPONSE_OPTIONS.FORBIDDEN)
@@ -129,10 +129,8 @@ export class PostsController {
     @CurrentUserId() userId: Types.ObjectId,
     @Body() likeStatusDto: LikeStatusDto,
   ) {
-    const likeStatus = await this.postsService.updateLikeStatus(
-      userId,
-      postId,
-      likeStatusDto,
+    const likeStatus = await this.commandBus.execute(
+      new UpdateLikeStatusPostCommand(userId, postId, likeStatusDto),
     );
     if (!likeStatus) throw new NotFoundException();
     throw new HttpException('No content', HttpStatus.NO_CONTENT);

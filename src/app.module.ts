@@ -55,10 +55,70 @@ import { BlogExistsRule } from './posts/validators/custom-blogId.validator';
 import { BloggerController } from './blogs/api/blogger.controller';
 import { SaController } from './blogs/api/sa.controller';
 import { SaUsersController } from './users/api/sa-users.controller';
+import { CreateBlogUseCase } from './blogs/application/use-cases/create-blog-use-case';
+import { CqrsModule } from '@nestjs/cqrs';
+import { UpdateBlogUseCase } from './blogs/application/use-cases/update-blog-use-case';
+import { DeleteBlogUseCase } from './blogs/application/use-cases/delete-blog-use-case';
+import { BindBlogUseCase } from './blogs/application/use-cases/bind-blog-use-case';
+import { CheckCredentialsUseCase } from './auth/application/use-cases/check-credentials-use-case';
+import { CreateTokensUseCase } from './auth/application/use-cases/create-tokens-use-case';
+import { NewTokensUseCase } from './auth/application/use-cases/new-tokens-use-case';
+import { LogoutUseCase } from './auth/application/use-cases/logout-use-case';
+import { CreateUserByRegistrationUseCase } from './users/application/use-cases/create-user-by-registration-use-case';
+import { ConfirmByEmailUseCase } from './users/application/use-cases/confirm-by-email-use-case';
+import { EmailResendingUseCase } from './users/application/use-cases/email -resending-use-case';
+import { RecoveryPasswordUseCase } from './users/application/use-cases/recovery -password-use-case';
+import { CreateUserByAdminUseCase } from './users/application/use-cases/create -user-by-admin-use-case';
+import { DeleteUserUseCase } from './users/application/use-cases/delete-user-use-case';
+import { NewPasswordUseCase } from './users/application/use-cases/new-password-use-case';
+import { UserBanUseCase } from './users/application/use-cases/user-ban-use-case';
+import { UserBanForBlogUseCase } from './users/application/use-cases/user-ban-for-blog-use-case';
+import { BanBlogUseCase } from './users/application/use-cases/ban-blog-use-case';
+import { DeleteAllSessionsUseCase } from './sessions/application/use-cases/delete-all-sessions-use-case';
+import { DeleteSessionUseCase } from './sessions/application/use-cases/delete -session-use-case';
+import { CreatePostUseCase } from './posts/application/use-cases/create-post-use-case';
+import { UpdatePostUseCase } from './posts/application/use-cases/update-post-use-case';
+import { DeletePostUseCase } from './posts/application/use-cases/delete-post-use-case';
+import { UpdateLikeStatusPostUseCase } from './posts/application/use-cases/update-like-status-post-use-case';
+import { CreateCommentUseCase } from './comments/application/use-cases/create-comment-use-case';
+import { UpdateCommentUseCase } from './comments/application/use-cases/update-comment-use-case';
+import { DeleteCommentUseCase } from './comments/application/use-cases/delete-comment-use-case';
+import { UpdateLikeStatusCommentUseCase } from './comments/application/use-cases/update-like-status-comment-use-case';
 
+const useCases = [
+  CreateBlogUseCase,
+  UpdateBlogUseCase,
+  DeleteBlogUseCase,
+  BindBlogUseCase,
+  CheckCredentialsUseCase,
+  CreateTokensUseCase,
+  NewTokensUseCase,
+  LogoutUseCase,
+  CreateUserByRegistrationUseCase,
+  ConfirmByEmailUseCase,
+  EmailResendingUseCase,
+  RecoveryPasswordUseCase,
+  CreateUserByAdminUseCase,
+  DeleteUserUseCase,
+  NewPasswordUseCase,
+  UserBanUseCase,
+  UserBanForBlogUseCase,
+  BanBlogUseCase,
+  DeleteAllSessionsUseCase,
+  DeleteSessionUseCase,
+  CreatePostUseCase,
+  UpdatePostUseCase,
+  DeletePostUseCase,
+  UpdateLikeStatusPostUseCase,
+  CreateCommentUseCase,
+  UpdateCommentUseCase,
+  DeleteCommentUseCase,
+  UpdateLikeStatusCommentUseCase,
+];
 @Module({
   imports: [
     ConfigModule.forRoot({ load: [configuration] }),
+    CqrsModule,
     MongooseModule.forRoot(configuration().mongoUri),
     ThrottlerModule.forRoot({
       // ttl: 10,
@@ -157,6 +217,7 @@ import { SaUsersController } from './users/api/sa-users.controller';
     CommentService,
     CommentsRepository,
     BlogExistsRule,
+    ...useCases,
   ],
 })
 export class AppModule {}

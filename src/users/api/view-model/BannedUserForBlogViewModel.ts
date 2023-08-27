@@ -1,4 +1,4 @@
-import { BanInfo, User } from '../../domain/user.schema';
+import { BanInfo } from '../../domain/user.schema';
 import { Types } from 'mongoose';
 
 export class BannedUserForBlogViewModel {

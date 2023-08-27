@@ -1,11 +1,9 @@
 import {
   Controller,
   Delete,
-  ForbiddenException,
   Get,
   HttpException,
   HttpStatus,
-  NotFoundException,
   Param,
   UnauthorizedException,
   UseGuards,
@@ -18,13 +16,17 @@ import { DeviceViewModel } from './view-model/DeviceViewModel';
 import { DeviceService } from '../application/device.service';
 import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
 import { Types } from 'mongoose';
-import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
+import { CommandBus } from '@nestjs/cqrs';
+import { DeleteAllSessionsCommand } from '../application/use-cases/delete-all-sessions-use-case';
+import { DeleteSessionCommand } from '../application/use-cases/delete -session-use-case';
+import { switchError } from '../../helpers/switch-error';
 
 @Controller('security/devices')
 export class DeviceController {
   constructor(
     protected deviceQueryRepo: DeviceQueryRepository,
     protected deviceService: DeviceService,
+    private commandBus: CommandBus,
   ) {}
   @UseGuards(RefreshJwtAuthGuard)
   @Get()
@@ -39,8 +41,8 @@ export class DeviceController {
   async deleteAllSessions(
     @CurrentUserRefresh() userFromRefresh: UserFromRefreshType,
   ) {
-    const isDeleted = await this.deviceService.deleteAllSessions(
-      userFromRefresh,
+    const isDeleted = await this.commandBus.execute(
+      new DeleteAllSessionsCommand(userFromRefresh),
     );
     if (!isDeleted) throw new UnauthorizedException();
     throw new HttpException('No content', HttpStatus.NO_CONTENT);
@@ -51,17 +53,9 @@ export class DeviceController {
     @Param('id', ParseObjectIdPipe) deviceId: Types.ObjectId,
     @CurrentUserRefresh() userFromRefresh: UserFromRefreshType,
   ) {
-    const isDeleted = await this.deviceService.deleteSession(
-      deviceId,
-      userFromRefresh,
+    const isDeleted = await this.commandBus.execute(
+      new DeleteSessionCommand(deviceId, userFromRefresh),
     );
-    switch (isDeleted) {
-      case RESPONSE_OPTIONS.NOT_FOUND:
-        throw new NotFoundException();
-      case RESPONSE_OPTIONS.FORBIDDEN:
-        throw new ForbiddenException();
-      case RESPONSE_OPTIONS.NO_CONTENT:
-        throw new HttpException('No content', HttpStatus.NO_CONTENT);
-    }
+    switchError(isDeleted);
   }
 }

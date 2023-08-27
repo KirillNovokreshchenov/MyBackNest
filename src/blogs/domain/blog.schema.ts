@@ -2,9 +2,8 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { CreateBlogDto } from '../application/dto/CreateBlogDto';
 import { UpdateBlogDto } from '../application/dto/UpdateBlogDto';
-import { BanUserForBlogDto } from '../../users/application/dto/BanuserForBlogDto';
-import { BanInfo } from '../../users/domain/user.schema';
 import { BanBlogDto } from '../application/dto/BanBlogDto';
+
 @Schema()
 export class BlogOwnerInfo {
   @Prop({ required: true })

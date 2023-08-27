@@ -38,6 +38,14 @@ import { BanUserForBlogDto } from '../../users/application/dto/BanuserForBlogDto
 import { UsersService } from '../../users/application/users.service';
 import { UserQueryInputType } from '../../users/api/input-model/UserQueryInputType';
 import { UsersQueryRepository } from '../../users/infrastructure/users.query.repository';
+import { CreateBlogCommand } from '../application/use-cases/create-blog-use-case';
+import { CommandBus } from '@nestjs/cqrs';
+import { UpdateBlogCommand } from '../application/use-cases/update-blog-use-case';
+import { DeleteBlogCommand } from '../application/use-cases/delete-blog-use-case';
+import { UserBanForBlogCommand } from '../../users/application/use-cases/user-ban-for-blog-use-case';
+import { CreatePostCommand } from '../../posts/application/use-cases/create-post-use-case';
+import { UpdatePostCommand } from '../../posts/application/use-cases/update-post-use-case';
+import { DeletePostCommand } from '../../posts/application/use-cases/delete-post-use-case';
 
 @Controller('blogger')
 @UseGuards(JwtAuthGuard)
@@ -50,6 +58,7 @@ export class BloggerController {
     private queryPostsRepository: PostsQueryRepository,
     private queryCommentsRepo: CommentsQueryRepository,
     private queryUsersRepo: UsersQueryRepository,
+    private commandBus: CommandBus,
   ) {}
   @Get('/blogs')
   async findAllBlogs(
@@ -74,17 +83,17 @@ export class BloggerController {
     @Param('id', ParseObjectIdPipe) blogId: Types.ObjectId,
     @CurrentUserId() userId: Types.ObjectId,
   ) {
-    const blogCheck = await this.blogsService.blogCheck(blogId, userId);
-    if (blogCheck === RESPONSE_OPTIONS.NOT_FOUND) {
-      throw new NotFoundException();
-    }
-    if (blogCheck === RESPONSE_OPTIONS.FORBIDDEN) {
-      throw new ForbiddenException();
-    }
     const bannedUsers = await this.queryUsersRepo.findBannedUsersForBlogs(
       dataQuery,
       blogId,
+      userId,
     );
+    if (bannedUsers === RESPONSE_OPTIONS.NOT_FOUND) {
+      throw new NotFoundException();
+    }
+    if (bannedUsers === RESPONSE_OPTIONS.FORBIDDEN) {
+      throw new ForbiddenException();
+    }
     return bannedUsers;
   }
   @Post('/blogs')
@@ -92,7 +101,9 @@ export class BloggerController {
     @Body() dto: CreateBlogDto,
     @CurrentUserId() userId: Types.ObjectId,
   ): Promise<BlogViewModel> {
-    const blogId = await this.blogsService.createBlog(dto, userId);
+    const blogId = await this.commandBus.execute(
+      new CreateBlogCommand(dto, userId),
+    );
     new HttpException('server error', HttpStatus.INTERNAL_SERVER_ERROR);
     if (!blogId) {
       throw new HttpException('server error', HttpStatus.INTERNAL_SERVER_ERROR);
@@ -109,10 +120,8 @@ export class BloggerController {
     @Body() dto: UpdateBlogDto,
     @CurrentUserId() userId: Types.ObjectId,
   ) {
-    const blogIsUpdate = await this.blogsService.updateBlog(
-      blogId,
-      userId,
-      dto,
+    const blogIsUpdate = await this.commandBus.execute(
+      new UpdateBlogCommand(blogId, userId, dto),
     );
     switchError(blogIsUpdate);
   }
@@ -122,10 +131,8 @@ export class BloggerController {
     @CurrentUserId() userOwnerBlogId: Types.ObjectId,
     @Body() banDto: BanUserForBlogDto,
   ) {
-    const isBanned = await this.usersService.userBanForBlog(
-      userId,
-      userOwnerBlogId,
-      banDto,
+    const isBanned = await this.commandBus.execute(
+      new UserBanForBlogCommand(userId, userOwnerBlogId, banDto),
     );
     switchError(isBanned);
   }
@@ -134,7 +141,9 @@ export class BloggerController {
     @Param('id', ParseObjectIdPipe) blogId: Types.ObjectId,
     @CurrentUserId() userId: Types.ObjectId,
   ) {
-    const blogIsDeleted = await this.blogsService.deleteBlog(blogId, userId);
+    const blogIsDeleted = await this.commandBus.execute(
+      new DeleteBlogCommand(blogId, userId),
+    );
     switchError(blogIsDeleted);
   }
   @Post('/blogs/:id/posts')
@@ -143,9 +152,8 @@ export class BloggerController {
     @Body() dto: CreatePostForBlogDto,
     @CurrentUserId() userId: Types.ObjectId,
   ) {
-    const postId = await this.postsService.createPost(
-      { ...dto, blogId },
-      userId,
+    const postId = await this.commandBus.execute(
+      new CreatePostCommand({ ...dto, blogId }, userId),
     );
     if (postId === RESPONSE_OPTIONS.NOT_FOUND) {
       throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
@@ -177,23 +185,23 @@ export class BloggerController {
 
   @Put('/blogs/:blogId/posts/:postId')
   async updatePost(
-    @Param(ParseObjectIdPipe) PostAnBlogId: BlogPostIdInputType,
+    @Param(ParseObjectIdPipe) PostAndBlogId: BlogPostIdInputType,
     @Body() postDto: UpdatePostDto,
     @CurrentUserId() userId: Types.ObjectId,
   ) {
-    const isUpdate = await this.postsService.updatePost(
-      PostAnBlogId,
-      userId,
-      postDto,
+    const isUpdate = await this.commandBus.execute(
+      new UpdatePostCommand(PostAndBlogId, userId, postDto),
     );
     switchError(isUpdate);
   }
   @Delete('/blogs/:blogId/posts/:postId')
   async deletePost(
-    @Param(ParseObjectIdPipe) PostAnBlogId: BlogPostIdInputType,
+    @Param(ParseObjectIdPipe) PostAndBlogId: BlogPostIdInputType,
     @CurrentUserId() userId: Types.ObjectId,
   ) {
-    const isDeleted = await this.postsService.deletePost(PostAnBlogId, userId);
+    const isDeleted = await this.commandBus.execute(
+      new DeletePostCommand(PostAndBlogId, userId),
+    );
     switchError(isDeleted);
   }
 }

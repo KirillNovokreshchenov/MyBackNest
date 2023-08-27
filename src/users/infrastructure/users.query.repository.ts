@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { UserViewModel } from '../api/view-model/UserViewModel';
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument, UserModelType } from '../domain/user.schema';
-import { Model, Types } from 'mongoose';
+import { User, UserModelType } from '../domain/user.schema';
+import { Types } from 'mongoose';
 import { userFilter } from '../users-helpers/user-filter';
 import { skipPages } from '../../helpers/skip-pages';
 import { sortQuery } from '../../helpers/sort-query';
@@ -13,6 +13,7 @@ import { UserQueryInputType } from '../api/input-model/UserQueryInputType';
 import { UserAuthViewModel } from '../../auth/api/view-model/UserAuthViewModel';
 import { Blog, BlogModelType } from '../../blogs/domain/blog.schema';
 import { BannedUserForBlogViewModel } from '../api/view-model/BannedUserForBlogViewModel';
+import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -48,7 +49,12 @@ export class UsersQueryRepository {
   async findBannedUsersForBlogs(
     dataQuery: UserQueryInputType,
     blogId: Types.ObjectId,
+    userId: Types.ObjectId,
   ) {
+    const blog = await this.BlogModel.findById(blogId);
+    if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (blog.blogOwnerInfo.userId.toString() !== userId.toString())
+      return RESPONSE_OPTIONS.FORBIDDEN;
     const data = await this._dataFindUser(dataQuery, blogId);
     const mapUsers = data.users.map((user) => {
       const banInfo = user.isBannedForBlogs.find(

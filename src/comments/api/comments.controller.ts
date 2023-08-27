@@ -21,12 +21,17 @@ import { CurrentUserId } from '../../auth/decorators/create-param-current-id.dec
 import { LikeStatusDto } from '../../models/LikeStatusDto';
 import { JwtLikeAuthGuard } from '../../auth/guards/jwt-like-auth.guard';
 import { switchError } from '../../helpers/switch-error';
+import { CommandBus } from '@nestjs/cqrs';
+import { UpdateCommentCommand } from '../application/use-cases/update-comment-use-case';
+import { DeleteCommentCommand } from '../application/use-cases/delete-comment-use-case';
+import { UpdateLikeStatusCommentCommand } from '../application/use-cases/update-like-status-comment-use-case';
 
 @Controller('comments')
 export class CommentsController {
   constructor(
     protected commentsQueryRepository: CommentsQueryRepository,
     protected commentService: CommentService,
+    private commandBus: CommandBus,
   ) {}
   @UseGuards(JwtLikeAuthGuard)
   @Get('/:id')
@@ -48,10 +53,8 @@ export class CommentsController {
     @Body() commentDto: UpdateCommentDto,
     @CurrentUserId() userId: Types.ObjectId,
   ) {
-    const isUpdated = await this.commentService.updateComment(
-      userId,
-      commentId,
-      commentDto,
+    const isUpdated = await this.commandBus.execute(
+      new UpdateCommentCommand(userId, commentId, commentDto),
     );
     switchError(isUpdated);
   }
@@ -62,10 +65,8 @@ export class CommentsController {
     @CurrentUserId() userId: Types.ObjectId,
     @Body() likeStatusDto: LikeStatusDto,
   ) {
-    const likeStatus = await this.commentService.updateLikeStatus(
-      userId,
-      commentId,
-      likeStatusDto,
+    const likeStatus = await this.commandBus.execute(
+      new UpdateLikeStatusCommentCommand(userId, commentId, likeStatusDto),
     );
     if (!likeStatus) throw new NotFoundException();
     throw new HttpException('No content', HttpStatus.NO_CONTENT);
@@ -77,9 +78,8 @@ export class CommentsController {
     @Param('id', ParseObjectIdPipe) commentId: Types.ObjectId,
     @CurrentUserId() userId: Types.ObjectId,
   ) {
-    const isDeleted = await this.commentService.deleteComment(
-      userId,
-      commentId,
+    const isDeleted = await this.commandBus.execute(
+      new DeleteCommentCommand(userId, commentId),
     );
     switchError(isDeleted);
   }

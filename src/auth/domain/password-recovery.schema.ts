@@ -2,6 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model } from 'mongoose';
 import { add } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
+
 @Schema()
 export class PasswordRecovery {
   @Prop({ required: true })
