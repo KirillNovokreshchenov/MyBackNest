@@ -34,6 +34,7 @@
     "class-validator": "^0.14.0",
     "cookie-parser": "^1.4.6",
     "date-fns": "^2.30.0",
+    "dotenv": "^16.3.1",
     "mongoose": "^7.4.0",
     "nestjs-real-ip": "^3.0.1",
     "nodemailer": "^6.9.4",

@@ -1,6 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import configuration from './configuration';
 import { HttpExceptionFilter } from './filters/http-exeption.filter';
 import {
   BadRequestException,
@@ -10,9 +9,14 @@ import {
 import { ErrorExceptionFilter } from './filters/error-exception.filter';
 import cookieParser from 'cookie-parser';
 import { useContainer } from 'class-validator';
+import * as process from 'process';
+import { ConfigType, getConfiguration } from './configuration/configuration';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService<ConfigType>);
+  const port = configService.get('port');
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
   app.enableCors();
   app.use(cookieParser());
@@ -37,6 +41,6 @@ async function bootstrap() {
       },
     }),
   );
-  await app.listen(configuration().port);
+  await app.listen(port);
 }
 bootstrap();

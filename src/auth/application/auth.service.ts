@@ -8,7 +8,11 @@ import {
   SessionModelType,
 } from '../../sessions/domain/session.schema';
 import { DeviceRepository } from '../../sessions/infrastructure/device.repository';
-import configuration from '../../configuration';
+import {
+  ConfigType,
+  getConfiguration,
+} from '../../configuration/configuration';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +21,7 @@ export class AuthService {
     private jwtService: JwtService,
     @InjectModel(Session.name) private SessionModel: SessionModelType,
     protected sessionRepo: DeviceRepository,
+    private configService: ConfigService<ConfigType>,
   ) {}
 
   // async checkCredentials(loginDto: LoginDto): Promise<Types.ObjectId | null> {
@@ -61,7 +66,7 @@ export class AuthService {
         accessToken: this.jwtService.sign(payloadAT),
       },
       refreshToken: this.jwtService.sign(payloadRT, {
-        secret: configuration().secretRT,
+        secret: this.configService.get('jwt.secretRT', { infer: true }),
       }),
     };
   }

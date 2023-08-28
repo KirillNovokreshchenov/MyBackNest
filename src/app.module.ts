@@ -1,5 +1,5 @@
+import { configModule } from './configuration/ConfigModule';
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersController } from './users/api/users.controller';
@@ -25,7 +25,6 @@ import { Comment, CommentSchema } from './comments/domain/comment.schema';
 import { TestingController } from './testing/testing.controller';
 import { AuthController } from './auth/api/auth.controller';
 import { AuthService } from './auth/application/auth.service';
-import configuration from './configuration';
 import { EmailAdapter } from './auth/infrastructure/adapters/email.adapter';
 import { EmailManagers } from './auth/application/managers/email.managers';
 import { MailerModule } from '@nestjs-modules/mailer';
@@ -84,6 +83,8 @@ import { CreateCommentUseCase } from './comments/application/use-cases/create-co
 import { UpdateCommentUseCase } from './comments/application/use-cases/update-comment-use-case';
 import { DeleteCommentUseCase } from './comments/application/use-cases/delete-comment-use-case';
 import { UpdateLikeStatusCommentUseCase } from './comments/application/use-cases/update-like-status-comment-use-case';
+import { ConfigService } from '@nestjs/config';
+import { ConfigType } from './configuration/configuration';
 
 const useCases = [
   CreateBlogUseCase,
@@ -115,11 +116,18 @@ const useCases = [
   DeleteCommentUseCase,
   UpdateLikeStatusCommentUseCase,
 ];
+
 @Module({
   imports: [
-    ConfigModule.forRoot({ load: [configuration] }),
+    configModule,
     CqrsModule,
-    MongooseModule.forRoot(configuration().mongoUri),
+    MongooseModule.forRootAsync({
+      imports: [configModule],
+      useFactory: (configService: ConfigService<ConfigType>) => ({
+        uri: configService.get('mongoUri'),
+      }),
+      inject: [ConfigService],
+    }),
     ThrottlerModule.forRoot({
       // ttl: 10,
       // limit: 5,
@@ -158,13 +166,21 @@ const useCases = [
         schema: CommentLikeSchema,
       },
     ]),
-    JwtModule.register({
-      secret: configuration().secretAT,
-      signOptions: { expiresIn: '60m' },
+    JwtModule.registerAsync({
+      imports: [configModule],
+      useFactory: (configService: ConfigService<ConfigType>) => ({
+        secret: configService.get('jwt.secretAT', { infer: true }),
+        signOptions: { expiresIn: '60m' },
+      }),
+      inject: [ConfigService],
     }),
-    JwtModule.register({
-      secret: configuration().secretRT,
-      signOptions: { expiresIn: '90m' },
+    JwtModule.registerAsync({
+      imports: [configModule],
+      useFactory: (configService: ConfigService<ConfigType>) => ({
+        secret: configService.get('jwt.secretRT', { infer: true }),
+        signOptions: { expiresIn: '90m' },
+      }),
+      inject: [ConfigService],
     }),
     MailerModule.forRoot({
       transport: {
