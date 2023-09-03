@@ -1,4 +1,6 @@
 import { configModule } from './configuration/ConfigModule';
+import { ConfigService } from '@nestjs/config';
+import { ConfigType } from './configuration/configuration';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -86,8 +88,6 @@ import { CreateCommentUseCase } from './comments/application/use-cases/create-co
 import { UpdateCommentUseCase } from './comments/application/use-cases/update-comment-use-case';
 import { DeleteCommentUseCase } from './comments/application/use-cases/delete-comment-use-case';
 import { UpdateLikeStatusCommentUseCase } from './comments/application/use-cases/update-like-status-comment-use-case';
-import { ConfigService } from '@nestjs/config';
-import { ConfigType } from './configuration/configuration';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
 const useCases = [
@@ -248,6 +248,7 @@ const useCases = [
     CommentsRepository,
     BlogExistsRule,
     SQLUsersRepository,
+    BcryptAdapter,
     ...useCases,
   ],
 })
