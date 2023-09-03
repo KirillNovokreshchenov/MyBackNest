@@ -3,7 +3,6 @@ import { ConfigService } from '@nestjs/config';
 import { ConfigType } from '../../../configuration/configuration';
 import { v4 as uuidv4 } from 'uuid';
 import { add } from 'date-fns';
-import { InjectModel } from '@nestjs/mongoose';
 import { Injectable } from '@nestjs/common';
 
 @Injectable()
