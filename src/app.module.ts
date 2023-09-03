@@ -125,16 +125,16 @@ const useCases = [
   imports: [
     configModule,
     CqrsModule,
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: '127.0.0.1',
-      port: 5432,
-      username: 'nestjs',
-      password: 'nestjs',
-      database: 'My-nest-db',
-      autoLoadEntities: false,
-      synchronize: false,
-    }),
+    // TypeOrmModule.forRoot({
+    //   type: 'postgres',
+    //   host: '127.0.0.1',
+    //   port: 5432,
+    //   username: 'nestjs',
+    //   password: 'nestjs',
+    //   database: 'My-nest-db',
+    //   autoLoadEntities: false,
+    //   synchronize: false,
+    // }),
     MongooseModule.forRootAsync({
       imports: [configModule],
       useFactory: (configService: ConfigService<ConfigType>) => ({
