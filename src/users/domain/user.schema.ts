@@ -1,15 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
-import { CreateUserDto } from '../application/dto/CreateUserDto';
-import { UserAdapter } from '../infrastructure/adapters/user.adapter';
-import { v4 as uuidv4 } from 'uuid';
-import { add } from 'date-fns';
 import {
   EmailConfirmation,
   EmailConfirmationSchema,
 } from '../../auth/domain/email-confirmation.schema';
 import { BanDto } from '../application/dto/BanDto';
 import { BanUserForBlogDto } from '../application/dto/BanuserForBlogDto';
+import { TransformCreateUserDto } from '../application/dto/TransformCreateUserDto';
+import { EmailConfirmationDto } from '../application/dto/EmailConfirmationDto';
 
 @Schema({ _id: false })
 export class BanInfo {
@@ -47,12 +45,12 @@ export class User {
   banInfo: BanInfo;
   @Prop({ default: [], type: [IsBannedForBlogsSchema] })
   isBannedForBlogs: IsBannedForBlogs[];
-  async createHash(password: string, user: UserDocument) {
-    user.password = await UserAdapter.hashPassword(password);
-  }
-  async passwordIsValid(password: string, userHash: string): Promise<boolean> {
-    return UserAdapter.compare(password, userHash);
-  }
+  // async createHash(password: string, user: UserDocument) {
+  //   user.password = await UserAdapter.hashPassword(password);
+  // }
+  // async passwordIsValid(password: string, userHash: string): Promise<boolean> {
+  //   return UserAdapter.compare(password, userHash);
+  // }
   banUnbanUserForBlog(banDto: BanUserForBlogDto) {
     if (banDto.isBanned) {
       this.isBannedForBlogs.push({
@@ -64,10 +62,9 @@ export class User {
         },
       });
     } else {
-      const filter = this.isBannedForBlogs.filter(
+      this.isBannedForBlogs = this.isBannedForBlogs.filter(
         (user) => user.blogId.toString() !== banDto.blogId,
       );
-      this.isBannedForBlogs = filter;
     }
   }
   userIsBannedForBlog(blogId: Types.ObjectId) {
@@ -85,13 +82,11 @@ export class User {
       banReason: null,
     };
   }
-  createEmailConfirm() {
+  createEmailConfirm(emailConfirm: EmailConfirmationDto) {
     this.emailConfirmation = {
-      confirmationCode: uuidv4(),
-      expirationDate: add(new Date(), {
-        minutes: 60,
-      }),
-      isConfirmed: false,
+      confirmationCode: emailConfirm.confirmationCode,
+      expirationDate: emailConfirm.expirationDate,
+      isConfirmed: emailConfirm.isConfirmed,
     };
   }
   canBeConfirmed(): boolean {
@@ -101,18 +96,16 @@ export class User {
     );
   }
 
-  static async createNewUser(
-    userDto: CreateUserDto,
+  static createNewUser(
+    userDto: TransformCreateUserDto,
     UserModel: UserModelType,
-    emailConfirm?: EmailConfirmation,
-  ): Promise<UserDocument> {
-    const newUser = new UserModel({
-      ...userDto,
+  ): UserDocument {
+    return new UserModel({
+      login: userDto.login,
+      email: userDto.email,
+      password: userDto.passwordHash,
       createdAt: new Date(),
-      emailConfirm,
     });
-    await newUser.createHash(newUser.password, newUser);
-    return newUser;
   }
 }
 
@@ -120,16 +113,14 @@ export const UserSchema = SchemaFactory.createForClass(User);
 
 export type UserModelStaticType = {
   createNewUser: (
-    userDto: CreateUserDto,
+    userDto: TransformCreateUserDto,
     UserModel: UserModelType,
-  ) => Promise<UserDocument>;
+  ) => UserDocument;
 };
 
 UserSchema.methods = {
-  createHash: User.prototype.createHash,
   createEmailConfirm: User.prototype.createEmailConfirm,
   canBeConfirmed: User.prototype.canBeConfirmed,
-  passwordIsValid: User.prototype.passwordIsValid,
   userBan: User.prototype.userBan,
   userUnban: User.prototype.userUnban,
   banUnbanUserForBlog: User.prototype.banUnbanUserForBlog,

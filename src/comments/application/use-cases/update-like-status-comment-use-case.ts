@@ -1,4 +1,3 @@
-import { Types } from 'mongoose';
 import { LikeStatusDto } from '../../../models/LikeStatusDto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { LIKE_STATUS } from '../../../models/LikeStatusEnum';
@@ -8,11 +7,12 @@ import {
   CommentLike,
   CommentLikeModelType,
 } from '../../domain/comment-like.schema';
+import { IdType } from '../../../models/IdType';
 
 export class UpdateLikeStatusCommentCommand {
   constructor(
-    public userId: Types.ObjectId,
-    public commentId: Types.ObjectId,
+    public userId: IdType,
+    public commentId: IdType,
     public likeStatusDto: LikeStatusDto,
   ) {}
 }
@@ -26,34 +26,37 @@ export class UpdateLikeStatusCommentUseCase
     private CommentLikeModel: CommentLikeModelType,
   ) {}
   async execute(command: UpdateLikeStatusCommentCommand) {
-    const comment = await this.commentRepo.findComment(command.commentId);
-    if (!comment) return false;
-    const likeIsExist = await this.commentRepo.findLikeStatus(
-      command.userId,
+    const commentOwnerId = await this.commentRepo.findCommentOwnerId(
       command.commentId,
     );
-    if (!likeIsExist && command.likeStatusDto.likeStatus === LIKE_STATUS.NONE) {
+    if (!commentOwnerId) return false;
+    const likeData: { likeId: IdType; likeStatus: LIKE_STATUS } | null =
+      await this.commentRepo.findLikeStatus(command.userId, command.commentId);
+    if (!likeData && command.likeStatusDto.likeStatus === LIKE_STATUS.NONE) {
       return false;
     }
-    if (!likeIsExist) {
-      const likeStatus = comment.createLikeStatus(
+    if (!likeData) {
+      const likeStatusIsCreated = await this.commentRepo.createLikeStatus(
         command.userId,
         command.commentId,
         command.likeStatusDto.likeStatus,
-        this.CommentLikeModel,
       );
-      await this.commentRepo.saveStatus(likeStatus);
-      await this.commentRepo.saveComment(comment);
+      if (likeStatusIsCreated === null) return false;
       return true;
     }
     if (command.likeStatusDto.likeStatus === LIKE_STATUS.NONE) {
-      comment.updateLikeNone(likeIsExist.likeStatus);
-      await this.commentRepo.saveComment(comment);
-      await this.commentRepo.deleteLikeStatus(likeIsExist._id);
+      const isUpdated = await this.commentRepo.updateLikeNone(
+        command.commentId,
+        likeData,
+      );
+      if (isUpdated === null) return false;
     } else {
-      comment.updateLike(command.likeStatusDto.likeStatus, likeIsExist);
-      await this.commentRepo.saveComment(comment);
-      await this.commentRepo.saveStatus(likeIsExist);
+      const isUpdated = await this.commentRepo.updateLike(
+        command.commentId,
+        command.likeStatusDto.likeStatus,
+        likeData,
+      );
+      if (!isUpdated === null) return false;
     }
     return true;
   }

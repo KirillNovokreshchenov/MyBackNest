@@ -1,14 +1,14 @@
-import { Types } from 'mongoose';
 import { BanUserForBlogDto } from '../dto/BanuserForBlogDto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { BlogsRepository } from '../../../blogs/infrastructure/blogs.repository';
+import { IdType } from '../../../models/IdType';
 
 export class UserBanForBlogCommand {
   constructor(
-    public userId: Types.ObjectId,
-    public userOwnerBlogId: Types.ObjectId,
+    public userId: IdType,
+    public userOwnerBlogId: IdType,
     public banDto: BanUserForBlogDto,
   ) {}
 }
@@ -21,21 +21,16 @@ export class UserBanForBlogUseCase
     private blogsRepo: BlogsRepository,
   ) {}
   async execute(command: UserBanForBlogCommand) {
-    const blog = await this.blogsRepo.findBlogById(
-      new Types.ObjectId(command.banDto.blogId),
-    );
-    if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
-    if (
-      blog.blogOwnerInfo.userId.toString() !==
-      command.userOwnerBlogId.toString()
-    ) {
+    const ownerBlogId = await this.blogsRepo.getOwnerId(command.banDto.blogId);
+    if (!ownerBlogId) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (ownerBlogId.toString() !== command.userOwnerBlogId.toString()) {
       return RESPONSE_OPTIONS.FORBIDDEN;
     }
-    const user = await this.usersRepository.findUserById(command.userId);
-    if (!user) return RESPONSE_OPTIONS.NOT_FOUND;
-
-    user.banUnbanUserForBlog(command.banDto);
-    await this.usersRepository.saveUser(user);
+    const isBannedUnbanned = await this.usersRepository.banUnbanUserForBlog(
+      command.userId,
+      command.banDto,
+    );
+    if (isBannedUnbanned === null) return RESPONSE_OPTIONS.NOT_FOUND;
     return RESPONSE_OPTIONS.NO_CONTENT;
   }
 }

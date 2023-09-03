@@ -2,10 +2,11 @@ import { CreatePostDto } from '../dto/CreatePostDto';
 import { Types } from 'mongoose';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
-import { Post, PostDocument, PostModelType } from '../../domain/post.schema';
+import { Post, PostModelType } from '../../domain/post.schema';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import { BlogsRepository } from '../../../blogs/infrastructure/blogs.repository';
 import { InjectModel } from '@nestjs/mongoose';
+import { IdType } from '../../../models/IdType';
 
 export class CreatePostCommand {
   constructor(public postDto: CreatePostDto, public userId: Types.ObjectId) {}
@@ -18,19 +19,16 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
     @InjectModel(Post.name) private PostModel: PostModelType,
   ) {}
   async execute(command: CreatePostCommand) {
-    const blog = await this.blogsRepo.findBlogById(
-      new Types.ObjectId(command.postDto.blogId),
-    );
-    if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
-    if (blog.blogOwnerInfo.userId.toString() !== command.userId.toString())
+    const blogData: { ownerId: IdType; blogName: string } | null =
+      await this.blogsRepo.findDataBlog(command.postDto.blogId);
+    if (!blogData) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (blogData.ownerId.toString() !== command.userId.toString())
       return RESPONSE_OPTIONS.FORBIDDEN;
-    const newPost: PostDocument = this.PostModel.createPost(
+    const postId = await this.postsRepository.createPost(
       command.postDto,
-      blog.name,
-      this.PostModel,
+      blogData.blogName,
       command.userId,
     );
-    await this.postsRepository.savePost(newPost);
-    return newPost._id;
+    return postId;
   }
 }

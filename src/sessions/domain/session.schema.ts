@@ -1,7 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
-import { UserDataType } from '../../auth/api/input-model/user-data-request.type';
-import { add } from 'date-fns';
+import { SessionDto } from '../application/dto/SessionDto';
 
 @Schema()
 export class Session {
@@ -11,7 +10,7 @@ export class Session {
   @Prop({ required: true })
   ip: string;
   @Prop({ required: true })
-  deviceId: Types.ObjectId;
+  deviceId: string;
   @Prop({ default: 'Google' })
   title: string;
   @Prop({ required: true })
@@ -19,25 +18,21 @@ export class Session {
   @Prop({ required: true })
   expDate: Date;
 
-  sessionUpdate() {
-    this.lastActiveDate = new Date();
-    this.expDate = add(new Date(), {
-      minutes: 30,
-    });
+  sessionUpdate(lastDate: Date, expDate: Date) {
+    this.lastActiveDate = lastDate;
+    this.expDate = expDate;
   }
 
-  static createSession(userData: UserDataType, SessionModel: SessionModelType) {
-    const session = new SessionModel({
-      userId: userData.userId,
-      ip: userData.ip,
-      deviceId: new Types.ObjectId(),
-      title: userData.deviceName,
-      lastActiveDate: new Date(),
-      expDate: add(new Date(), {
-        minutes: 30,
-      }),
+  static createSession(session: SessionDto, SessionModel: SessionModelType) {
+    const sess = new SessionModel({
+      userId: session.userId,
+      ip: session.ip,
+      deviceId: session.deviceId,
+      title: session.title,
+      lastActiveDate: session.lastActiveDate,
+      expDate: session.expDate,
     });
-    return session;
+    return sess;
   }
 }
 
@@ -45,7 +40,7 @@ export const SessionSchema = SchemaFactory.createForClass(Session);
 
 export type SessionModelStaticType = {
   createSession: (
-    userData: UserDataType,
+    session: SessionDto,
     SessionModel: SessionModelType,
   ) => SessionDocument;
 };

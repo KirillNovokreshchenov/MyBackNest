@@ -1,31 +1,26 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
-import { add } from 'date-fns';
-import { v4 as uuidv4 } from 'uuid';
+import { HydratedDocument, Model, Types } from 'mongoose';
+import { RecoveryPasswordDto } from '../../users/application/dto/RecoveryPasswordDto';
 
 @Schema()
 export class PasswordRecovery {
+  @Prop()
+  userId: Types.ObjectId;
   @Prop({ required: true })
   email: string;
   @Prop({ required: true })
   recoveryCode: string;
   @Prop({ required: true })
   expirationDate: Date;
-  canBeRecovery(recoveryCode: string) {
-    return (
-      this.recoveryCode === recoveryCode && this.expirationDate > new Date()
-    );
-  }
   static createRecovery(
     recoveryModel: PasswordRecoveryType,
-    email: string,
+    recoveryPas: RecoveryPasswordDto,
   ): PasswordRecoveryDocument {
     const recovery = new recoveryModel({
-      email: email,
-      recoveryCode: uuidv4(),
-      expirationDate: add(new Date(), {
-        minutes: 60,
-      }),
+      userId: recoveryPas.userId,
+      email: recoveryPas.email,
+      recoveryCode: recoveryPas.recoveryCode,
+      expirationDate: recoveryPas.expirationDate,
     });
     return recovery;
   }
@@ -36,13 +31,11 @@ export const PasswordRecoverySchema =
 export type PasswordRecoveryStaticType = {
   createRecovery: (
     recoveryModel: PasswordRecoveryType,
-    email: string,
+    recoveryPas: RecoveryPasswordDto,
   ) => PasswordRecoveryDocument;
 };
 
-PasswordRecoverySchema.methods = {
-  canBeRecovery: PasswordRecovery.prototype.canBeRecovery,
-};
+PasswordRecoverySchema.methods = {};
 
 PasswordRecoverySchema.statics = {
   createRecovery: PasswordRecovery.createRecovery,

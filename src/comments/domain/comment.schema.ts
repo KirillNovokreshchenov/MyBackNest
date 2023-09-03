@@ -61,12 +61,8 @@ export class Comment {
       }
     }
   }
-  isBannedComment() {
-    if (!this.isBanned) {
-      this.isBanned = true;
-    } else {
-      this.isBanned = false;
-    }
+  isBannedComment(isBanned: boolean) {
+    this.isBanned = isBanned;
   }
   static createComment(
     userId: Types.ObjectId,

@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpException,
   HttpStatus,
+  InternalServerErrorException,
   Post,
   Res,
   UnauthorizedException,
@@ -21,7 +22,7 @@ import { NewPasswordDto } from '../application/dto/NewPasswordDto';
 import { LoginDto } from '../application/dto/loginDto';
 import { LocalAuthGuard } from '../guards/local-auth.guard';
 import { CurrentUser } from '../decorators/create-param-current-user.decorator';
-import { UserDataType } from './input-model/user-data-request.type';
+import { SessionDataType } from './input-model/user-data-request.type';
 import { AuthService } from '../application/auth.service';
 import { Response } from 'express';
 import { RefreshJwtAuthGuard } from '../guards/refresh-auth.guard';
@@ -64,12 +65,13 @@ export class AuthController {
   @Post('/login')
   async login(
     @Body() loginDto: LoginDto,
-    @CurrentUser() userData: UserDataType,
+    @CurrentUser() userData: SessionDataType,
     @Res({ passthrough: true }) res: Response,
   ): Promise<TokenViewModel> {
     const tokens = await this.commandBus.execute(
       new CreateTokensCommand(userData),
     );
+    if (!tokens) throw new InternalServerErrorException();
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: true,

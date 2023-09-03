@@ -9,5 +9,7 @@ export const getConfiguration = () => ({
     secretAT: process.env.SECRET_AT ?? '123',
     secretRT: process.env.SECRET_RT ?? '456',
   },
+  ID_TYPE: process.env.ID_TYPE ?? 'STRING',
+  SALT_HASH: 10,
 });
 export type ConfigType = ReturnType<typeof getConfiguration>;

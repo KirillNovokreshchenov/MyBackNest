@@ -18,17 +18,17 @@ export class DeletePostUseCase implements ICommandHandler<DeletePostCommand> {
     private blogsRepo: BlogsRepository,
   ) {}
   async execute(command: DeletePostCommand) {
-    const blog = await this.blogsRepo.findBlogById(
+    const blogOwberId = await this.blogsRepo.findOwnerId(
       command.PostAndBlogId.blogId,
     );
-    if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
-    if (blog.blogOwnerInfo.userId.toString() !== command.userId.toString())
+    if (!blogOwberId) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (blogOwberId.toString() !== command.userId.toString())
       return RESPONSE_OPTIONS.FORBIDDEN;
-    const post = await this.postsRepository.findPostDocument(
+    const postOwnerId = await this.postsRepository.findPostOwnerId(
       command.PostAndBlogId.postId,
     );
-    if (!post) return RESPONSE_OPTIONS.NOT_FOUND;
-    if (post.userId.toString() !== command.userId.toString())
+    if (!postOwnerId) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (postOwnerId.toString() !== command.userId.toString())
       return RESPONSE_OPTIONS.FORBIDDEN;
     await this.postsRepository.deletePost(command.PostAndBlogId.postId);
     return RESPONSE_OPTIONS.NO_CONTENT;

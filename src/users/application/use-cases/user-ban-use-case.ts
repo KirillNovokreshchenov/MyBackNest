@@ -1,13 +1,13 @@
-import { Types } from 'mongoose';
 import { BanDto } from '../dto/BanDto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PostsRepository } from '../../../posts/infrastructure/posts.repository';
 import { CommentsRepository } from '../../../comments/infractructure/comments.repository';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { DeviceRepository } from '../../../sessions/infrastructure/device.repository';
+import { IdType } from '../../../models/IdType';
 
 export class UserBanCommand {
-  constructor(public userId: Types.ObjectId, public banDto: BanDto) {}
+  constructor(public userId: IdType, public banDto: BanDto) {}
 }
 @CommandHandler(UserBanCommand)
 export class UserBanUseCase implements ICommandHandler<UserBanCommand> {
@@ -18,66 +18,29 @@ export class UserBanUseCase implements ICommandHandler<UserBanCommand> {
     protected deviceRepo: DeviceRepository,
   ) {}
   async execute(command: UserBanCommand) {
-    const user = await this.usersRepository.findUserById(command.userId);
-    if (!user) return false;
-    if (command.banDto.isBanned && !user.banInfo.isBanned) {
-      user.userBan(command.banDto);
-      await this.usersRepository.saveUser(user);
+    const banInfo = await this.usersRepository.banStatus(command.userId);
+    if (!banInfo) return false;
+    if (command.banDto.isBanned && !banInfo.isBanned) {
+      const isBanned = await this.usersRepository.userBan(
+        command.userId,
+        command.banDto,
+      );
+      if (isBanned === null) return false;
       await this.deviceRepo.deleteAllSessionsBan(command.userId);
-      await this.banUnbanContent(command.userId);
-      await this._banUnbanLikesUser(command.userId, command.banDto.isBanned);
+      await this.banUnbanContent(command.userId, command.banDto.isBanned);
       return true;
-    } else if (!command.banDto.isBanned && user.banInfo.isBanned) {
-      user.userUnban();
-      await this.usersRepository.saveUser(user);
-      await this.banUnbanContent(command.userId);
-      await this._banUnbanLikesUser(command.userId, command.banDto.isBanned);
+    } else if (!command.banDto.isBanned && banInfo.isBanned) {
+      const isUnbanned = await this.usersRepository.userUnban(command.userId);
+      if (isUnbanned === null) return false;
+      await this.banUnbanContent(command.userId, command.banDto.isBanned);
       return true;
     }
     return true;
   }
-  async banUnbanContent(userId: Types.ObjectId) {
-    await this._banUnbanPostsUser(userId);
-    await this._banUnbanCommentsUser(userId);
-  }
-  async _banUnbanPostsUser(userId: Types.ObjectId) {
-    const posts = await this.postRepo.findPostsBan(userId);
-    posts.map((post) => {
-      post.isBannedPost();
-      this.postRepo.savePost(post);
-    });
-  }
-  async _banUnbanCommentsUser(userId: Types.ObjectId) {
-    const comments = await this.commentsRepo.findCommentsBan(userId);
-    comments.map((comment) => {
-      comment.isBannedComment();
-      this.commentsRepo.saveComment(comment);
-    });
-  }
-  async _banUnbanLikesUser(userId: Types.ObjectId, isBanned: boolean) {
-    const likesComment = await this.commentsRepo.findLikesBan(userId);
-    await Promise.all(
-      likesComment.map(async (like) => {
-        like.isBannedLike();
-        const comment = await this.commentsRepo.findComment(like.commentId);
-        if (comment) {
-          comment.countBan(like.likeStatus, isBanned);
-          await this.commentsRepo.saveComment(comment);
-        }
-        await this.commentsRepo.saveStatus(like);
-      }),
-    );
-    const likesPost = await this.postRepo.findLikesBan(userId);
-    await Promise.all(
-      likesPost.map(async (like) => {
-        like.isBannedLike();
-        const post = await this.postRepo.findPostDocument(like.postId);
-        if (post) {
-          post.countBan(like.likeStatus, isBanned);
-          await this.postRepo.savePost(post);
-        }
-        await this.postRepo.saveStatus(like);
-      }),
-    );
+  async banUnbanContent(userId: IdType, isBanned: boolean) {
+    await this.postRepo.banUnbanPost(userId, isBanned);
+    await this.commentsRepo.banUnbanComment(userId, isBanned);
+    await this.commentsRepo._banUnbanLikesCommentUser(userId, isBanned);
+    await this.postRepo._banUnbanLikesPostUser(userId, isBanned);
   }
 }

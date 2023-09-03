@@ -4,9 +4,10 @@ import { Blog, BlogModelType } from '../../domain/blog.schema';
 import { CreateBlogDto } from '../dto/CreateBlogDto';
 import { Types } from 'mongoose';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { IdType } from '../../../models/IdType';
 
 export class CreateBlogCommand {
-  constructor(public blogDto: CreateBlogDto, public userId: Types.ObjectId) {}
+  constructor(public blogDto: CreateBlogDto, public userId: IdType) {}
 }
 @CommandHandler(CreateBlogCommand)
 export class CreateBlogUseCase implements ICommandHandler<CreateBlogCommand> {
@@ -16,17 +17,13 @@ export class CreateBlogUseCase implements ICommandHandler<CreateBlogCommand> {
   ) {}
 
   async execute(command: CreateBlogCommand): Promise<Types.ObjectId | null> {
-    const foundUser = await this.blogsRepository.findUserForBlog(
-      command.userId,
-    );
-    if (!foundUser) return null;
-    const newBlog = this.BlogModel.createNewBlog(
+    const userData: { userId: IdType; userLogin: string } | null =
+      await this.blogsRepository.findUserForBlog(command.userId);
+    if (!userData) return null;
+    return this.blogsRepository.createBlog(
+      userData.userId,
+      userData.userLogin,
       command.blogDto,
-      command.userId,
-      foundUser.login,
-      this.BlogModel,
     );
-    await this.blogsRepository.saveBlog(newBlog);
-    return newBlog._id;
   }
 }

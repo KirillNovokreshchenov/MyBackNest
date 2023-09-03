@@ -15,11 +15,11 @@ import { DeviceQueryRepository } from '../infrastructure/device.query.repository
 import { DeviceViewModel } from './view-model/DeviceViewModel';
 import { DeviceService } from '../application/device.service';
 import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
-import { Types } from 'mongoose';
 import { CommandBus } from '@nestjs/cqrs';
 import { DeleteAllSessionsCommand } from '../application/use-cases/delete-all-sessions-use-case';
 import { DeleteSessionCommand } from '../application/use-cases/delete -session-use-case';
 import { switchError } from '../../helpers/switch-error';
+import { IdType } from '../../models/IdType';
 
 @Controller('security/devices')
 export class DeviceController {
@@ -50,7 +50,7 @@ export class DeviceController {
   @UseGuards(RefreshJwtAuthGuard)
   @Delete('/:id')
   async deleteSession(
-    @Param('id', ParseObjectIdPipe) deviceId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) deviceId: IdType,
     @CurrentUserRefresh() userFromRefresh: UserFromRefreshType,
   ) {
     const isDeleted = await this.commandBus.execute(

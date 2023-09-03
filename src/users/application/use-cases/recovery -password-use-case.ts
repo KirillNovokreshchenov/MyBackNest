@@ -1,12 +1,9 @@
 import { EmailDto } from '../dto/EmailDto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  PasswordRecovery,
-  PasswordRecoveryType,
-} from '../../../auth/domain/password-recovery.schema';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { EmailManagers } from '../../../auth/application/managers/email.managers';
+import { IdType } from '../../../models/IdType';
+import { BcryptAdapter } from '../../infrastructure/adapters/bcryptAdapter';
 
 export class RecoveryPasswordCommand {
   constructor(public emailDto: EmailDto) {}
@@ -17,28 +14,36 @@ export class RecoveryPasswordUseCase
 {
   constructor(
     private usersRepository: UsersRepository,
-    protected emailManager: EmailManagers,
-    @InjectModel(PasswordRecovery.name)
-    private passwordRecoveryModel: PasswordRecoveryType,
+    private emailManager: EmailManagers,
+    private bcryptAdapter: BcryptAdapter,
   ) {}
   async execute(command: RecoveryPasswordCommand) {
-    const user = await this.usersRepository.findUserByEmailOrLogin(
+    const userId = await this.usersRepository.findUserByEmailOrLogin(
       command.emailDto.email,
     );
-    if (!user) return;
-    const pasRecovery = await this.passwordRecoveryModel.createRecovery(
-      this.passwordRecoveryModel,
+    if (!userId) return;
+    const recoveryPas = await this._createPasswordRecovery(
+      userId,
       command.emailDto.email,
     );
-
     try {
       await this.emailManager.passwordRecovery(
         command.emailDto.email,
-        pasRecovery.recoveryCode,
+        recoveryPas,
       );
     } catch {
       return;
     }
-    await this.usersRepository.saveRecovery(pasRecovery);
+  }
+  private async _createPasswordRecovery(userId: IdType, email: string) {
+    const recoveryCode = await this.bcryptAdapter.uuid();
+    const expirationDate = await this.bcryptAdapter.addMinutes(60);
+    const pasRecovery = {
+      userId,
+      email,
+      recoveryCode,
+      expirationDate,
+    };
+    await this.usersRepository.createRecovery(pasRecovery);
   }
 }

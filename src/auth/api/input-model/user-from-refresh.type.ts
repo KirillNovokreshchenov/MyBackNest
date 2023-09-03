@@ -1,7 +1,7 @@
-import { Types } from 'mongoose';
+import { IdType } from '../../../models/IdType';
 
 export type UserFromRefreshType = {
-  userId: Types.ObjectId;
-  deviceId: Types.ObjectId;
+  userId: IdType;
+  deviceId: IdType;
   lastActiveDate: Date;
 };

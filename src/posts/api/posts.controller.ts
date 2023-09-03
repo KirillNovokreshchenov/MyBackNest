@@ -29,6 +29,7 @@ import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
 import { CommandBus } from '@nestjs/cqrs';
 import { UpdateLikeStatusPostCommand } from '../application/use-cases/update-like-status-post-use-case';
 import { CreateCommentCommand } from '../../comments/application/use-cases/create-comment-use-case';
+import { IdType } from '../../models/IdType';
 
 @Controller('posts')
 export class PostsController {
@@ -93,8 +94,8 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   @Post('/:id/comments')
   async createCommentForPost(
-    @CurrentUserId() userId: Types.ObjectId,
-    @Param('id', ParseObjectIdPipe) postId: Types.ObjectId,
+    @CurrentUserId() userId: IdType,
+    @Param('id', ParseObjectIdPipe) postId: IdType,
     @Body() commentDto: CreateCommentDto,
   ) {
     const commentId = await this.commandBus.execute(

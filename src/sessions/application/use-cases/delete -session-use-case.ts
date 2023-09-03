@@ -1,13 +1,12 @@
-import { Types } from 'mongoose';
 import { UserFromRefreshType } from '../../../auth/api/input-model/user-from-refresh.type';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DeviceRepository } from '../../infrastructure/device.repository';
-import { SessionDocument } from '../../domain/session.schema';
 import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
+import { IdType } from '../../../models/IdType';
 
 export class DeleteSessionCommand {
   constructor(
-    public deviceId: Types.ObjectId,
+    public deviceId: IdType,
     public userFromRefresh: UserFromRefreshType,
   ) {}
 }
@@ -17,13 +16,12 @@ export class DeleteSessionUseCase
 {
   constructor(private deviceRepo: DeviceRepository) {}
   async execute(command: DeleteSessionCommand) {
-    const session: SessionDocument | null =
-      await this.deviceRepo.findSessionById(command.deviceId);
-    if (!session) return RESPONSE_OPTIONS.NOT_FOUND;
+    const userId: IdType | null = await this.deviceRepo.findSessionById(
+      command.deviceId,
+    );
+    if (!userId) return RESPONSE_OPTIONS.NOT_FOUND;
 
-    if (
-      command.userFromRefresh.userId.toString() !== session.userId.toString()
-    ) {
+    if (command.userFromRefresh.userId.toString() !== userId.toString()) {
       return RESPONSE_OPTIONS.FORBIDDEN;
     }
 

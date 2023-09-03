@@ -1,6 +1,6 @@
-import { Types } from 'mongoose';
+import { IdType } from '../../../models/IdType';
 
 export type BlogPostIdInputType = {
-  postId: Types.ObjectId;
-  blogId: Types.ObjectId;
+  postId: IdType;
+  blogId: IdType;
 };

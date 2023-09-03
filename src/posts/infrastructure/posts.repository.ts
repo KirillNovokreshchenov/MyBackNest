@@ -8,6 +8,10 @@ import {
   PostLikeDocument,
   PostLikeModelType,
 } from '../domain/post-like.schema';
+import { IdType } from '../../models/IdType';
+import { CreatePostDto } from '../application/dto/CreatePostDto';
+import { UpdatePostDto } from '../application/dto/UpdatePostDto';
+import { LIKE_STATUS } from '../../models/LikeStatusEnum';
 
 @Injectable()
 export class PostsRepository {
@@ -34,12 +38,6 @@ export class PostsRepository {
     await this.PostModel.deleteOne(postId);
   }
 
-  async findLikeStatus(
-    userId: Types.ObjectId,
-    postId: Types.ObjectId,
-  ): Promise<PostLikeDocument | null> {
-    return this.PostLikeModel.findOne({ userId, postId });
-  }
   async saveStatus(likeStatus: PostLikeDocument) {
     await likeStatus.save();
   }
@@ -47,15 +45,115 @@ export class PostsRepository {
     await this.PostLikeModel.deleteOne({ _id });
   }
 
-  async findPostsBan(userId: Types.ObjectId) {
-    return this.PostModel.find({ userId });
+  async banUnbanPost(userId: IdType, isBanned: boolean) {
+    const posts = await this.PostModel.find({ userId });
+    await Promise.all(
+      posts.map(async (post) => {
+        post.isBannedPost(isBanned);
+        await this.savePost(post);
+      }),
+    );
   }
 
-  async findLikesBan(userId: Types.ObjectId) {
-    return this.PostLikeModel.find({ userId });
+  async _banUnbanLikesPostUser(userId: Types.ObjectId, isBanned: boolean) {
+    const likesPost = await this.PostLikeModel.find({ userId });
+    await Promise.all(
+      likesPost.map(async (like) => {
+        like.isBannedLike();
+        const post = await this.findPostDocument(like.postId);
+        if (post) {
+          post.countBan(like.likeStatus, isBanned);
+          await this.savePost(post);
+        }
+        await this.saveStatus(like);
+      }),
+    );
   }
 
-  async findPostsBlogBan(blogId: Types.ObjectId) {
-    return this.PostModel.find({ blogId });
+  async PostsBlogBan(blogId: IdType, isBanned: boolean) {
+    const posts = await this.PostModel.find({ blogId });
+    await Promise.all(
+      posts.map(async (post) => {
+        post.isBannedPost(isBanned);
+        await this.savePost(post);
+      }),
+    );
+  }
+
+  async findOwnerBlogId(postId: IdType) {
+    const post = await this.findPostDocument(postId);
+    if (!post) return null;
+    return post.blogId;
+  }
+  async createPost(postDto: CreatePostDto, blogName: string, userId: IdType) {
+    const newPost: PostDocument = this.PostModel.createPost(
+      postDto,
+      blogName,
+      this.PostModel,
+      userId,
+    );
+    await this.savePost(newPost);
+    return newPost._id;
+  }
+
+  async findPostOwnerId(postId: IdType) {
+    const post = await this.findPostDocument(postId);
+    if (!post) return null;
+    return post.userId;
+  }
+  async updatePost(postId: IdType, postDto: UpdatePostDto) {
+    const post = await this.findPostDocument(postId);
+    if (!post) return null;
+    post.updatePost(postDto);
+    await this.savePost(post);
+  }
+  async findLikeStatus(userId: IdType, postId: IdType) {
+    const likeStatus = await this.PostLikeModel.findOne({
+      userId,
+      postId,
+    });
+    if (!likeStatus) return null;
+    return { likeId: likeStatus._id, likeStatus: likeStatus.likeStatus };
+  }
+  async createLikeStatus(
+    userId: IdType,
+    postId: IdType,
+    userLogin: string,
+    likeStatus: LIKE_STATUS,
+  ) {
+    const post = await this.findPostDocument(postId);
+    if (!post) return null;
+    const likeStatusCreated = post.createLikeStatus(
+      userId,
+      postId,
+      userLogin,
+      likeStatus,
+      this.PostLikeModel,
+    );
+    await this.saveStatus(likeStatusCreated);
+    await this.savePost(post);
+  }
+  async updateLikeNone(
+    postId: IdType,
+    likeData: { likeId: IdType; likeStatus: LIKE_STATUS },
+  ) {
+    const post = await this.findPostDocument(postId);
+    if (!post) return null;
+    post.updateLikeNone(likeData.likeStatus);
+    await this.savePost(post);
+    await this.deleteLikeStatus(likeData.likeId);
+  }
+  async updateLike(
+    postId: IdType,
+    likeStatus: LIKE_STATUS,
+    likeData: { likeId: IdType; likeStatus: LIKE_STATUS },
+  ) {
+    const post = await this.findPostDocument(postId);
+    if (!post) return null;
+    const oldLike = await this.PostLikeModel.findById(likeData.likeId);
+    if (!oldLike) return null;
+    post.updateLike(likeStatus, oldLike);
+    await this.savePost(post);
+    await this.saveStatus(oldLike);
   }
 }

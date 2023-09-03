@@ -4,15 +4,12 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   Session,
-  SessionDocument,
   SessionModelType,
 } from '../../sessions/domain/session.schema';
 import { DeviceRepository } from '../../sessions/infrastructure/device.repository';
-import {
-  ConfigType,
-  getConfiguration,
-} from '../../configuration/configuration';
+import { ConfigType } from '../../configuration/configuration';
 import { ConfigService } from '@nestjs/config';
+import { SessionDto } from '../../sessions/application/dto/SessionDto';
 
 @Injectable()
 export class AuthService {
@@ -54,7 +51,7 @@ export class AuthService {
   //   return this.tokens(session);
   // }
 
-  tokens(session: SessionDocument) {
+  tokens(session: SessionDto) {
     const payloadAT = { userId: session.userId };
     const payloadRT = {
       deviceId: session.deviceId,

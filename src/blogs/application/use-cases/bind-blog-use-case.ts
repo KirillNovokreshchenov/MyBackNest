@@ -1,6 +1,7 @@
 import { BlogUserIdInputType } from '../../api/input-model/BlogUserIdInputType';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BlogsRepository } from '../../infrastructure/blogs.repository';
+import { IdType } from '../../../models/IdType';
 
 export class BindBlogCommand {
   constructor(public blogAndUserId: BlogUserIdInputType) {}
@@ -9,18 +10,21 @@ export class BindBlogCommand {
 export class BindBlogUseCase implements ICommandHandler<BindBlogCommand> {
   constructor(protected blogsRepository: BlogsRepository) {}
   async execute(command: BindBlogCommand) {
-    const blog = await this.blogsRepository.findBlogById(
+    const userData: { userId: IdType; userLogin: string } | null =
+      await this.blogsRepository.findUserForBlog(command.blogAndUserId.userId);
+    if (!userData) return false;
+    const blogOwnerId = await this.blogsRepository.findOwnerId(
       command.blogAndUserId.blogId,
     );
-    if (!blog) return false;
-    const user = await this.blogsRepository.findUserForBlog(
-      command.blogAndUserId.userId,
-    );
-    if (!user) return false;
-    if (!blog.blogOwnerInfo) {
+    if (blogOwnerId) {
       return false;
     } else {
-      blog.bindUser(user._id, user.login);
+      const isBind = await this.blogsRepository.bindBlog(
+        command.blogAndUserId.blogId,
+        userData.userId,
+        userData.userLogin,
+      );
+      if (isBind === null) return false;
       return true;
     }
   }

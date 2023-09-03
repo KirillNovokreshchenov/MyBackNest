@@ -41,12 +41,8 @@ export class Post {
     this.content = postDto.content;
     this.shortDescription = postDto.shortDescription;
   }
-  isBannedPost() {
-    if (!this.isBanned) {
-      this.isBanned = true;
-    } else {
-      this.isBanned = false;
-    }
+  isBannedPost(isBanned: boolean) {
+    this.isBanned = isBanned;
   }
   countBan(likeStatus: LIKE_STATUS, isBanned: boolean) {
     if (isBanned) {

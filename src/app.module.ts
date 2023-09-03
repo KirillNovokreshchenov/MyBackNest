@@ -4,11 +4,14 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersController } from './users/api/users.controller';
 import { UsersService } from './users/application/users.service';
-import { UsersRepository } from './users/infrastructure/users.repository';
+import {
+  SQLUsersRepository,
+  UsersRepository,
+} from './users/infrastructure/users.repository';
 import { UsersQueryRepository } from './users/infrastructure/users.query.repository';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './users/domain/user.schema';
-import { UserAdapter } from './users/infrastructure/adapters/user.adapter';
+import { BcryptAdapter } from './users/infrastructure/adapters/bcryptAdapter';
 import { BlogsController } from './blogs/api/blogs.controller';
 import { BlogsService } from './blogs/application/blogs.service';
 import { Blog, BlogSchema } from './blogs/domain/blog.schema';
@@ -85,6 +88,7 @@ import { DeleteCommentUseCase } from './comments/application/use-cases/delete-co
 import { UpdateLikeStatusCommentUseCase } from './comments/application/use-cases/update-like-status-comment-use-case';
 import { ConfigService } from '@nestjs/config';
 import { ConfigType } from './configuration/configuration';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 const useCases = [
   CreateBlogUseCase,
@@ -121,6 +125,16 @@ const useCases = [
   imports: [
     configModule,
     CqrsModule,
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: '127.0.0.1',
+      port: 5432,
+      username: 'nestjs',
+      password: 'nestjs',
+      database: 'My-nest-db',
+      autoLoadEntities: false,
+      synchronize: false,
+    }),
     MongooseModule.forRootAsync({
       imports: [configModule],
       useFactory: (configService: ConfigService<ConfigType>) => ({
@@ -212,7 +226,7 @@ const useCases = [
     UsersService,
     UsersRepository,
     UsersQueryRepository,
-    UserAdapter,
+    BcryptAdapter,
     BlogsService,
     BlogsRepository,
     BlogsQueryRepository,
@@ -233,6 +247,7 @@ const useCases = [
     CommentService,
     CommentsRepository,
     BlogExistsRule,
+    SQLUsersRepository,
     ...useCases,
   ],
 })

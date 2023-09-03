@@ -1,15 +1,15 @@
 import { BlogPostIdInputType } from '../../../blogs/api/input-model/BlogPostIdInputType';
-import { Types } from 'mongoose';
 import { UpdatePostDto } from '../dto/UpdatePostDto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import { BlogsRepository } from '../../../blogs/infrastructure/blogs.repository';
+import { IdType } from '../../../models/IdType';
 
 export class UpdatePostCommand {
   constructor(
     public PostAndBlogId: BlogPostIdInputType,
-    public userId: Types.ObjectId,
+    public userId: IdType,
     public postDto: UpdatePostDto,
   ) {}
 }
@@ -20,21 +20,24 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
     private blogsRepo: BlogsRepository,
   ) {}
   async execute(command: UpdatePostCommand) {
-    const blog = await this.blogsRepo.findBlogById(
+    const blogOwnerId = await this.blogsRepo.findOwnerId(
       command.PostAndBlogId.blogId,
     );
-    if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
-    if (blog.blogOwnerInfo.userId.toString() !== command.userId.toString())
+    if (!blogOwnerId) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (blogOwnerId.toString() !== command.userId.toString())
       return RESPONSE_OPTIONS.FORBIDDEN;
 
-    const post = await this.postsRepository.findPostDocument(
+    const postOwnerId = await this.postsRepository.findPostOwnerId(
       command.PostAndBlogId.postId,
     );
-    if (!post) return RESPONSE_OPTIONS.NOT_FOUND;
-    if (post.userId.toString() !== command.userId.toString())
+    if (!postOwnerId) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (postOwnerId.toString() !== command.userId.toString())
       return RESPONSE_OPTIONS.FORBIDDEN;
-    post.updatePost(command.postDto);
-    await this.postsRepository.savePost(post);
+    const isUpdated = await this.postsRepository.updatePost(
+      command.PostAndBlogId.postId,
+      command.postDto,
+    );
+    if (isUpdated === null) return RESPONSE_OPTIONS.NOT_FOUND;
     return RESPONSE_OPTIONS.NO_CONTENT;
   }
 }

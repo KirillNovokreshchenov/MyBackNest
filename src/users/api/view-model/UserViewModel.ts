@@ -5,7 +5,7 @@ export class UserViewModel {
   login: string;
   email: string;
   createdAt: Date;
-  banInfo?: BanInfo;
+  banInfo: BanInfo;
   constructor(user: User) {
     this.id = user._id.toString();
     this.login = user.login;

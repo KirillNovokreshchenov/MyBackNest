@@ -1,14 +1,14 @@
-import { Types } from 'mongoose';
 import { UpdateCommentDto } from '../dto/UpdateCommentDto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CommentsRepository } from '../../infractructure/comments.repository';
+import { IdType } from '../../../models/IdType';
 
 export class UpdateCommentCommand {
   constructor(
-    public userId: Types.ObjectId,
-    public commentId: Types.ObjectId,
+    public userId: IdType,
+    public commentId: IdType,
     public commentDto: UpdateCommentDto,
   ) {}
 }
@@ -21,14 +21,19 @@ export class UpdateCommentUseCase
     private commentRepo: CommentsRepository,
   ) {}
   async execute(command: UpdateCommentCommand) {
-    const user = await this.usersRepo.findUserById(command.userId);
-    if (!user) return RESPONSE_OPTIONS.NOT_FOUND;
-    const comment = await this.commentRepo.findComment(command.commentId);
-    if (!comment) return RESPONSE_OPTIONS.NOT_FOUND;
-    if (command.userId.toString() !== comment.userId.toString())
+    const userId = await this.usersRepo.findUserId(command.userId);
+    if (!userId) return RESPONSE_OPTIONS.NOT_FOUND;
+    const commentOwnerId = await this.commentRepo.findCommentOwnerId(
+      command.commentId,
+    );
+    if (!commentOwnerId) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (command.userId.toString() !== commentOwnerId.toString())
       return RESPONSE_OPTIONS.FORBIDDEN;
-    comment.updateComment(command.commentDto);
-    await this.commentRepo.saveComment(comment);
+    const isUpdate = await this.commentRepo.updateComment(
+      command.commentId,
+      command.commentDto,
+    );
+    if (isUpdate === null) return RESPONSE_OPTIONS.NOT_FOUND;
     return RESPONSE_OPTIONS.NO_CONTENT;
   }
 }

@@ -9,8 +9,7 @@ import {
 import { ErrorExceptionFilter } from './filters/error-exception.filter';
 import cookieParser from 'cookie-parser';
 import { useContainer } from 'class-validator';
-import * as process from 'process';
-import { ConfigType, getConfiguration } from './configuration/configuration';
+import { ConfigType } from './configuration/configuration';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {

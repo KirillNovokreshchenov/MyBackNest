@@ -1,8 +1,10 @@
 import { CreateUserDto } from '../dto/CreateUserDto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { User, UserDocument, UserModelType } from '../../domain/user.schema';
+import { User, UserModelType } from '../../domain/user.schema';
 import { UsersRepository } from '../../infrastructure/users.repository';
 import { InjectModel } from '@nestjs/mongoose';
+import { BcryptAdapter } from '../../infrastructure/adapters/bcryptAdapter';
+import { IdType } from '../../../models/IdType';
 
 export class CreateUserByAdminCommand {
   constructor(public userDto: CreateUserDto) {}
@@ -13,15 +15,17 @@ export class CreateUserByAdminUseCase
 {
   constructor(
     private usersRepository: UsersRepository,
+    private bcryptAdapter: BcryptAdapter,
     @InjectModel(User.name) private UserModel: UserModelType,
   ) {}
-  async execute(command: CreateUserByAdminCommand) {
-    const newUser: UserDocument = await this.UserModel.createNewUser(
-      command.userDto,
-      this.UserModel,
-    );
-
-    await this.usersRepository.saveUser(newUser);
-    return newUser._id;
+  async execute(command: CreateUserByAdminCommand): Promise<IdType> {
+    const { login, email, password } = command.userDto;
+    const passwordHash = await this.bcryptAdapter.hashPassword(password);
+    const userId: IdType = await this.usersRepository.createUser({
+      login,
+      email,
+      passwordHash,
+    });
+    return userId;
   }
 }

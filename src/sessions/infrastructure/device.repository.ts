@@ -6,6 +6,7 @@ import {
 import { UserFromRefreshType } from '../../auth/api/input-model/user-from-refresh.type';
 import { InjectModel } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
+import { SessionDto } from '../application/dto/SessionDto';
 
 export class DeviceRepository {
   constructor(
@@ -21,7 +22,9 @@ export class DeviceRepository {
     return this.SessionModel.findOne(userFromRefresh);
   }
   async findSessionById(deviceId: Types.ObjectId) {
-    return this.SessionModel.findOne({ deviceId });
+    const session = await this.SessionModel.findOne({ deviceId });
+    if (!session) return null;
+    return session.userId;
   }
 
   async logout(userFromRefresh: UserFromRefreshType) {
@@ -51,5 +54,32 @@ export class DeviceRepository {
 
   async deleteAllSessionsBan(userId: Types.ObjectId) {
     await this.SessionModel.deleteMany({ userId });
+  }
+
+  async createSession(session: SessionDto) {
+    const sess: SessionDocument = this.SessionModel.createSession(
+      session,
+      this.SessionModel,
+    );
+    if (!sess) return null;
+    await this.saveSession(sess);
+  }
+
+  async updateSession(
+    userData: UserFromRefreshType,
+    lastActiveDate: Date,
+    expDate: Date,
+  ) {
+    const session = await this.findSession(userData);
+    if (!session) return null;
+    session.sessionUpdate(lastActiveDate, expDate);
+    return {
+      userId: session.userId,
+      ip: session.ip,
+      deviceId: session.deviceId,
+      title: session.title,
+      lastActiveDate: session.lastActiveDate,
+      expDate: session.expDate,
+    };
   }
 }

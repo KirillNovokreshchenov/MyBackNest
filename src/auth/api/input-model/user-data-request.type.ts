@@ -1,7 +1,7 @@
-import { Types } from 'mongoose';
+import { IdType } from '../../../models/IdType';
 
-export type UserDataType = {
-  userId: Types.ObjectId;
+export type SessionDataType = {
+  userId: IdType;
   ip: string;
   deviceName: string;
 };

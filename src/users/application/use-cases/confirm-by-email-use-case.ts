@@ -11,13 +11,18 @@ export class ConfirmByEmailUseCase
 {
   constructor(private usersRepository: UsersRepository) {}
   async execute(command: ConfirmByEmailCommand) {
-    const user = await this.usersRepository.findUserByCode(
+    const emailConfirmationData = await this.usersRepository.findUserByCode(
       command.codeDto.code,
     );
-    if (!user) return false;
-    if (user.canBeConfirmed()) {
-      user.emailConfirmation.isConfirmed = true;
-      await this.usersRepository.saveUser(user);
+    if (!emailConfirmationData) return false;
+    if (
+      emailConfirmationData.expDate > new Date() &&
+      !emailConfirmationData.isConfirmed
+    ) {
+      const isConfirmed = await this.usersRepository.emailConfirmed(
+        emailConfirmationData.userId,
+      );
+      if (!isConfirmed === null) return false;
       return true;
     } else {
       return false;
