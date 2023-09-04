@@ -31,7 +31,6 @@ export class BlogsController {
 
   @Get()
   async findAllBlogs(@Query() dataQuery: BlogQueryInputType) {
-    console.log(1);
     return this.blogsQueryRepository.findAllBlogs(dataQuery);
   }
   @Get('/:id')

@@ -83,7 +83,7 @@ export class PostsRepository {
   async findOwnerBlogId(postId: IdType) {
     const post = await this.findPostDocument(postId);
     if (!post) return null;
-    return post.blogId;
+    return post.userId;
   }
   async createPost(postDto: CreatePostDto, blogName: string, userId: IdType) {
     const newPost: PostDocument = this.PostModel.createPost(

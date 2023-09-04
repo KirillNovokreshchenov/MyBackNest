@@ -72,6 +72,7 @@ export class BloggerController {
     @Query() dataQuery: BlogQueryInputType,
     @CurrentUserId() userId: Types.ObjectId,
   ) {
+    console.log(userId);
     return await this.queryCommentsRepo.findAllCommentsForBlogs(
       dataQuery,
       userId,
