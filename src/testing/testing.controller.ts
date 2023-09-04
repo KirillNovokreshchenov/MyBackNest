@@ -31,14 +31,14 @@ export class TestingController {
   ) {}
   @Delete('/all-data')
   async deleteAllData() {
-    const comment = this.CommentModel.deleteMany();
-    const user = this.UserModel.deleteMany();
-    const blog = this.BlogModel.deleteMany();
-    const post = this.PostModel.deleteMany();
-    const recovery = this.passwordRecoveryModel.deleteMany();
-    const session = this.SessionModel.deleteMany();
-    const commentLike = this.CommentLikeModel.deleteMany();
-    const postLike = this.PostLikeModel.deleteMany();
+    const comment = await this.CommentModel.deleteMany();
+    const user = await this.UserModel.deleteMany();
+    const blog = await this.BlogModel.deleteMany();
+    const post = await this.PostModel.deleteMany();
+    const recovery = await this.passwordRecoveryModel.deleteMany();
+    const session = await this.SessionModel.deleteMany();
+    const commentLike = await this.CommentLikeModel.deleteMany();
+    const postLike = await this.PostLikeModel.deleteMany();
     await Promise.all([
       comment,
       user,

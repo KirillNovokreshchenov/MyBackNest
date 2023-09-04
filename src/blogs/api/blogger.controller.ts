@@ -65,7 +65,7 @@ export class BloggerController {
     @Query() dataQuery: BlogQueryInputType,
     @CurrentUserId() userId: Types.ObjectId,
   ): Promise<BlogViewModelAll> {
-    return await this.blogsQueryRepository.findAllBlogs(dataQuery, userId);
+    return this.blogsQueryRepository.findAllBlogs(dataQuery, userId);
   }
   @Get('/blogs/comments')
   async findAllCommentsForBlogs(

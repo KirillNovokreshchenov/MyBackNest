@@ -4,6 +4,7 @@ import {
   HttpException,
   HttpStatus,
   Param,
+  Post,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -24,17 +25,14 @@ import { CurrentUserId } from '../../auth/decorators/create-param-current-id.dec
 @Controller('blogs')
 export class BlogsController {
   constructor(
-    protected blogsService: BlogsService,
     protected blogsQueryRepository: BlogsQueryRepository,
-    protected postsService: PostsService,
     protected queryPostsRepository: PostsQueryRepository,
   ) {}
 
   @Get()
-  async findAllBlogs(
-    @Query() dataQuery: BlogQueryInputType,
-  ): Promise<BlogViewModelAll> {
-    return await this.blogsQueryRepository.findAllBlogs(dataQuery);
+  async findAllBlogs(@Query() dataQuery: BlogQueryInputType) {
+    console.log(1);
+    return this.blogsQueryRepository.findAllBlogs(dataQuery);
   }
   @Get('/:id')
   async findBlogById(

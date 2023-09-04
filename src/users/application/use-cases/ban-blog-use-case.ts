@@ -16,11 +16,11 @@ export class BanBlogUseCase implements ICommandHandler<BanBlogCommand> {
     private blogsRepo: BlogsRepository,
   ) {}
   async execute(command: BanBlogCommand) {
-    const blog = await this.blogsRepo.bunUnbanBlog(
+    const isBanned = await this.blogsRepo.bunUnbanBlog(
       command.blogId,
       command.banBlogDto,
     );
-    if (blog === null) return false;
+    if (isBanned === null) return false;
     await this.postRepo.PostsBlogBan(
       command.blogId,
       command.banBlogDto.isBanned,

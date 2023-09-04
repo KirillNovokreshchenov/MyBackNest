@@ -14,8 +14,4 @@ export class AppController {
       bla: process.env.BLABLA2,
     };
   }
-  @Get('/:id')
-  async getData(@Param('id', ParseObjectIdPipe) id) {
-    console.log(typeof id);
-  }
 }

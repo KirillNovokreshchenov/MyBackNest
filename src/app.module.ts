@@ -4,6 +4,7 @@ import { ConfigType } from './configuration/configuration';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { BlogsController } from './blogs/api/blogs.controller';
 import { UsersController } from './users/api/users.controller';
 import { UsersService } from './users/application/users.service';
 import {
@@ -14,7 +15,7 @@ import { UsersQueryRepository } from './users/infrastructure/users.query.reposit
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './users/domain/user.schema';
 import { BcryptAdapter } from './users/infrastructure/adapters/bcryptAdapter';
-import { BlogsController } from './blogs/api/blogs.controller';
+
 import { BlogsService } from './blogs/application/blogs.service';
 import { Blog, BlogSchema } from './blogs/domain/blog.schema';
 import { BlogsRepository } from './blogs/infrastructure/blogs.repository';

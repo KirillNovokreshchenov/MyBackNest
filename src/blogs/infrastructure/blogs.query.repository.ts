@@ -20,7 +20,7 @@ export class BlogsQueryRepository {
     const query = new BlogQueryModel(dataQuery);
     const filter = blogFilter(query.searchNameTerm, userId);
     filter['banInfo.isBanned'] = { $ne: true };
-    const dataAllBlogs = await this._dataAllBlogs(query, filter);
+    const dataAllBlogs = await this._dataAllBlogs(query, filter, userId);
 
     const mapBlogs = dataAllBlogs.allBlogs.map(
       (blog) => new BlogViewModel(blog),
@@ -58,7 +58,7 @@ export class BlogsQueryRepository {
   async _dataAllBlogs(
     query: BlogQueryModel,
     filter: any,
-    // userId?: Types.ObjectId,
+    userId?: Types.ObjectId,
   ) {
     const totalCount = await this.BlogModel.countDocuments(filter);
     const countPages = pagesCount(totalCount, query.pageSize);
