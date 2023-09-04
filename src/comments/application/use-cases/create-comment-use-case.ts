@@ -25,10 +25,11 @@ export class CreateCommentUseCase
   async execute(command: CreateCommentCommand) {
     const userLogin = await this.usersRepo.findUserLogin(command.userId);
     if (!userLogin) return RESPONSE_OPTIONS.NOT_FOUND;
-    const ownerBlogId = await this.postRepo.findOwnerBlogId(command.postId);
-    if (!ownerBlogId) return RESPONSE_OPTIONS.NOT_FOUND;
+    const blogDataByPost: { ownerBlogId: IdType; blogId: IdType } | null =
+      await this.postRepo.findOwnerBlogId(command.postId);
+    if (!blogDataByPost) return RESPONSE_OPTIONS.NOT_FOUND;
     const isBannedForBlog = await this.usersRepo.isBannedForBlog(
-      ownerBlogId,
+      blogDataByPost.blogId,
       command.userId,
     );
     if (isBannedForBlog) {
@@ -38,7 +39,7 @@ export class CreateCommentUseCase
     const commentId = await this.commentRepo.createComment(
       command.userId,
       command.postId,
-      ownerBlogId,
+      blogDataByPost.ownerBlogId,
       userLogin,
       command.commentDto,
     );
