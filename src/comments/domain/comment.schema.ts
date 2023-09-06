@@ -8,28 +8,29 @@ import {
   CommentLikeDocument,
   CommentLikeModelType,
 } from './comment-like.schema';
+import { IdType } from '../../models/IdType';
 
 @Schema()
 export class PostInfo {
-  @Prop({ required: true })
-  id: Types.ObjectId;
+  @Prop({ required: true, type: Types.ObjectId })
+  id: IdType;
   @Prop({ required: true })
   title: string;
-  @Prop({ required: true })
-  blogId: Types.ObjectId;
+  @Prop({ required: true, type: Types.ObjectId })
+  blogId: IdType;
   @Prop({ required: true })
   blogName: string;
 }
 const PostInfoSchema = SchemaFactory.createForClass(PostInfo);
 @Schema()
 export class Comment {
-  _id: Types.ObjectId;
+  _id: IdType;
   @Prop({ required: true })
   content: string;
-  @Prop({ required: true })
-  userId: Types.ObjectId;
-  @Prop({ required: true })
-  ownerBlogId: Types.ObjectId;
+  @Prop({ required: true, type: Types.ObjectId })
+  userId: IdType;
+  @Prop({ required: true, type: Types.ObjectId })
+  ownerBlogId: IdType;
   @Prop({ required: true })
   userLogin: string;
   // @Prop({ required: true })
@@ -65,8 +66,8 @@ export class Comment {
     this.isBanned = isBanned;
   }
   static createComment(
-    userId: Types.ObjectId,
-    ownerBlogId: Types.ObjectId,
+    userId: IdType,
+    ownerBlogId: IdType,
     userLogin: string,
     commentDto: CreateCommentDto,
     postInfo: PostInfo,
@@ -82,8 +83,8 @@ export class Comment {
     });
   }
   createLikeStatus(
-    userId: Types.ObjectId,
-    commentId: Types.ObjectId,
+    userId: IdType,
+    commentId: IdType,
     likeStatus: LIKE_STATUS,
     CommentLikeModel: CommentLikeModelType,
   ): CommentLikeDocument {
@@ -124,9 +125,9 @@ export const CommentSchema = SchemaFactory.createForClass(Comment);
 
 export type CommentModelStaticType = {
   createComment: (
-    userId: Types.ObjectId,
-    ownerBlogId: Types.ObjectId,
-    userLogin,
+    userId: IdType,
+    ownerBlogId: IdType,
+    userLogin: string,
     commentDto: CreateCommentDto,
     postInfo: PostInfo,
     CommentModel: CommentModelType,

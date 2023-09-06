@@ -4,6 +4,7 @@ import { CreatePostDto } from '../application/dto/CreatePostDto';
 import { UpdatePostDto } from '../application/dto/UpdatePostDto';
 import { LIKE_STATUS } from '../../models/LikeStatusEnum';
 import { PostLikeDocument, PostLikeModelType } from './post-like.schema';
+import { IdType } from '../../models/IdType';
 
 @Schema()
 export class LikesInfo {
@@ -16,17 +17,17 @@ export class LikesInfo {
 export const LikesInfoSchema = SchemaFactory.createForClass(LikesInfo);
 @Schema()
 export class Post {
-  _id: Types.ObjectId;
-  @Prop()
-  userId: Types.ObjectId;
+  _id: IdType;
+  @Prop({ type: Types.ObjectId })
+  userId: IdType;
   @Prop({ required: true })
   title: string;
   @Prop({ required: true })
   shortDescription: string;
   @Prop({ required: true })
   content: string;
-  @Prop({ required: true })
-  blogId: Types.ObjectId;
+  @Prop({ required: true, type: Types.ObjectId })
+  blogId: IdType;
   @Prop({ required: true })
   blogName: string;
   @Prop({ required: true })
@@ -60,8 +61,8 @@ export class Post {
     }
   }
   createLikeStatus(
-    userId: Types.ObjectId,
-    postId: Types.ObjectId,
+    userId: IdType,
+    postId: IdType,
     login: string,
     likeStatus: LIKE_STATUS,
     PostLikeModel: PostLikeModelType,
@@ -108,7 +109,7 @@ export class Post {
     postDto: CreatePostDto,
     blogName: string,
     PostModel: PostModelType,
-    userId: Types.ObjectId,
+    userId: IdType,
   ) {
     const blogId = new Types.ObjectId(postDto.blogId);
     return new PostModel({
@@ -128,7 +129,7 @@ export type PostModelStaticType = {
     postDto: CreatePostDto,
     blogName: string,
     PostModel: PostModelType,
-    userId: Types.ObjectId,
+    userId: IdType,
   ) => PostDocument;
   changeBlogName: (posts: PostDocument[], blogName: string) => void;
 };

@@ -20,7 +20,7 @@ export class PostsRepository {
     @InjectModel(Blog.name) private BlogModel: BlogModelType,
     @InjectModel(PostLike.name) private PostLikeModel: PostLikeModelType,
   ) {}
-  async findBlogName(blogId: Types.ObjectId): Promise<string | null> {
+  async findBlogName(blogId: IdType): Promise<string | null> {
     const blog = await this.BlogModel.findById(blogId).lean();
     if (!blog) return null;
     return blog.name;
@@ -30,18 +30,18 @@ export class PostsRepository {
     await newPost.save();
   }
 
-  async findPostDocument(postId: Types.ObjectId): Promise<PostDocument | null> {
+  async findPostDocument(postId: IdType): Promise<PostDocument | null> {
     return this.PostModel.findById(postId);
   }
 
-  async deletePost(postId: Types.ObjectId) {
-    await this.PostModel.deleteOne(postId);
+  async deletePost(postId: IdType) {
+    await this.PostModel.deleteOne({ _id: postId });
   }
 
   async saveStatus(likeStatus: PostLikeDocument) {
     await likeStatus.save();
   }
-  async deleteLikeStatus(_id: Types.ObjectId) {
+  async deleteLikeStatus(_id: IdType) {
     await this.PostLikeModel.deleteOne({ _id });
   }
 
@@ -55,7 +55,7 @@ export class PostsRepository {
     );
   }
 
-  async _banUnbanLikesPostUser(userId: Types.ObjectId, isBanned: boolean) {
+  async _banUnbanLikesPostUser(userId: IdType, isBanned: boolean) {
     const likesPost = await this.PostLikeModel.find({ userId });
     await Promise.all(
       likesPost.map(async (like) => {

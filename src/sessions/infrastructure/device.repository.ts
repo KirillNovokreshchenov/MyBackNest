@@ -7,6 +7,7 @@ import { UserFromRefreshType } from '../../auth/api/input-model/user-from-refres
 import { InjectModel } from '@nestjs/mongoose';
 import { Types } from 'mongoose';
 import { SessionDto } from '../application/dto/SessionDto';
+import { IdType } from '../../models/IdType';
 
 export class DeviceRepository {
   constructor(
@@ -21,7 +22,7 @@ export class DeviceRepository {
   ): Promise<SessionDocument | null> {
     return this.SessionModel.findOne(userFromRefresh);
   }
-  async findSessionById(deviceId: Types.ObjectId) {
+  async findSessionById(deviceId: IdType) {
     const session = await this.SessionModel.findOne({ deviceId });
     if (!session) return null;
     return session.userId;
@@ -48,11 +49,11 @@ export class DeviceRepository {
     return count === 1;
   }
 
-  async deleteSession(deviceId: Types.ObjectId) {
+  async deleteSession(deviceId: IdType) {
     await this.SessionModel.deleteOne({ deviceId });
   }
 
-  async deleteAllSessionsBan(userId: Types.ObjectId) {
+  async deleteAllSessionsBan(userId: IdType) {
     await this.SessionModel.deleteMany({ userId });
   }
 

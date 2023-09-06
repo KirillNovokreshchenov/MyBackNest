@@ -1,15 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { LIKE_STATUS } from '../../models/LikeStatusEnum';
+import { IdType } from '../../models/IdType';
 
 @Schema()
 export class PostLike {
-  @Prop({ required: true })
-  userId: Types.ObjectId;
+  _id: IdType;
+  @Prop({ required: true, type: Types.ObjectId })
+  userId: IdType;
   @Prop({ required: true })
   login: string;
-  @Prop({ required: true })
-  postId: Types.ObjectId;
+  @Prop({ required: true, type: Types.ObjectId })
+  postId: IdType;
   @Prop({ required: true })
   likeStatus: LIKE_STATUS;
   @Prop({ required: true })

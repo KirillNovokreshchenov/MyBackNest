@@ -17,7 +17,10 @@ import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.servi
 import { UpdateCommentDto } from '../application/dto/UpdateCommentDto';
 import { CommentService } from '../application/comment.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentUserId } from '../../auth/decorators/create-param-current-id.decarator';
+import {
+  CurrentUserId,
+  ParseCurrentIdDecorator,
+} from '../../auth/decorators/create-param-current-id.decarator';
 import { LikeStatusDto } from '../../models/LikeStatusDto';
 import { JwtLikeAuthGuard } from '../../auth/guards/jwt-like-auth.guard';
 import { switchError } from '../../helpers/switch-error';
@@ -25,6 +28,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { UpdateCommentCommand } from '../application/use-cases/update-comment-use-case';
 import { DeleteCommentCommand } from '../application/use-cases/delete-comment-use-case';
 import { UpdateLikeStatusCommentCommand } from '../application/use-cases/update-like-status-comment-use-case';
+import { IdType } from '../../models/IdType';
 
 @Controller('comments')
 export class CommentsController {
@@ -36,8 +40,8 @@ export class CommentsController {
   @UseGuards(JwtLikeAuthGuard)
   @Get('/:id')
   async findCommentById(
-    @Param('id', ParseObjectIdPipe) commentId: Types.ObjectId,
-    @CurrentUserId() userId?: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) commentId: IdType,
+    @CurrentUserId(ParseCurrentIdDecorator) userId?: IdType,
   ): Promise<CommentViewModel> {
     const comment = await this.commentsQueryRepository.findComment(
       commentId,
@@ -49,9 +53,9 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   @Put('/:id')
   async updateComment(
-    @Param('id', ParseObjectIdPipe) commentId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) commentId: IdType,
     @Body() commentDto: UpdateCommentDto,
-    @CurrentUserId() userId: Types.ObjectId,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
   ) {
     const isUpdated = await this.commandBus.execute(
       new UpdateCommentCommand(userId, commentId, commentDto),
@@ -61,8 +65,8 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   @Put('/:id/like-status')
   async updateLikeStatus(
-    @Param('id', ParseObjectIdPipe) commentId: Types.ObjectId,
-    @CurrentUserId() userId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) commentId: IdType,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
     @Body() likeStatusDto: LikeStatusDto,
   ) {
     const likeStatus = await this.commandBus.execute(
@@ -75,8 +79,8 @@ export class CommentsController {
   @UseGuards(JwtAuthGuard)
   @Delete('/:id')
   async deleteComment(
-    @Param('id', ParseObjectIdPipe) commentId: Types.ObjectId,
-    @CurrentUserId() userId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) commentId: IdType,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
   ) {
     const isDeleted = await this.commandBus.execute(
       new DeleteCommentCommand(userId, commentId),

@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
+import { IdType } from '../../../models/IdType';
 
 export type PostFilterType = {
-  userId?: Types.ObjectId;
-  blogId?: Types.ObjectId;
+  userId?: IdType;
+  blogId?: IdType;
 };

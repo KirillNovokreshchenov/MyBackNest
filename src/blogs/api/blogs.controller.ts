@@ -20,7 +20,11 @@ import { PostViewModelAll } from '../../posts/api/view-models/PostViewModelAll';
 import { BlogViewModelAll } from './view-model/BlogViewModelAll';
 import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
 import { JwtLikeAuthGuard } from '../../auth/guards/jwt-like-auth.guard';
-import { CurrentUserId } from '../../auth/decorators/create-param-current-id.decarator';
+import {
+  CurrentUserId,
+  ParseCurrentIdDecorator,
+} from '../../auth/decorators/create-param-current-id.decarator';
+import { IdType } from '../../models/IdType';
 
 @Controller('blogs')
 export class BlogsController {
@@ -35,7 +39,7 @@ export class BlogsController {
   }
   @Get('/:id')
   async findBlogById(
-    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) id: IdType,
   ): Promise<BlogViewModel> {
     const findBlog = await this.blogsQueryRepository.findBlog(id);
     if (!findBlog) {
@@ -46,9 +50,9 @@ export class BlogsController {
   @UseGuards(JwtLikeAuthGuard)
   @Get('/:id/posts')
   async findAllPostsForBlog(
-    @Param('id', ParseObjectIdPipe) blogId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) blogId: IdType,
     @Query() dataQuery: QueryInputType,
-    @CurrentUserId() userId?: Types.ObjectId,
+    @CurrentUserId(ParseCurrentIdDecorator) userId?: IdType,
   ): Promise<PostViewModelAll> {
     const blog = await this.blogsQueryRepository.findBlog(blogId);
     if (!blog) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);

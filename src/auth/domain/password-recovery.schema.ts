@@ -1,11 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { RecoveryPasswordDto } from '../../users/application/dto/RecoveryPasswordDto';
+import { IdType } from '../../models/IdType';
 
 @Schema()
 export class PasswordRecovery {
-  @Prop()
-  userId: Types.ObjectId;
+  @Prop({ type: Types.ObjectId })
+  userId: IdType;
   @Prop({ required: true })
   email: string;
   @Prop({ required: true })

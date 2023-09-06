@@ -1,11 +1,12 @@
 import { BanStatus } from './ban-status-enum';
 import { Types } from 'mongoose';
+import { IdType } from '../../models/IdType';
 
 export function userFilter(
   searchLoginTerm: string | null,
   searchEmailTerm: string | null,
   banStatus: BanStatus,
-  blogIdForBannedUsers?: Types.ObjectId,
+  blogIdForBannedUsers?: IdType,
 ) {
   let filter = {};
   if (searchLoginTerm && searchEmailTerm) {

@@ -25,6 +25,7 @@ import { UsersService } from '../../users/application/users.service';
 import { BindBlogCommand } from '../application/use-cases/bind-blog-use-case';
 import { CommandBus } from '@nestjs/cqrs';
 import { BanBlogCommand } from '../../users/application/use-cases/ban-blog-use-case';
+import { IdType } from '../../models/IdType';
 
 @Controller('sa/blogs')
 @UseGuards(BasicAuthGuard)
@@ -44,7 +45,7 @@ export class SaController {
   }
   @Put('/:id/ban')
   async banBlog(
-    @Param('id', ParseObjectIdPipe) blogId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) blogId: IdType,
     @Body() banBlogDto: BanBlogDto,
   ) {
     const isBanned = await this.commandBus.execute(

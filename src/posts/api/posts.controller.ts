@@ -19,7 +19,10 @@ import { QueryInputType } from '../../models/QueryInputType';
 import { CommentsQueryRepository } from '../../comments/infractructure/comments.query.repository';
 import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { CurrentUserId } from '../../auth/decorators/create-param-current-id.decarator';
+import {
+  CurrentUserId,
+  ParseCurrentIdDecorator,
+} from '../../auth/decorators/create-param-current-id.decarator';
 import { CreateCommentDto } from '../../comments/application/dto/CreateCommentDto';
 import { CommentService } from '../../comments/application/comment.service';
 import { JwtLikeAuthGuard } from '../../auth/guards/jwt-like-auth.guard';
@@ -45,15 +48,15 @@ export class PostsController {
   @Get()
   async findAllPost(
     @Query() dataQuery: QueryInputType,
-    @CurrentUserId() userId?: Types.ObjectId,
+    @CurrentUserId(ParseCurrentIdDecorator) userId?: IdType,
   ) {
     return await this.queryPostsRepository.findAllPost(dataQuery, { userId });
   }
   @UseGuards(JwtLikeAuthGuard)
   @Get('/:id')
   async findPost(
-    @Param('id', ParseObjectIdPipe) postId: Types.ObjectId,
-    @CurrentUserId() userId?: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) postId: IdType,
+    @CurrentUserId(ParseCurrentIdDecorator) userId?: IdType,
   ) {
     const post = await this.queryPostsRepository.findPost(postId, userId);
     if (!post) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
@@ -62,9 +65,9 @@ export class PostsController {
   @UseGuards(JwtLikeAuthGuard)
   @Get('/:id/comments')
   async findCommentsForPost(
-    @Param('id', ParseObjectIdPipe) postId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) postId: IdType,
     @Query() dataQuery: QueryInputType,
-    @CurrentUserId() userId?: Types.ObjectId,
+    @CurrentUserId(ParseCurrentIdDecorator) userId?: IdType,
   ) {
     const post = await this.queryPostsRepository.findPost(postId);
     if (!post) throw new NotFoundException();
@@ -94,7 +97,7 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   @Post('/:id/comments')
   async createCommentForPost(
-    @CurrentUserId() userId: IdType,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
     @Param('id', ParseObjectIdPipe) postId: IdType,
     @Body() commentDto: CreateCommentDto,
   ) {
@@ -126,8 +129,8 @@ export class PostsController {
   @UseGuards(JwtAuthGuard)
   @Put('/:id/like-status')
   async updateLikeStatus(
-    @Param('id', ParseObjectIdPipe) postId: Types.ObjectId,
-    @CurrentUserId() userId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) postId: IdType,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
     @Body() likeStatusDto: LikeStatusDto,
   ) {
     const likeStatus = await this.commandBus.execute(

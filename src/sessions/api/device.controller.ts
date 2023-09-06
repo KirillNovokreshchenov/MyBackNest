@@ -9,7 +9,10 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { RefreshJwtAuthGuard } from '../../auth/guards/refresh-auth.guard';
-import { CurrentUserRefresh } from '../../auth/decorators/create-param-user-refresh.decorator';
+import {
+  CurrentUserRefresh,
+  ParseCurrentRefreshPipe,
+} from '../../auth/decorators/create-param-user-refresh.decorator';
 import { UserFromRefreshType } from '../../auth/api/input-model/user-from-refresh.type';
 import { DeviceQueryRepository } from '../infrastructure/device.query.repository';
 import { DeviceViewModel } from './view-model/DeviceViewModel';
@@ -31,7 +34,8 @@ export class DeviceController {
   @UseGuards(RefreshJwtAuthGuard)
   @Get()
   async findAllSession(
-    @CurrentUserRefresh() userFromRefresh: UserFromRefreshType,
+    @CurrentUserRefresh(ParseCurrentRefreshPipe)
+    userFromRefresh: UserFromRefreshType,
   ): Promise<DeviceViewModel[]> {
     const devices = await this.deviceQueryRepo.findAllSession(userFromRefresh);
     return devices;
@@ -39,7 +43,8 @@ export class DeviceController {
   @UseGuards(RefreshJwtAuthGuard)
   @Delete()
   async deleteAllSessions(
-    @CurrentUserRefresh() userFromRefresh: UserFromRefreshType,
+    @CurrentUserRefresh(ParseCurrentRefreshPipe)
+    userFromRefresh: UserFromRefreshType,
   ) {
     const isDeleted = await this.commandBus.execute(
       new DeleteAllSessionsCommand(userFromRefresh),
@@ -51,7 +56,8 @@ export class DeviceController {
   @Delete('/:id')
   async deleteSession(
     @Param('id', ParseObjectIdPipe) deviceId: IdType,
-    @CurrentUserRefresh() userFromRefresh: UserFromRefreshType,
+    @CurrentUserRefresh(ParseCurrentRefreshPipe)
+    userFromRefresh: UserFromRefreshType,
   ) {
     const isDeleted = await this.commandBus.execute(
       new DeleteSessionCommand(deviceId, userFromRefresh),

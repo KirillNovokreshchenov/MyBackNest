@@ -14,6 +14,7 @@ import { UserAuthViewModel } from '../../auth/api/view-model/UserAuthViewModel';
 import { Blog, BlogModelType } from '../../blogs/domain/blog.schema';
 import { BannedUserForBlogViewModel } from '../api/view-model/BannedUserForBlogViewModel';
 import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
+import { IdType } from '../../models/IdType';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -21,13 +22,13 @@ export class UsersQueryRepository {
     @InjectModel(User.name) private userModel: UserModelType,
     @InjectModel(Blog.name) private BlogModel: BlogModelType,
   ) {}
-  async findUserById(userId): Promise<UserViewModel | null> {
+  async findUserById(userId: IdType): Promise<UserViewModel | null> {
     const foundUser = await this.userModel.findById(userId).lean();
     if (!foundUser) return null;
 
     return new UserViewModel(foundUser);
   }
-  async findUserAuth(userId: Types.ObjectId) {
+  async findUserAuth(userId: IdType) {
     const foundUser = await this.userModel.findById(userId).lean();
     if (!foundUser) return null;
     return new UserAuthViewModel(foundUser);
@@ -48,8 +49,8 @@ export class UsersQueryRepository {
   }
   async findBannedUsersForBlogs(
     dataQuery: UserQueryInputType,
-    blogId: Types.ObjectId,
-    userId: Types.ObjectId,
+    blogId: IdType,
+    userId: IdType,
   ) {
     const blog = await this.BlogModel.findById(blogId);
     if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
@@ -78,7 +79,7 @@ export class UsersQueryRepository {
 
   async _dataFindUser(
     dataQuery: UserQueryInputType,
-    blogIdForBannedUsers?: Types.ObjectId,
+    blogIdForBannedUsers?: IdType,
   ) {
     const query = new UserQueryModel(dataQuery);
 

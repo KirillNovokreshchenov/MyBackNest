@@ -26,6 +26,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { CreateUserByAdminCommand } from '../application/use-cases/create -user-by-admin-use-case';
 import { DeleteUserCommand } from '../application/use-cases/delete-user-use-case';
 import { UserBanCommand } from '../application/use-cases/user-ban-use-case';
+import { IdType } from '../../models/IdType';
 
 @Controller('sa/users')
 @UseGuards(BasicAuthGuard)
@@ -43,7 +44,7 @@ export class SaUsersController {
   }
   @Put(':id/ban')
   async userBan(
-    @Param('id', ParseObjectIdPipe) userId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) userId: IdType,
     @Body() banDto: BanDto,
   ) {
     const isBanned = await this.commandBus.execute(
@@ -65,7 +66,7 @@ export class SaUsersController {
   }
   @Delete('/:id')
   async deleteUser(
-    @Param('id', ParseObjectIdPipe) id: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) id: IdType,
   ): Promise<HttpException> {
     const userIsDeleted = await this.commandBus.execute(
       new DeleteUserCommand(id),

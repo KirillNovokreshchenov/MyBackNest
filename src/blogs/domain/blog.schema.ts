@@ -3,11 +3,12 @@ import { HydratedDocument, Model, Types } from 'mongoose';
 import { CreateBlogDto } from '../application/dto/CreateBlogDto';
 import { UpdateBlogDto } from '../application/dto/UpdateBlogDto';
 import { BanBlogDto } from '../application/dto/BanBlogDto';
+import { IdType } from '../../models/IdType';
 
 @Schema()
 export class BlogOwnerInfo {
-  @Prop({ required: true })
-  userId: Types.ObjectId;
+  @Prop({ required: true, type: Types.ObjectId })
+  userId: IdType;
   @Prop({ required: true })
   userLogin: string;
 }
@@ -43,7 +44,7 @@ export class Blog {
     this.description = dto.description;
     this.websiteUrl = dto.websiteUrl;
   }
-  bindUser(userId: Types.ObjectId, login: string) {
+  bindUser(userId: IdType, login: string) {
     this.blogOwnerInfo = {
       userId: userId,
       userLogin: login,
@@ -85,7 +86,7 @@ export const BlogSchema = SchemaFactory.createForClass(Blog);
 export type BlogModelStaticType = {
   createNewBlog: (
     blogDto: CreateBlogDto,
-    userId: Types.ObjectId,
+    userId: IdType,
     userLogin: string,
     BlogModel: BlogModelType,
   ) => BlogDocument;

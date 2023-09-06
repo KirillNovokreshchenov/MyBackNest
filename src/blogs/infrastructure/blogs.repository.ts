@@ -21,19 +21,21 @@ export class BlogsRepository {
     await newBlog.save();
   }
 
-  async findBlogById(blogId: Types.ObjectId): Promise<BlogDocument | null> {
+  async findBlogById(
+    blogId: IdType | Types.ObjectId,
+  ): Promise<BlogDocument | null> {
     return this.BlogModel.findById(blogId);
   }
   async findPostsByBlogName(blogName: string) {
     return this.PostModel.find({ blogName });
   }
 
-  async deleteBlog(blogId: Types.ObjectId): Promise<boolean> {
-    const res = await this.BlogModel.deleteOne(blogId);
+  async deleteBlog(blogId: IdType): Promise<boolean> {
+    const res = await this.BlogModel.deleteOne({ _id: blogId });
     return res.deletedCount === 1;
   }
 
-  async findUserForBlog(userId: Types.ObjectId) {
+  async findUserForBlog(userId: IdType) {
     const user = await this.UserModel.findById(userId);
     if (!user) return null;
     return { userId: user._id, userLogin: user.login };
@@ -86,4 +88,12 @@ export class BlogsRepository {
     await blog.updateBlog(blogDto);
     await this.saveBlog(blog);
   }
+}
+@Injectable()
+export class BlogsSQLRepository {
+  constructor(
+    @InjectModel(Blog.name) private BlogModel: BlogModelType,
+    @InjectModel(Post.name) private PostModel: PostModelType,
+    @InjectModel(User.name) private UserModel: UserModelType,
+  ) {}
 }

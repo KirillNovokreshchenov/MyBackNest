@@ -30,12 +30,12 @@ export class CommentsRepository {
     await comment.save();
   }
 
-  findComment(commentId: Types.ObjectId): Promise<CommentDocument | null> {
+  findComment(commentId: IdType): Promise<CommentDocument | null> {
     return this.CommentModel.findById(commentId);
   }
 
-  async deleteComment(commentId: Types.ObjectId) {
-    await this.CommentModel.deleteOne(commentId);
+  async deleteComment(commentId: IdType) {
+    await this.CommentModel.deleteOne({ _id: commentId });
   }
 
   async findLikeStatus(userId: IdType, commentId: IdType) {
@@ -51,11 +51,11 @@ export class CommentsRepository {
     await likeStatus.save();
   }
 
-  async deleteLikeStatus(_id: Types.ObjectId) {
+  async deleteLikeStatus(_id: IdType) {
     await this.CommentLikeModel.deleteOne({ _id });
   }
 
-  async banUnbanComment(userId: Types.ObjectId, isBanned: boolean) {
+  async banUnbanComment(userId: IdType, isBanned: boolean) {
     const comments = await this.CommentModel.find({ userId });
     await Promise.all(
       comments.map(async (comment) => {
@@ -65,7 +65,7 @@ export class CommentsRepository {
     );
   }
 
-  async _banUnbanLikesCommentUser(userId: Types.ObjectId, isBanned: boolean) {
+  async _banUnbanLikesCommentUser(userId: IdType, isBanned: boolean) {
     const likesComment = await this.CommentLikeModel.find({ userId });
     await Promise.all(
       likesComment.map(async (like) => {
@@ -95,7 +95,7 @@ export class CommentsRepository {
   async createComment(
     userId: IdType,
     postId: IdType,
-    ownerBlogId: Types.ObjectId,
+    ownerBlogId: IdType,
     userLogin: string,
     commentDto: CreateCommentDto,
   ) {

@@ -20,6 +20,7 @@ import {
 import { Blog, BlogModelType } from '../../blogs/domain/blog.schema';
 import { Post, PostModelType } from '../../posts/domain/post.schema';
 import { CommentForBlogViewModel } from '../api/view-models/CommentForBlogViewModel';
+import { IdType } from '../../models/IdType';
 
 @Injectable()
 export class CommentsQueryRepository {
@@ -31,8 +32,8 @@ export class CommentsQueryRepository {
     @InjectModel(Post.name) private PostModel: PostModelType,
   ) {}
   async findComment(
-    commentId: Types.ObjectId,
-    userId?: Types.ObjectId,
+    commentId: IdType,
+    userId?: IdType,
   ): Promise<CommentViewModel | null> {
     const like = await this.CommentLikeModel.findOne({
       userId,
@@ -48,10 +49,7 @@ export class CommentsQueryRepository {
     if (!comment) return null;
     return new CommentViewModel(comment, like?.likeStatus);
   }
-  async findAllCommentsForBlogs(
-    dataQuery: QueryInputType,
-    userId: Types.ObjectId,
-  ) {
+  async findAllCommentsForBlogs(dataQuery: QueryInputType, userId: IdType) {
     const query = new QueryModel(dataQuery);
     const totalCount = await this.CommentModel.countDocuments({
       ownerBlogId: userId,
@@ -91,8 +89,8 @@ export class CommentsQueryRepository {
 
   async findAllComments(
     dataQuery: QueryInputType,
-    postId: Types.ObjectId,
-    userId?: Types.ObjectId,
+    postId: IdType,
+    userId?: IdType,
   ): Promise<CommentViewModelAll> {
     const query = new QueryModel(dataQuery);
 

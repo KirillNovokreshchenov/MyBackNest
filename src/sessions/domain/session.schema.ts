@@ -1,12 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Types } from 'mongoose';
 import { SessionDto } from '../application/dto/SessionDto';
+import { IdType } from '../../models/IdType';
 
 @Schema()
 export class Session {
-  _id: Types.ObjectId;
-  @Prop({ required: true })
-  userId: Types.ObjectId;
+  _id: IdType;
+  @Prop({ required: true, type: Types.ObjectId })
+  userId: IdType;
   @Prop({ required: true })
   ip: string;
   @Prop({ required: true })

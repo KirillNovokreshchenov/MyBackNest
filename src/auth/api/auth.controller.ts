@@ -26,10 +26,16 @@ import { SessionDataType } from './input-model/user-data-request.type';
 import { AuthService } from '../application/auth.service';
 import { Response } from 'express';
 import { RefreshJwtAuthGuard } from '../guards/refresh-auth.guard';
-import { CurrentUserRefresh } from '../decorators/create-param-user-refresh.decorator';
+import {
+  CurrentUserRefresh,
+  ParseCurrentRefreshPipe,
+} from '../decorators/create-param-user-refresh.decorator';
 import { UserFromRefreshType } from './input-model/user-from-refresh.type';
 import { TokenViewModel } from './view-model/TokenViewModel';
-import { CurrentUserId } from '../decorators/create-param-current-id.decarator';
+import {
+  CurrentUserId,
+  ParseCurrentIdDecorator,
+} from '../decorators/create-param-current-id.decarator';
 import { Types } from 'mongoose';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
 import { UsersQueryRepository } from '../../users/infrastructure/users.query.repository';
@@ -42,6 +48,7 @@ import { ConfirmByEmailCommand } from '../../users/application/use-cases/confirm
 import { EmailResendingCommand } from '../../users/application/use-cases/email -resending-use-case';
 import { RecoveryPasswordCommand } from '../../users/application/use-cases/recovery -password-use-case';
 import { NewPasswordCommand } from '../../users/application/use-cases/new-password-use-case';
+import { IdType } from '../../models/IdType';
 
 @Controller('auth')
 export class AuthController {
@@ -53,7 +60,7 @@ export class AuthController {
   ) {}
   @UseGuards(JwtAuthGuard)
   @Get('/me')
-  async me(@CurrentUserId() id: Types.ObjectId) {
+  async me(@CurrentUserId(ParseCurrentIdDecorator) id: IdType) {
     const user = this.usersQueryRepo.findUserAuth(id);
     if (!user) throw new UnauthorizedException();
     return user;
@@ -82,9 +89,11 @@ export class AuthController {
   @HttpCode(200)
   @Post('/refresh-token')
   async newTokens(
-    @CurrentUserRefresh() userFromRefresh: UserFromRefreshType,
+    @CurrentUserRefresh(ParseCurrentRefreshPipe)
+    userFromRefresh: UserFromRefreshType,
     @Res({ passthrough: true }) res: Response,
   ) {
+    console.log(userFromRefresh);
     const tokens = await this.commandBus.execute(
       new NewTokensCommand(userFromRefresh),
     );
@@ -97,7 +106,10 @@ export class AuthController {
   }
   @UseGuards(RefreshJwtAuthGuard)
   @Post('/logout')
-  async logout(@CurrentUserRefresh() userFromRefresh: UserFromRefreshType) {
+  async logout(
+    @CurrentUserRefresh(ParseCurrentRefreshPipe)
+    userFromRefresh: UserFromRefreshType,
+  ) {
     const logout = await this.commandBus.execute(
       new LogoutCommand(userFromRefresh),
     );

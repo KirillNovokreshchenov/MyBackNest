@@ -11,12 +11,13 @@ import { pagesCount } from '../../helpers/pages-count';
 import { sortQuery } from '../../helpers/sort-query';
 import { skipPages } from '../../helpers/skip-pages';
 import { BlogByAdminViewModel } from '../api/view-model/BlogByAdminViewModel';
+import { IdType } from '../../models/IdType';
 
 @Injectable()
 export class BlogsQueryRepository {
   constructor(@InjectModel(Blog.name) private BlogModel: BlogModelType) {}
 
-  async findAllBlogs(dataQuery: BlogQueryInputType, userId?: Types.ObjectId) {
+  async findAllBlogs(dataQuery: BlogQueryInputType, userId?: IdType) {
     const query = new BlogQueryModel(dataQuery);
     const filter = blogFilter(query.searchNameTerm, userId);
     filter['banInfo.isBanned'] = { $ne: true };
@@ -55,11 +56,7 @@ export class BlogsQueryRepository {
     );
   }
 
-  async _dataAllBlogs(
-    query: BlogQueryModel,
-    filter: any,
-    userId?: Types.ObjectId,
-  ) {
+  async _dataAllBlogs(query: BlogQueryModel, filter: any, userId?: IdType) {
     const totalCount = await this.BlogModel.countDocuments(filter);
     const countPages = pagesCount(totalCount, query.pageSize);
     const sort = sortQuery(query.sortDirection, query.sortBy);
@@ -79,7 +76,9 @@ export class BlogsQueryRepository {
     };
   }
 
-  async findBlog(blogId: Types.ObjectId): Promise<BlogViewModel | null> {
+  async findBlog(
+    blogId: IdType | Types.ObjectId,
+  ): Promise<BlogViewModel | null> {
     const blog = await this.BlogModel.findOne({
       _id: blogId,
       'banInfo.isBanned': { $ne: true },

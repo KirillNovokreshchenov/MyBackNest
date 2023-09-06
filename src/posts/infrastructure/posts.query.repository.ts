@@ -13,6 +13,7 @@ import { PostFilterType } from './types/filter-query.types';
 import { PostLike, PostLikeModelType } from '../domain/post-like.schema';
 import { NewestLikes } from '../api/view-models/NewestLikeModel';
 import { LIKE_STATUS } from '../../models/LikeStatusEnum';
+import { IdType } from '../../models/IdType';
 
 @Injectable()
 export class PostsQueryRepository {
@@ -21,8 +22,8 @@ export class PostsQueryRepository {
     @InjectModel(PostLike.name) private PostLikeModel: PostLikeModelType,
   ) {}
   async findPost(
-    postId: Types.ObjectId,
-    userId?: Types.ObjectId,
+    postId: IdType,
+    userId?: IdType,
   ): Promise<PostViewModel | null> {
     const newestLikes = await this._newestLikes(postId);
     const like = await this.PostLikeModel.findOne({
@@ -41,7 +42,7 @@ export class PostsQueryRepository {
   async findAllPost(dataQuery: QueryInputType, postFilter: PostFilterType) {
     const query = new QueryModel(dataQuery);
 
-    const filter: { blogId?: Types.ObjectId; isBanned?: any } = {};
+    const filter: { blogId?: IdType; isBanned?: any } = {};
     if (postFilter.blogId) {
       filter.blogId = postFilter.blogId;
     }
@@ -78,7 +79,7 @@ export class PostsQueryRepository {
       mapPosts,
     );
   }
-  async _newestLikes(postId: Types.ObjectId) {
+  async _newestLikes(postId: IdType) {
     const newestLikes = await this.PostLikeModel.find({
       postId,
       likeStatus: LIKE_STATUS.LIKE,

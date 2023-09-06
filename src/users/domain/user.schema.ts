@@ -8,6 +8,8 @@ import { BanDto } from '../application/dto/BanDto';
 import { BanUserForBlogDto } from '../application/dto/BanuserForBlogDto';
 import { TransformCreateUserDto } from '../application/dto/TransformCreateUserDto';
 import { EmailConfirmationDto } from '../application/dto/EmailConfirmationDto';
+import { IdType } from '../../models/IdType';
+import * as string_decoder from 'string_decoder';
 
 @Schema({ _id: false })
 export class BanInfo {
@@ -21,8 +23,8 @@ export class BanInfo {
 const BanInfoSchema = SchemaFactory.createForClass(BanInfo);
 @Schema()
 export class IsBannedForBlogs {
-  @Prop({ required: true })
-  blogId: Types.ObjectId;
+  @Prop({ required: true, type: Types.ObjectId })
+  blogId: IdType | Types.ObjectId;
   @Prop({ required: true })
   banInfo: BanInfo;
 }
@@ -30,7 +32,7 @@ const IsBannedForBlogsSchema = SchemaFactory.createForClass(IsBannedForBlogs);
 
 @Schema()
 export class User {
-  _id: Types.ObjectId;
+  _id: IdType;
   @Prop({ required: true })
   login: string;
   @Prop({ required: true })
@@ -67,7 +69,7 @@ export class User {
       );
     }
   }
-  userIsBannedForBlog(blogId: Types.ObjectId) {
+  userIsBannedForBlog(blogId: IdType) {
     return this.isBannedForBlogs.find(
       (user) => user.blogId.toString() === blogId.toString(),
     );

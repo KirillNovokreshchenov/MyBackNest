@@ -9,7 +9,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { IdType } from '../../../models/IdType';
 
 export class CreatePostCommand {
-  constructor(public postDto: CreatePostDto, public userId: Types.ObjectId) {}
+  constructor(public postDto: CreatePostDto, public userId: IdType) {}
 }
 @CommandHandler(CreatePostCommand)
 export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {

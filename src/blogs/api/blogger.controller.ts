@@ -20,7 +20,10 @@ import { BlogQueryInputType } from './input-model/BlogQueryInputType';
 import { BlogViewModelAll } from './view-model/BlogViewModelAll';
 import { CreateBlogDto } from '../application/dto/CreateBlogDto';
 import { BlogViewModel } from './view-model/BlogViewModel';
-import { CurrentUserId } from '../../auth/decorators/create-param-current-id.decarator';
+import {
+  CurrentUserId,
+  ParseCurrentIdDecorator,
+} from '../../auth/decorators/create-param-current-id.decarator';
 import { Types } from 'mongoose';
 import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
 import { UpdateBlogDto } from '../application/dto/UpdateBlogDto';
@@ -46,6 +49,7 @@ import { UserBanForBlogCommand } from '../../users/application/use-cases/user-ba
 import { CreatePostCommand } from '../../posts/application/use-cases/create-post-use-case';
 import { UpdatePostCommand } from '../../posts/application/use-cases/update-post-use-case';
 import { DeletePostCommand } from '../../posts/application/use-cases/delete-post-use-case';
+import { IdType } from '../../models/IdType';
 
 @Controller('blogger')
 @UseGuards(JwtAuthGuard)
@@ -63,14 +67,15 @@ export class BloggerController {
   @Get('/blogs')
   async findAllBlogs(
     @Query() dataQuery: BlogQueryInputType,
-    @CurrentUserId() userId: Types.ObjectId,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
   ): Promise<BlogViewModelAll> {
+    console.log(userId);
     return this.blogsQueryRepository.findAllBlogs(dataQuery, userId);
   }
   @Get('/blogs/comments')
   async findAllCommentsForBlogs(
     @Query() dataQuery: BlogQueryInputType,
-    @CurrentUserId() userId: Types.ObjectId,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
   ) {
     console.log(userId);
     return await this.queryCommentsRepo.findAllCommentsForBlogs(
@@ -81,8 +86,8 @@ export class BloggerController {
   @Get('users/blog/:id')
   async findBannedUsers(
     @Query() dataQuery: UserQueryInputType,
-    @Param('id', ParseObjectIdPipe) blogId: Types.ObjectId,
-    @CurrentUserId() userId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) blogId: IdType,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
   ) {
     const bannedUsers = await this.queryUsersRepo.findBannedUsersForBlogs(
       dataQuery,
@@ -100,7 +105,7 @@ export class BloggerController {
   @Post('/blogs')
   async createBlog(
     @Body() dto: CreateBlogDto,
-    @CurrentUserId() userId: Types.ObjectId,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
   ): Promise<BlogViewModel> {
     const blogId = await this.commandBus.execute(
       new CreateBlogCommand(dto, userId),
@@ -117,9 +122,9 @@ export class BloggerController {
   }
   @Put('/blogs/:id')
   async updateBlog(
-    @Param('id', ParseObjectIdPipe) blogId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) blogId: IdType,
     @Body() dto: UpdateBlogDto,
-    @CurrentUserId() userId: Types.ObjectId,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
   ) {
     const blogIsUpdate = await this.commandBus.execute(
       new UpdateBlogCommand(blogId, userId, dto),
@@ -128,8 +133,8 @@ export class BloggerController {
   }
   @Put('users/:id/ban')
   async userBanForBlog(
-    @Param('id', ParseObjectIdPipe) userId: Types.ObjectId,
-    @CurrentUserId() userOwnerBlogId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) userId: IdType,
+    @CurrentUserId(ParseCurrentIdDecorator) userOwnerBlogId: IdType,
     @Body() banDto: BanUserForBlogDto,
   ) {
     const isBanned = await this.commandBus.execute(
@@ -139,8 +144,8 @@ export class BloggerController {
   }
   @Delete('/blogs/:id')
   async deleteBlog(
-    @Param('id', ParseObjectIdPipe) blogId: Types.ObjectId,
-    @CurrentUserId() userId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) blogId: IdType,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
   ) {
     const blogIsDeleted = await this.commandBus.execute(
       new DeleteBlogCommand(blogId, userId),
@@ -151,7 +156,7 @@ export class BloggerController {
   async createPostForBlog(
     @Param('id') blogId: string,
     @Body() dto: CreatePostForBlogDto,
-    @CurrentUserId() userId: Types.ObjectId,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
   ) {
     const postId = await this.commandBus.execute(
       new CreatePostCommand({ ...dto, blogId }, userId),
@@ -172,9 +177,9 @@ export class BloggerController {
   }
   @Get('/blogs/:id/posts')
   async findAllPostsForBlog(
-    @Param('id', ParseObjectIdPipe) blogId: Types.ObjectId,
+    @Param('id', ParseObjectIdPipe) blogId: IdType,
     @Query() dataQuery: QueryInputType,
-    @CurrentUserId() userId?: Types.ObjectId,
+    @CurrentUserId(ParseCurrentIdDecorator) userId?: IdType,
   ): Promise<PostViewModelAll> {
     const blog = await this.blogsQueryRepository.findBlog(blogId);
     if (!blog) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
@@ -188,7 +193,7 @@ export class BloggerController {
   async updatePost(
     @Param(ParseObjectIdPipe) PostAndBlogId: BlogPostIdInputType,
     @Body() postDto: UpdatePostDto,
-    @CurrentUserId() userId: Types.ObjectId,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
   ) {
     const isUpdate = await this.commandBus.execute(
       new UpdatePostCommand(PostAndBlogId, userId, postDto),
@@ -198,7 +203,7 @@ export class BloggerController {
   @Delete('/blogs/:blogId/posts/:postId')
   async deletePost(
     @Param(ParseObjectIdPipe) PostAndBlogId: BlogPostIdInputType,
-    @CurrentUserId() userId: Types.ObjectId,
+    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
   ) {
     const isDeleted = await this.commandBus.execute(
       new DeletePostCommand(PostAndBlogId, userId),

@@ -44,8 +44,8 @@ export class UsersRepository {
   async saveUser(createdUser: UserDocument) {
     await createdUser.save();
   }
-  async deleteUser(id: Types.ObjectId): Promise<boolean> {
-    const res = await this.UserModel.deleteOne(id);
+  async deleteUser(id: IdType): Promise<boolean> {
+    const res = await this.UserModel.deleteOne({ _id: id });
     return res.deletedCount === 1;
   }
 
@@ -179,4 +179,6 @@ export class UsersRepository {
 }
 
 @Injectable()
-export class SQLUsersRepository {}
+export class SQLUsersRepository {
+  async createUser(transformDto: TransformCreateUserDto) {}
+}

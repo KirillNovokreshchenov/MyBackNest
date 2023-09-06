@@ -18,7 +18,10 @@ import { BcryptAdapter } from './users/infrastructure/adapters/bcryptAdapter';
 
 import { BlogsService } from './blogs/application/blogs.service';
 import { Blog, BlogSchema } from './blogs/domain/blog.schema';
-import { BlogsRepository } from './blogs/infrastructure/blogs.repository';
+import {
+  BlogsRepository,
+  BlogsSQLRepository,
+} from './blogs/infrastructure/blogs.repository';
 import { BlogsQueryRepository } from './blogs/infrastructure/blogs.query.repository';
 import { PostsController } from './posts/api/posts.controller';
 import { PostsService } from './posts/application/posts.service';
@@ -90,6 +93,7 @@ import { UpdateCommentUseCase } from './comments/application/use-cases/update-co
 import { DeleteCommentUseCase } from './comments/application/use-cases/delete-comment-use-case';
 import { UpdateLikeStatusCommentUseCase } from './comments/application/use-cases/update-like-status-comment-use-case';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import * as process from 'process';
 
 const useCases = [
   CreateBlogUseCase,
@@ -126,16 +130,16 @@ const useCases = [
   imports: [
     configModule,
     CqrsModule,
-    // TypeOrmModule.forRoot({
-    //   type: 'postgres',
-    //   host: '127.0.0.1',
-    //   port: 5432,
-    //   username: 'nestjs',
-    //   password: 'nestjs',
-    //   database: 'My-nest-db',
-    //   autoLoadEntities: false,
-    //   synchronize: false,
-    // }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: '127.0.0.1',
+      port: 5432,
+      username: 'nestjs',
+      password: 'nestjs',
+      database: 'My-nest-db',
+      autoLoadEntities: false,
+      synchronize: false,
+    }),
     MongooseModule.forRootAsync({
       imports: [configModule],
       useFactory: (configService: ConfigService<ConfigType>) => ({
@@ -229,7 +233,13 @@ const useCases = [
     UsersQueryRepository,
     BcryptAdapter,
     BlogsService,
-    BlogsRepository,
+    {
+      provide: BlogsRepository,
+      useClass:
+        process.env.REPO_TYPE === 'MONGO'
+          ? BlogsRepository
+          : BlogsSQLRepository,
+    },
     BlogsQueryRepository,
     PostsService,
     PostsRepository,
