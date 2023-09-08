@@ -150,7 +150,7 @@ const useCases = [
         password: configService.get('sql.PASSWORD_DB', { infer: true }),
         database: configService.get('sql.NAME_DB', { infer: true }),
         autoLoadEntities: false,
-        synchronize: false,
+        synchronize: true,
       }),
       inject: [ConfigService],
     }),
