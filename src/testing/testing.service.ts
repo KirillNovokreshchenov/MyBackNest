@@ -13,7 +13,7 @@ import {
   CommentLikeModelType,
 } from '../comments/domain/comment-like.schema';
 import { PostLike, PostLikeModelType } from '../posts/domain/post-like.schema';
-import { Delete, HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
