@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Delete,
-  HttpException,
-  HttpStatus,
-  Inject,
-  Injectable,
-} from '@nestjs/common';
+import { Controller, Delete, HttpException, HttpStatus } from '@nestjs/common';
 import { TestingService } from './testing.service';
 
 @Controller('testing')
