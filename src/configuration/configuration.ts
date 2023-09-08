@@ -1,3 +1,5 @@
+import * as process from 'process';
+
 export const getConfiguration = () => ({
   port: process.env.PORT || 3000,
   mongoUri: process.env.MONGO_URI || 'mongodb://127.0.0.1:27017',
@@ -17,6 +19,7 @@ export const getConfiguration = () => ({
     USERNAME_DB: process.env.USERNAME_DB,
     PASSWORD_DB: process.env.PASSWORD_DB,
     NAME_DB: process.env.NAME_DB,
+    DB_URL: process.env.DB_URL,
   },
 });
 export type ConfigType = ReturnType<typeof getConfiguration>;
