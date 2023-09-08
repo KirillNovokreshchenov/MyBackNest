@@ -102,8 +102,8 @@ VALUES ($1, $2, $3, $4, $5, $6);
           session.ip,
           session.deviceId,
           session.title,
-          session.lastActiveDate,
-          session.expDate,
+          session.lastActiveDate.toISOString(),
+          session.expDate.toISOString(),
         ],
       );
     } catch (e) {
@@ -127,9 +127,9 @@ RETURNING user_id, ip, device_id, title, last_active_date, expiration_date;
         [
           userData.userId,
           userData.deviceId,
-          userData.lastActiveDate,
-          lastActiveDate,
-          expDate,
+          userData.lastActiveDate.toISOString(),
+          lastActiveDate.toISOString(),
+          expDate.toISOString(),
         ],
       );
       if (!session[1]) return null;
@@ -156,7 +156,7 @@ WHERE user_id = $1 AND device_id = $2 AND last_active_date = $3;
       [
         userFromRefresh.userId,
         userFromRefresh.deviceId,
-        userFromRefresh.lastActiveDate,
+        userFromRefresh.lastActiveDate.toISOString(),
       ],
     );
     return isDeleted[1] === 1;

@@ -1,9 +1,9 @@
-import { CreateUserDto } from "../dto/CreateUserDto";
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { UsersRepository } from "../../infrastructure/users.repository";
-import { EmailManagers } from "../../../auth/application/managers/email.managers";
-import { IdType } from "../../../models/IdType";
-import { BcryptAdapter } from "../../infrastructure/adapters/bcryptAdapter";
+import { CreateUserDto } from '../dto/CreateUserDto';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { UsersRepository } from '../../infrastructure/users.repository';
+import { EmailManagers } from '../../../auth/application/managers/email.managers';
+import { IdType } from '../../../models/IdType';
+import { BcryptAdapter } from '../../infrastructure/adapters/bcryptAdapter';
 
 export class CreateUserByRegistrationCommand {
   constructor(public userDto: CreateUserDto) {}

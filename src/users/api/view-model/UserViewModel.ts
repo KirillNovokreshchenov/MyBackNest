@@ -1,5 +1,5 @@
-import { BanInfo, User } from "../../domain/user.schema";
-import { UserSQlModel } from "../../infrastructure/models/UserSQLModel";
+import { BanInfo, User } from '../../domain/user.schema';
+import { UserSQlModel } from '../../infrastructure/models/UserSQLModel';
 
 export class UserViewModel {
   id: string;

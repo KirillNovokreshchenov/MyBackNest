@@ -1,19 +1,19 @@
-import { Injectable } from "@nestjs/common";
-import { User, UserDocument, UserModelType } from "../domain/user.schema";
-import { InjectModel } from "@nestjs/mongoose";
+import { Injectable } from '@nestjs/common';
+import { User, UserDocument, UserModelType } from '../domain/user.schema';
+import { InjectModel } from '@nestjs/mongoose';
 import {
   PasswordRecovery,
   PasswordRecoveryDocument,
-  PasswordRecoveryType
-} from "../../auth/domain/password-recovery.schema";
-import { TransformCreateUserDto } from "../application/dto/TransformCreateUserDto";
-import { IdType } from "../../models/IdType";
-import { EmailConfirmationDto } from "../application/dto/EmailConfirmationDto";
-import { RecoveryPasswordDto } from "../application/dto/RecoveryPasswordDto";
-import { BanDto } from "../application/dto/BanDto";
-import { BanUserForBlogDto } from "../application/dto/BanuserForBlogDto";
-import { DataSource } from "typeorm";
-import { InjectDataSource } from "@nestjs/typeorm";
+  PasswordRecoveryType,
+} from '../../auth/domain/password-recovery.schema';
+import { TransformCreateUserDto } from '../application/dto/TransformCreateUserDto';
+import { IdType } from '../../models/IdType';
+import { EmailConfirmationDto } from '../application/dto/EmailConfirmationDto';
+import { RecoveryPasswordDto } from '../application/dto/RecoveryPasswordDto';
+import { BanDto } from '../application/dto/BanDto';
+import { BanUserForBlogDto } from '../application/dto/BanuserForBlogDto';
+import { DataSource } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
 
 @Injectable()
 export class UsersRepository {
@@ -187,10 +187,15 @@ export class UsersSQLRepository {
     const user = await this.dataSource.query(
       `
 INSERT INTO public.users(
-login, email, password)
-VALUES ($1, $2, $3)
+login, email, password, "createdAt")
+VALUES ($1, $2, $3, $4)
 RETURNING user_id;`,
-      [transformDto.login, transformDto.email, transformDto.passwordHash],
+      [
+        transformDto.login,
+        transformDto.email,
+        transformDto.passwordHash,
+        new Date().toISOString(),
+      ],
     );
     return user[0].user_id;
   }
@@ -208,7 +213,7 @@ VALUES ($1, $2, $3, $4);`,
         [
           userId,
           emailConfirm.confirmationCode,
-          emailConfirm.expirationDate,
+          emailConfirm.expirationDate.toISOString(),
           emailConfirm.isConfirmed,
         ],
       );
@@ -311,7 +316,7 @@ VALUES ($1, $2, $3);
       [
         recoveryPas.userId,
         recoveryPas.recoveryCode,
-        recoveryPas.expirationDate,
+        recoveryPas.expirationDate.toISOString(),
       ],
     );
   }
