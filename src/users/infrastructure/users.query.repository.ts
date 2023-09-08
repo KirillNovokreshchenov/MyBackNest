@@ -1,22 +1,26 @@
-import { Injectable } from "@nestjs/common";
-import { UserMongoViewModel, UserSQLViewModel, UserViewModel } from "../api/view-model/UserViewModel";
-import { InjectModel } from "@nestjs/mongoose";
-import { User, UserModelType } from "../domain/user.schema";
-import { userFilter } from "../users-helpers/user-filter";
-import { skipPages } from "../../helpers/skip-pages";
-import { sortQuery } from "../../helpers/sort-query";
-import { UserViewModelAll } from "../api/view-model/UserViewModelAll";
-import { pagesCount } from "../../helpers/pages-count";
-import { UserMongoQueryModel } from "./models/UserMongoQueryModel";
-import { UserQueryInputType } from "../api/input-model/UserQueryInputType";
-import { UserAuthViewModel } from "../../auth/api/view-model/UserAuthViewModel";
-import { Blog, BlogModelType } from "../../blogs/domain/blog.schema";
-import { BannedUserForBlogViewModel } from "../api/view-model/BannedUserForBlogViewModel";
-import { RESPONSE_OPTIONS } from "../../models/ResponseOptionsEnum";
-import { IdType } from "../../models/IdType";
-import { InjectDataSource } from "@nestjs/typeorm";
-import { DataSource } from "typeorm";
-import { UserSQLQueryModel } from "./models/UserSQLQueryModel";
+import { Injectable } from '@nestjs/common';
+import {
+  UserMongoViewModel,
+  UserSQLViewModel,
+  UserViewModel,
+} from '../api/view-model/UserViewModel';
+import { InjectModel } from '@nestjs/mongoose';
+import { User, UserModelType } from '../domain/user.schema';
+import { userFilter } from '../users-helpers/user-filter';
+import { skipPages } from '../../helpers/skip-pages';
+import { sortQuery } from '../../helpers/sort-query';
+import { UserViewModelAll } from '../api/view-model/UserViewModelAll';
+import { pagesCount } from '../../helpers/pages-count';
+import { UserMongoQueryModel } from './models/UserMongoQueryModel';
+import { UserQueryInputType } from '../api/input-model/UserQueryInputType';
+import { UserAuthViewModel } from '../../auth/api/view-model/UserAuthViewModel';
+import { Blog, BlogModelType } from '../../blogs/domain/blog.schema';
+import { BannedUserForBlogViewModel } from '../api/view-model/BannedUserForBlogViewModel';
+import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
+import { IdType } from '../../models/IdType';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { UserSQLQueryModel } from './models/UserSQLQueryModel';
 
 @Injectable()
 export class UsersQueryRepository {
@@ -175,5 +179,20 @@ LIMIT $3 OFFSET $4
       pageSize: query.pageSize,
       users: allUsers,
     };
+  }
+  async findUserAuth(userId: IdType) {
+    try {
+      const user = await this.dataSource.query(
+        `
+SELECT email, login, user_id
+FROM public.users
+WHERE user_id = $1;
+`,
+        [userId],
+      );
+      return user[0];
+    } catch (e) {
+      return null;
+    }
   }
 }

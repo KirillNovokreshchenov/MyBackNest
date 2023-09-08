@@ -11,5 +11,12 @@ export const getConfiguration = () => ({
   },
   ID_TYPE: process.env.ID_TYPE ?? 'STRING',
   SALT_HASH: 10,
+  sql: {
+    PORT_DB: process.env.PORT_DB,
+    HOST_DB: process.env.HOST_DB,
+    USERNAME_DB: process.env.USERNAME_DB,
+    PASSWORD_DB: process.env.PASSWORD_DB,
+    NAME_DB: process.env.NAME_DB,
+  },
 });
 export type ConfigType = ReturnType<typeof getConfiguration>;

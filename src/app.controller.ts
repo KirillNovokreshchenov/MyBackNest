@@ -10,7 +10,6 @@ export class AppController {
   getHello() {
     return {
       hello: this.appService.getHello(),
-      bla: process.env.BLABLA2,
     };
   }
 }

@@ -103,6 +103,7 @@ import { DeleteCommentUseCase } from './comments/application/use-cases/delete-co
 import { UpdateLikeStatusCommentUseCase } from './comments/application/use-cases/update-like-status-comment-use-case';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as process from 'process';
+import { TestingService, TestingSQLService } from './testing/testing.service';
 
 const useCases = [
   CreateBlogUseCase,
@@ -139,15 +140,19 @@ const useCases = [
   imports: [
     configModule,
     CqrsModule,
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: '127.0.0.1',
-      port: 5432,
-      username: 'nestjs',
-      password: 'nestjs',
-      database: 'My-nest-db',
-      autoLoadEntities: false,
-      synchronize: false,
+    TypeOrmModule.forRootAsync({
+      imports: [configModule],
+      useFactory: (configService: ConfigService<ConfigType>) => ({
+        type: 'postgres',
+        host: configService.get('sql.HOST_DB', { infer: true }),
+        port: configService.get('sql.PORT_DB', { infer: true }),
+        username: configService.get('sql.USERNAME_DB', { infer: true }),
+        password: configService.get('sql.PASSWORD_DB', { infer: true }),
+        database: configService.get('sql.NAME_DB', { infer: true }),
+        autoLoadEntities: false,
+        synchronize: false,
+      }),
+      inject: [ConfigService],
     }),
     MongooseModule.forRootAsync({
       imports: [configModule],
@@ -228,12 +233,12 @@ const useCases = [
     BlogsController,
     PostsController,
     CommentsController,
-    TestingController,
     AuthController,
     DeviceController,
     BloggerController,
     SaController,
     SaUsersController,
+    TestingController,
   ],
   providers: [
     AppService,
@@ -274,6 +279,11 @@ const useCases = [
         process.env.REPO_TYPE === 'MONGO'
           ? DeviceQueryRepository
           : DeviceSQLQueryRepository,
+    },
+    {
+      provide: TestingService,
+      useClass:
+        process.env.REPO_TYPE === 'MONGO' ? TestingService : TestingSQLService,
     },
     BlogsQueryRepository,
     PostsService,
