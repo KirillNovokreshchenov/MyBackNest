@@ -1,13 +1,10 @@
-import { SessionDataType } from '../../api/input-model/user-data-request.type';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import {
-  Session,
-  SessionModelType,
-} from '../../../sessions/domain/session.schema';
-import { InjectModel } from '@nestjs/mongoose';
-import { DeviceRepository } from '../../../sessions/infrastructure/device.repository';
-import { AuthService } from '../auth.service';
-import { BcryptAdapter } from '../../../users/infrastructure/adapters/bcryptAdapter';
+import { SessionDataType } from "../../api/input-model/user-data-request.type";
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import { Session, SessionModelType } from "../../../sessions/domain/session.schema";
+import { InjectModel } from "@nestjs/mongoose";
+import { DeviceRepository } from "../../../sessions/infrastructure/device.repository";
+import { AuthService } from "../auth.service";
+import { BcryptAdapter } from "../../../users/infrastructure/adapters/bcryptAdapter";
 
 export class CreateTokensCommand {
   constructor(public sessionData: SessionDataType) {}
@@ -40,7 +37,7 @@ export class CreateTokensUseCase
       expDate: expDate,
     };
     const isCreated = await this.sessionRepo.createSession(session);
-    if (isCreated) return null;
+    if (isCreated === null) return null;
     return session;
   }
 }

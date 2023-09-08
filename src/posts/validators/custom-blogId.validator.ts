@@ -1,10 +1,7 @@
-import {
-  ValidatorConstraint,
-  ValidatorConstraintInterface,
-} from 'class-validator';
-import { Injectable } from '@nestjs/common';
-import { BlogsQueryRepository } from '../../blogs/infrastructure/blogs.query.repository';
-import { Types } from 'mongoose';
+import { ValidatorConstraint, ValidatorConstraintInterface } from "class-validator";
+import { Injectable } from "@nestjs/common";
+import { BlogsQueryRepository } from "../../blogs/infrastructure/blogs.query.repository";
+import { Types } from "mongoose";
 
 @ValidatorConstraint({ name: 'BlogExists', async: true })
 @Injectable()

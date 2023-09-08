@@ -1,4 +1,4 @@
-import { IdType } from '../../../models/IdType';
+import { IdType } from "../../../models/IdType";
 
 export type UserFromRefreshType = {
   userId: IdType;

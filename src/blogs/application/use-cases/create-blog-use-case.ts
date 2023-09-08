@@ -1,10 +1,10 @@
-import { BlogsRepository } from '../../infrastructure/blogs.repository';
-import { InjectModel } from '@nestjs/mongoose';
-import { Blog, BlogModelType } from '../../domain/blog.schema';
-import { CreateBlogDto } from '../dto/CreateBlogDto';
-import { Types } from 'mongoose';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { IdType } from '../../../models/IdType';
+import { BlogsRepository } from "../../infrastructure/blogs.repository";
+import { InjectModel } from "@nestjs/mongoose";
+import { Blog, BlogModelType } from "../../domain/blog.schema";
+import { CreateBlogDto } from "../dto/CreateBlogDto";
+import { Types } from "mongoose";
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import { IdType } from "../../../models/IdType";
 
 export class CreateBlogCommand {
   constructor(public blogDto: CreateBlogDto, public userId: IdType) {}

@@ -1,6 +1,7 @@
-import { CodeDto } from '../dto/CodeDto';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { UsersRepository } from '../../infrastructure/users.repository';
+import { CodeDto } from "../dto/CodeDto";
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import { UsersRepository } from "../../infrastructure/users.repository";
+import { IdType } from "../../../models/IdType";
 
 export class ConfirmByEmailCommand {
   constructor(public codeDto: CodeDto) {}
@@ -11,9 +12,11 @@ export class ConfirmByEmailUseCase
 {
   constructor(private usersRepository: UsersRepository) {}
   async execute(command: ConfirmByEmailCommand) {
-    const emailConfirmationData = await this.usersRepository.findUserByCode(
-      command.codeDto.code,
-    );
+    const emailConfirmationData: {
+      userId: IdType;
+      expDate: Date;
+      isConfirmed: boolean;
+    } | null = await this.usersRepository.findUserByCode(command.codeDto.code);
     if (!emailConfirmationData) return false;
     if (
       emailConfirmationData.expDate > new Date() &&

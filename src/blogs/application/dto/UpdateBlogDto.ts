@@ -1,5 +1,5 @@
-import { IsNotEmpty, IsString, Matches, MaxLength } from 'class-validator';
-import { Transform, TransformFnParams } from 'class-transformer';
+import { IsNotEmpty, IsString, Matches, MaxLength } from "class-validator";
+import { Transform, TransformFnParams } from "class-transformer";
 
 export class UpdateBlogDto {
   @MaxLength(15)

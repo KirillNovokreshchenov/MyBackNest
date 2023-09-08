@@ -1,5 +1,5 @@
-import { BanBlogInfo, Blog, BlogOwnerInfo } from '../../domain/blog.schema';
-import { BlogViewModel } from './BlogViewModel';
+import { BanBlogInfo, Blog, BlogOwnerInfo } from "../../domain/blog.schema";
+import { BlogViewModel } from "./BlogViewModel";
 
 export class BlogByAdminViewModel extends BlogViewModel {
   blogOwnerInfo: BlogOwnerInfo;

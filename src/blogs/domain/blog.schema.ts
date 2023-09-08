@@ -1,9 +1,9 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model, Types } from 'mongoose';
-import { CreateBlogDto } from '../application/dto/CreateBlogDto';
-import { UpdateBlogDto } from '../application/dto/UpdateBlogDto';
-import { BanBlogDto } from '../application/dto/BanBlogDto';
-import { IdType } from '../../models/IdType';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { HydratedDocument, Model, Types } from "mongoose";
+import { CreateBlogDto } from "../application/dto/CreateBlogDto";
+import { UpdateBlogDto } from "../application/dto/UpdateBlogDto";
+import { BanBlogDto } from "../application/dto/BanBlogDto";
+import { IdType } from "../../models/IdType";
 
 @Schema()
 export class BlogOwnerInfo {

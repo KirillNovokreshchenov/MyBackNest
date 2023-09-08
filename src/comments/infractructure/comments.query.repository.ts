@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Types } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   Comment,

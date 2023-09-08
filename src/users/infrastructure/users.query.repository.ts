@@ -1,20 +1,22 @@
-import { Injectable } from '@nestjs/common';
-import { UserViewModel } from '../api/view-model/UserViewModel';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserModelType } from '../domain/user.schema';
-import { Types } from 'mongoose';
-import { userFilter } from '../users-helpers/user-filter';
-import { skipPages } from '../../helpers/skip-pages';
-import { sortQuery } from '../../helpers/sort-query';
-import { UserViewModelAll } from '../api/view-model/UserViewModelAll';
-import { pagesCount } from '../../helpers/pages-count';
-import { UserQueryModel } from './models/UserQueryModel';
-import { UserQueryInputType } from '../api/input-model/UserQueryInputType';
-import { UserAuthViewModel } from '../../auth/api/view-model/UserAuthViewModel';
-import { Blog, BlogModelType } from '../../blogs/domain/blog.schema';
-import { BannedUserForBlogViewModel } from '../api/view-model/BannedUserForBlogViewModel';
-import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
-import { IdType } from '../../models/IdType';
+import { Injectable } from "@nestjs/common";
+import { UserMongoViewModel, UserSQLViewModel, UserViewModel } from "../api/view-model/UserViewModel";
+import { InjectModel } from "@nestjs/mongoose";
+import { User, UserModelType } from "../domain/user.schema";
+import { userFilter } from "../users-helpers/user-filter";
+import { skipPages } from "../../helpers/skip-pages";
+import { sortQuery } from "../../helpers/sort-query";
+import { UserViewModelAll } from "../api/view-model/UserViewModelAll";
+import { pagesCount } from "../../helpers/pages-count";
+import { UserMongoQueryModel } from "./models/UserMongoQueryModel";
+import { UserQueryInputType } from "../api/input-model/UserQueryInputType";
+import { UserAuthViewModel } from "../../auth/api/view-model/UserAuthViewModel";
+import { Blog, BlogModelType } from "../../blogs/domain/blog.schema";
+import { BannedUserForBlogViewModel } from "../api/view-model/BannedUserForBlogViewModel";
+import { RESPONSE_OPTIONS } from "../../models/ResponseOptionsEnum";
+import { IdType } from "../../models/IdType";
+import { InjectDataSource } from "@nestjs/typeorm";
+import { DataSource } from "typeorm";
+import { UserSQLQueryModel } from "./models/UserSQLQueryModel";
 
 @Injectable()
 export class UsersQueryRepository {
@@ -26,7 +28,7 @@ export class UsersQueryRepository {
     const foundUser = await this.userModel.findById(userId).lean();
     if (!foundUser) return null;
 
-    return new UserViewModel(foundUser);
+    return new UserMongoViewModel(foundUser);
   }
   async findUserAuth(userId: IdType) {
     const foundUser = await this.userModel.findById(userId).lean();
@@ -37,7 +39,7 @@ export class UsersQueryRepository {
   async findAllUsers(dataQuery: UserQueryInputType) {
     const data = await this._dataFindUser(dataQuery);
 
-    const mapUsers = data.users.map((user) => new UserViewModel(user));
+    const mapUsers = data.users.map((user) => new UserMongoViewModel(user));
 
     return new UserViewModelAll(
       data.countPages,
@@ -81,7 +83,7 @@ export class UsersQueryRepository {
     dataQuery: UserQueryInputType,
     blogIdForBannedUsers?: IdType,
   ) {
-    const query = new UserQueryModel(dataQuery);
+    const query = new UserMongoQueryModel(dataQuery);
 
     const filter = userFilter(
       query.searchLoginTerm,
@@ -101,6 +103,71 @@ export class UsersQueryRepository {
       .skip(skip)
       .limit(query.pageSize)
       .lean();
+    return {
+      totalCount,
+      countPages,
+      pageNumber: query.pageNumber,
+      pageSize: query.pageSize,
+      users: allUsers,
+    };
+  }
+}
+
+@Injectable()
+export class UsersSQLQueryRepository {
+  constructor(@InjectDataSource() protected dataSource: DataSource) {}
+  async findUserById(userId: IdType): Promise<UserViewModel | null> {
+    const foundUser = await this.dataSource.query(
+      `
+    SELECT user_id, login, email, "createdAt"
+FROM public.users
+WHERE user_id = $1
+    `,
+      [userId],
+    );
+    if (!foundUser) return null;
+
+    return new UserSQLViewModel(foundUser[0]);
+  }
+
+  async findAllUsers(dataQuery: UserQueryInputType) {
+    const data = await this._dataFindUser(dataQuery);
+
+    const mapUsers = data.users.map((user) => new UserSQLViewModel(user));
+
+    return new UserViewModelAll(
+      data.countPages,
+      data.pageNumber,
+      data.pageSize,
+      data.totalCount,
+      mapUsers,
+    );
+  }
+  async _dataFindUser(dataQuery: UserQueryInputType) {
+    const query = new UserSQLQueryModel(dataQuery);
+
+    let totalCount = await this.dataSource.query(
+      `
+           SELECT COUNT(*)
+           FROM public.users
+           WHERE login ILIKE $1 AND email ILIKE $2 AND is_deleted <> true;
+            `,
+      [query.searchLoginTerm, query.searchEmailTerm],
+    );
+    totalCount = +totalCount[0].count;
+    const countPages = pagesCount(totalCount, query.pageSize);
+    const skip = skipPages(query.pageNumber, query.pageSize);
+
+    const allUsers = await this.dataSource.query(
+      `
+    SELECT user_id, login, email, password, "createdAt"
+FROM public.users
+WHERE login ILIKE $1 AND email ILIKE $2 AND is_deleted <> true
+ORDER BY "${query.sortBy}" ${query.sortDirection}
+LIMIT $3 OFFSET $4
+    `,
+      [query.searchLoginTerm, query.searchEmailTerm, query.pageSize, skip],
+    );
     return {
       totalCount,
       countPages,

@@ -6,7 +6,6 @@ import {
   PostInfo,
 } from '../domain/comment.schema';
 import { InjectModel } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
 import {
   CommentLike,
   CommentLikeDocument,

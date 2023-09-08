@@ -1,13 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { Blog, BlogDocument, BlogModelType } from '../domain/blog.schema';
-import { InjectModel } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
-import { Post, PostModelType } from '../../posts/domain/post.schema';
-import { User, UserModelType } from '../../users/domain/user.schema';
-import { BanBlogDto } from '../application/dto/BanBlogDto';
-import { IdType } from '../../models/IdType';
-import { CreateBlogDto } from '../application/dto/CreateBlogDto';
-import { UpdateBlogDto } from '../application/dto/UpdateBlogDto';
+import { Injectable } from "@nestjs/common";
+import { Blog, BlogDocument, BlogModelType } from "../domain/blog.schema";
+import { InjectModel } from "@nestjs/mongoose";
+import { Types } from "mongoose";
+import { Post, PostModelType } from "../../posts/domain/post.schema";
+import { User, UserModelType } from "../../users/domain/user.schema";
+import { BanBlogDto } from "../application/dto/BanBlogDto";
+import { IdType } from "../../models/IdType";
+import { CreateBlogDto } from "../application/dto/CreateBlogDto";
+import { UpdateBlogDto } from "../application/dto/UpdateBlogDto";
 
 @Injectable()
 export class BlogsRepository {

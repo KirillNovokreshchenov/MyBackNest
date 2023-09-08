@@ -16,7 +16,6 @@ import {
 import { UserFromRefreshType } from '../../auth/api/input-model/user-from-refresh.type';
 import { DeviceQueryRepository } from '../infrastructure/device.query.repository';
 import { DeviceViewModel } from './view-model/DeviceViewModel';
-import { DeviceService } from '../application/device.service';
 import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
 import { CommandBus } from '@nestjs/cqrs';
 import { DeleteAllSessionsCommand } from '../application/use-cases/delete-all-sessions-use-case';
@@ -28,7 +27,6 @@ import { IdType } from '../../models/IdType';
 export class DeviceController {
   constructor(
     protected deviceQueryRepo: DeviceQueryRepository,
-    protected deviceService: DeviceService,
     private commandBus: CommandBus,
   ) {}
   @UseGuards(RefreshJwtAuthGuard)

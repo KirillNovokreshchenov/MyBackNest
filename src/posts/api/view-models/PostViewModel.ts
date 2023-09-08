@@ -1,6 +1,6 @@
-import { Post } from '../../domain/post.schema';
-import { LIKE_STATUS } from '../../../models/LikeStatusEnum';
-import { NewestLikes } from './NewestLikeModel';
+import { Post } from "../../domain/post.schema";
+import { LIKE_STATUS } from "../../../models/LikeStatusEnum";
+import { NewestLikes } from "./NewestLikeModel";
 
 type ExtendedLikesInfo = {
   likesCount: number;

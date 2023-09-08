@@ -11,7 +11,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { CommentsQueryRepository } from '../infractructure/comments.query.repository';
-import { Types } from 'mongoose';
 import { CommentViewModel } from './view-models/CommentViewModel';
 import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
 import { UpdateCommentDto } from '../application/dto/UpdateCommentDto';

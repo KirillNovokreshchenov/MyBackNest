@@ -1,8 +1,8 @@
-import { Injectable } from '@nestjs/common';
-import { BlogsRepository } from '../infrastructure/blogs.repository';
-import { InjectModel } from '@nestjs/mongoose';
-import { Blog, BlogModelType } from '../domain/blog.schema';
-import { Post, PostModelType } from '../../posts/domain/post.schema';
+import { Injectable } from "@nestjs/common";
+import { BlogsRepository } from "../infrastructure/blogs.repository";
+import { InjectModel } from "@nestjs/mongoose";
+import { Blog, BlogModelType } from "../domain/blog.schema";
+import { Post, PostModelType } from "../../posts/domain/post.schema";
 
 @Injectable()
 export class BlogsService {

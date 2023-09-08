@@ -1,5 +1,5 @@
-import { QueryModel } from '../../../models/QueryModel';
-import { BlogQueryInputType } from '../../api/input-model/BlogQueryInputType';
+import { QueryModel } from "../../../models/QueryModel";
+import { BlogQueryInputType } from "../../api/input-model/BlogQueryInputType";
 
 export class BlogQueryModel extends QueryModel {
   searchNameTerm: string | null;

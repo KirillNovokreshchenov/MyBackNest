@@ -1,9 +1,9 @@
-import { BanBlogDto } from '../../../blogs/application/dto/BanBlogDto';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { PostsRepository } from '../../../posts/infrastructure/posts.repository';
-import { CommentsRepository } from '../../../comments/infractructure/comments.repository';
-import { BlogsRepository } from '../../../blogs/infrastructure/blogs.repository';
-import { IdType } from '../../../models/IdType';
+import { BanBlogDto } from "../../../blogs/application/dto/BanBlogDto";
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import { PostsRepository } from "../../../posts/infrastructure/posts.repository";
+import { CommentsRepository } from "../../../comments/infractructure/comments.repository";
+import { BlogsRepository } from "../../../blogs/infrastructure/blogs.repository";
+import { IdType } from "../../../models/IdType";
 
 export class BanBlogCommand {
   constructor(public blogId: IdType, public banBlogDto: BanBlogDto) {}

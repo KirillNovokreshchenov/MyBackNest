@@ -1,23 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { UsersRepository } from '../../users/infrastructure/users.repository';
-import { JwtService } from '@nestjs/jwt';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  Session,
-  SessionModelType,
-} from '../../sessions/domain/session.schema';
-import { DeviceRepository } from '../../sessions/infrastructure/device.repository';
-import { ConfigType } from '../../configuration/configuration';
-import { ConfigService } from '@nestjs/config';
-import { SessionDto } from '../../sessions/application/dto/SessionDto';
+import { Injectable } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import { ConfigType } from "../../configuration/configuration";
+import { ConfigService } from "@nestjs/config";
+import { SessionDto } from "../../sessions/application/dto/SessionDto";
 
 @Injectable()
 export class AuthService {
   constructor(
-    protected usersRepository: UsersRepository,
     private jwtService: JwtService,
-    @InjectModel(Session.name) private SessionModel: SessionModelType,
-    protected sessionRepo: DeviceRepository,
     private configService: ConfigService<ConfigType>,
   ) {}
 

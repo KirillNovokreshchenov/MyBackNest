@@ -1,18 +1,19 @@
-import { Injectable } from '@nestjs/common';
-import { User, UserDocument, UserModelType } from '../domain/user.schema';
-import { InjectModel } from '@nestjs/mongoose';
-import { Types } from 'mongoose';
+import { Injectable } from "@nestjs/common";
+import { User, UserDocument, UserModelType } from "../domain/user.schema";
+import { InjectModel } from "@nestjs/mongoose";
 import {
   PasswordRecovery,
   PasswordRecoveryDocument,
-  PasswordRecoveryType,
-} from '../../auth/domain/password-recovery.schema';
-import { TransformCreateUserDto } from '../application/dto/TransformCreateUserDto';
-import { IdType } from '../../models/IdType';
-import { EmailConfirmationDto } from '../application/dto/EmailConfirmationDto';
-import { RecoveryPasswordDto } from '../application/dto/RecoveryPasswordDto';
-import { BanDto } from '../application/dto/BanDto';
-import { BanUserForBlogDto } from '../application/dto/BanuserForBlogDto';
+  PasswordRecoveryType
+} from "../../auth/domain/password-recovery.schema";
+import { TransformCreateUserDto } from "../application/dto/TransformCreateUserDto";
+import { IdType } from "../../models/IdType";
+import { EmailConfirmationDto } from "../application/dto/EmailConfirmationDto";
+import { RecoveryPasswordDto } from "../application/dto/RecoveryPasswordDto";
+import { BanDto } from "../application/dto/BanDto";
+import { BanUserForBlogDto } from "../application/dto/BanuserForBlogDto";
+import { DataSource } from "typeorm";
+import { InjectDataSource } from "@nestjs/typeorm";
 
 @Injectable()
 export class UsersRepository {
@@ -179,6 +180,189 @@ export class UsersRepository {
 }
 
 @Injectable()
-export class SQLUsersRepository {
-  async createUser(transformDto: TransformCreateUserDto) {}
+export class UsersSQLRepository {
+  constructor(@InjectDataSource() protected dataSource: DataSource) {}
+
+  async createUser(transformDto: TransformCreateUserDto) {
+    const user = await this.dataSource.query(
+      `
+INSERT INTO public.users(
+login, email, password)
+VALUES ($1, $2, $3)
+RETURNING user_id;`,
+      [transformDto.login, transformDto.email, transformDto.passwordHash],
+    );
+    return user[0].user_id;
+  }
+
+  async createEmailConfirmation(
+    userId: IdType,
+    emailConfirm: EmailConfirmationDto,
+  ) {
+    try {
+      const emailConfirmation = await this.dataSource.query(
+        `
+    INSERT INTO public.email_confirmation(
+user_id, confirmation_code, expiration_date, is_confirmed)
+VALUES ($1, $2, $3, $4);`,
+        [
+          userId,
+          emailConfirm.confirmationCode,
+          emailConfirm.expirationDate,
+          emailConfirm.isConfirmed,
+        ],
+      );
+    } catch (e) {
+      console.log(e);
+      return null;
+    }
+  }
+
+  async deleteUser(id: IdType): Promise<boolean> {
+    try {
+      const res = await this.dataSource.query(
+        `UPDATE public.users
+            SET is_deleted=true
+            WHERE user_id = $1 AND is_deleted <> true;`,
+        [id],
+      );
+      return res[1];
+    } catch {
+      return false;
+    }
+  }
+
+  async findUserByCode(code: string) {
+    try {
+      const user = await this.dataSource.query(
+        `
+    SELECT user_id as "userId", expiration_date as "expDate", is_confirmed as "isConfirmed"
+FROM public.email_confirmation
+WHERE confirmation_code = $1;
+    `,
+        [code],
+      );
+      return user[0];
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async emailConfirmed(userId: IdType) {
+    try {
+      const user = await this.dataSource.query(
+        `
+      UPDATE public.email_confirmation
+SET  is_confirmed= true
+WHERE user_id = $1;
+      `,
+        [userId],
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  async findDataConfirmedByEmail(email: string) {
+    try {
+      const user = await this.dataSource.query(
+        `
+    SELECT user_id, confirmation_code, expiration_date, is_confirmed, email
+FROM public.email_confirmation
+LEFT JOIN users USING(user_id)
+WHERE email = $1
+ORDER BY is_confirmed desc
+LIMIT 1
+    `,
+        [email],
+      );
+      return {
+        userId: user[0].user_id,
+        isConfirmed: user[0].is_confirmed,
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async findUserByEmailOrLogin(emailOrLogin: string) {
+    try {
+      const user = await this.dataSource.query(
+        `
+      SELECT user_id
+      FROM public.users
+WHERE login = $1 OR email = $1;
+      `,
+        [emailOrLogin],
+      );
+      return user[0].user_id;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async createRecovery(recoveryPas: RecoveryPasswordDto) {
+    await this.dataSource.query(
+      `
+    INSERT INTO public.recovery_password(
+user_id, recovery_code, expiration_date)
+VALUES ($1, $2, $3);
+    `,
+      [
+        recoveryPas.userId,
+        recoveryPas.recoveryCode,
+        recoveryPas.expirationDate,
+      ],
+    );
+  }
+
+  async findRecovery(recoveryCode: string) {
+    try {
+      const recovery = await this.dataSource.query(
+        `
+      SELECT user_id as "userId", recovery_code as "recCode", expiration_date as "expDate"
+      FROM public.recovery_password
+      WHERE recovery_code = $1;
+      `,
+        [recoveryCode],
+      );
+      return recovery[0];
+    } catch (e) {
+      return null;
+    }
+  }
+  async newPass(userId: IdType, newPass: string) {
+    try {
+      await this.dataSource.query(
+        `
+      UPDATE public.users
+SET password= $2
+WHERE user_id = $1;
+      `,
+        [userId, newPass],
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+  async findUserDataCheckCredentials(loginOrEmail: string) {
+    try {
+      const user = await this.dataSource.query(
+        `
+      SELECT user_id, password
+      FROM public.users
+WHERE login = $1 OR email = $1;
+      `,
+        [loginOrEmail],
+      );
+
+      return {
+        userId: user[0].user_id,
+        hashPassword: user[0].password,
+        isBanned: false,
+      };
+    } catch (e) {
+      return null;
+    }
+  }
 }

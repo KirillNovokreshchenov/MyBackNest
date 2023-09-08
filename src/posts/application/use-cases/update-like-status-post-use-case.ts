@@ -1,11 +1,11 @@
-import { LikeStatusDto } from '../../../models/LikeStatusDto';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { LIKE_STATUS } from '../../../models/LikeStatusEnum';
-import { InjectModel } from '@nestjs/mongoose';
-import { PostLike, PostLikeModelType } from '../../domain/post-like.schema';
-import { PostsRepository } from '../../infrastructure/posts.repository';
-import { UsersRepository } from '../../../users/infrastructure/users.repository';
-import { IdType } from '../../../models/IdType';
+import { LikeStatusDto } from "../../../models/LikeStatusDto";
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import { LIKE_STATUS } from "../../../models/LikeStatusEnum";
+import { InjectModel } from "@nestjs/mongoose";
+import { PostLike, PostLikeModelType } from "../../domain/post-like.schema";
+import { PostsRepository } from "../../infrastructure/posts.repository";
+import { UsersRepository } from "../../../users/infrastructure/users.repository";
+import { IdType } from "../../../models/IdType";
 
 export class UpdateLikeStatusPostCommand {
   constructor(

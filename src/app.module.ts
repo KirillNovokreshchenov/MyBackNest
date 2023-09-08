@@ -8,10 +8,13 @@ import { BlogsController } from './blogs/api/blogs.controller';
 import { UsersController } from './users/api/users.controller';
 import { UsersService } from './users/application/users.service';
 import {
-  SQLUsersRepository,
   UsersRepository,
+  UsersSQLRepository,
 } from './users/infrastructure/users.repository';
-import { UsersQueryRepository } from './users/infrastructure/users.query.repository';
+import {
+  UsersQueryRepository,
+  UsersSQLQueryRepository,
+} from './users/infrastructure/users.query.repository';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './users/domain/user.schema';
 import { BcryptAdapter } from './users/infrastructure/adapters/bcryptAdapter';
@@ -47,11 +50,17 @@ import { JwtModule } from '@nestjs/jwt';
 import { LocalStrategy } from './auth/strategies/local.strategy';
 import { JwtStrategy } from './auth/strategies/jwt.strategy';
 import { Session, SessionSchema } from './sessions/domain/session.schema';
-import { DeviceRepository } from './sessions/infrastructure/device.repository';
+import {
+  DeviceRepository,
+  DeviceSQLRepository,
+} from './sessions/infrastructure/device.repository';
 import { JwtRefreshStrategy } from './auth/strategies/jwt.refresh.strategy';
 import { DeviceController } from './sessions/api/device.controller';
 import { DeviceService } from './sessions/application/device.service';
-import { DeviceQueryRepository } from './sessions/infrastructure/device.query.repository';
+import {
+  DeviceQueryRepository,
+  DeviceSQLQueryRepository,
+} from './sessions/infrastructure/device.query.repository';
 import { CommentService } from './comments/application/comment.service';
 import { CommentsRepository } from './comments/infractructure/comments.repository';
 import { PostLike, PostLikeSchema } from './posts/domain/post-like.schema';
@@ -229,8 +238,6 @@ const useCases = [
   providers: [
     AppService,
     UsersService,
-    UsersRepository,
-    UsersQueryRepository,
     BcryptAdapter,
     BlogsService,
     {
@@ -239,6 +246,34 @@ const useCases = [
         process.env.REPO_TYPE === 'MONGO'
           ? BlogsRepository
           : BlogsSQLRepository,
+    },
+    {
+      provide: UsersRepository,
+      useClass:
+        process.env.REPO_TYPE === 'MONGO'
+          ? UsersRepository
+          : UsersSQLRepository,
+    },
+    {
+      provide: UsersQueryRepository,
+      useClass:
+        process.env.REPO_TYPE === 'MONGO'
+          ? UsersQueryRepository
+          : UsersSQLQueryRepository,
+    },
+    {
+      provide: DeviceRepository,
+      useClass:
+        process.env.REPO_TYPE === 'MONGO'
+          ? DeviceRepository
+          : DeviceSQLRepository,
+    },
+    {
+      provide: DeviceQueryRepository,
+      useClass:
+        process.env.REPO_TYPE === 'MONGO'
+          ? DeviceQueryRepository
+          : DeviceSQLQueryRepository,
     },
     BlogsQueryRepository,
     PostsService,
@@ -251,14 +286,11 @@ const useCases = [
     BasicStrategy,
     LocalStrategy,
     JwtStrategy,
-    DeviceRepository,
     JwtRefreshStrategy,
     DeviceService,
-    DeviceQueryRepository,
     CommentService,
     CommentsRepository,
     BlogExistsRule,
-    SQLUsersRepository,
     BcryptAdapter,
     ...useCases,
   ],

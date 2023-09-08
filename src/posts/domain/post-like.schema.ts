@@ -1,7 +1,7 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model, Types } from 'mongoose';
-import { LIKE_STATUS } from '../../models/LikeStatusEnum';
-import { IdType } from '../../models/IdType';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { HydratedDocument, Model, Types } from "mongoose";
+import { LIKE_STATUS } from "../../models/LikeStatusEnum";
+import { IdType } from "../../models/IdType";
 
 @Schema()
 export class PostLike {

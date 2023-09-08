@@ -1,9 +1,9 @@
-import { BanUserForBlogDto } from '../dto/BanuserForBlogDto';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
-import { UsersRepository } from '../../infrastructure/users.repository';
-import { BlogsRepository } from '../../../blogs/infrastructure/blogs.repository';
-import { IdType } from '../../../models/IdType';
+import { BanUserForBlogDto } from "../dto/BanuserForBlogDto";
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import { RESPONSE_OPTIONS } from "../../../models/ResponseOptionsEnum";
+import { UsersRepository } from "../../infrastructure/users.repository";
+import { BlogsRepository } from "../../../blogs/infrastructure/blogs.repository";
+import { IdType } from "../../../models/IdType";
 
 export class UserBanForBlogCommand {
   constructor(

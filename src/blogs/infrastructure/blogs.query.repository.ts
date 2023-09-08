@@ -1,17 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { Types } from 'mongoose';
-import { BlogViewModel } from '../api/view-model/BlogViewModel';
-import { InjectModel } from '@nestjs/mongoose';
-import { Blog, BlogModelType } from '../domain/blog.schema';
-import { BlogQueryInputType } from '../api/input-model/BlogQueryInputType';
-import { BlogQueryModel } from './models/BlogQueryModel';
-import { BlogViewModelAll } from '../api/view-model/BlogViewModelAll';
-import { blogFilter } from '../blogs-helpers/blog-filter';
-import { pagesCount } from '../../helpers/pages-count';
-import { sortQuery } from '../../helpers/sort-query';
-import { skipPages } from '../../helpers/skip-pages';
-import { BlogByAdminViewModel } from '../api/view-model/BlogByAdminViewModel';
-import { IdType } from '../../models/IdType';
+import { Injectable } from "@nestjs/common";
+import { Types } from "mongoose";
+import { BlogViewModel } from "../api/view-model/BlogViewModel";
+import { InjectModel } from "@nestjs/mongoose";
+import { Blog, BlogModelType } from "../domain/blog.schema";
+import { BlogQueryInputType } from "../api/input-model/BlogQueryInputType";
+import { BlogQueryModel } from "./models/BlogQueryModel";
+import { BlogViewModelAll } from "../api/view-model/BlogViewModelAll";
+import { blogFilter } from "../blogs-helpers/blog-filter";
+import { pagesCount } from "../../helpers/pages-count";
+import { sortQuery } from "../../helpers/sort-query";
+import { skipPages } from "../../helpers/skip-pages";
+import { BlogByAdminViewModel } from "../api/view-model/BlogByAdminViewModel";
+import { IdType } from "../../models/IdType";
 
 @Injectable()
 export class BlogsQueryRepository {

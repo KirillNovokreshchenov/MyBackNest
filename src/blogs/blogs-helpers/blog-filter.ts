@@ -1,5 +1,4 @@
-import { Types } from 'mongoose';
-import { IdType } from '../../models/IdType';
+import { IdType } from "../../models/IdType";
 
 export function blogFilter(searchNameTerm: string | null, userId?: IdType) {
   let filter = {};

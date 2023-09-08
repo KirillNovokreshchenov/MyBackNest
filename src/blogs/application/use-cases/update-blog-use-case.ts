@@ -1,10 +1,10 @@
-import { BlogsRepository } from '../../infrastructure/blogs.repository';
-import { InjectModel } from '@nestjs/mongoose';
-import { Post, PostModelType } from '../../../posts/domain/post.schema';
-import { UpdateBlogDto } from '../dto/UpdateBlogDto';
-import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { IdType } from '../../../models/IdType';
+import { BlogsRepository } from "../../infrastructure/blogs.repository";
+import { InjectModel } from "@nestjs/mongoose";
+import { Post, PostModelType } from "../../../posts/domain/post.schema";
+import { UpdateBlogDto } from "../dto/UpdateBlogDto";
+import { RESPONSE_OPTIONS } from "../../../models/ResponseOptionsEnum";
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import { IdType } from "../../../models/IdType";
 
 export class UpdateBlogCommand {
   constructor(

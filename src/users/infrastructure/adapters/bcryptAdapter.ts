@@ -1,9 +1,9 @@
-import * as bcrypt from 'bcrypt';
-import { ConfigService } from '@nestjs/config';
-import { ConfigType } from '../../../configuration/configuration';
-import { v4 as uuidv4 } from 'uuid';
-import { add } from 'date-fns';
-import { Injectable } from '@nestjs/common';
+import * as bcrypt from "bcrypt";
+import { ConfigService } from "@nestjs/config";
+import { ConfigType } from "../../../configuration/configuration";
+import { v4 as uuidv4 } from "uuid";
+import { add } from "date-fns";
+import { Injectable } from "@nestjs/common";
 
 @Injectable()
 export class BcryptAdapter {

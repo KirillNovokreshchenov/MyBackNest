@@ -1,5 +1,5 @@
-import { IsNotEmpty, IsString, MaxLength } from 'class-validator';
-import { Transform, TransformFnParams } from 'class-transformer';
+import { IsNotEmpty, IsString, MaxLength } from "class-validator";
+import { Transform, TransformFnParams } from "class-transformer";
 
 export class UpdatePostDto {
   @MaxLength(30)

@@ -1,16 +1,13 @@
-import { Injectable } from '@nestjs/common';
-import { UsersRepository } from '../infrastructure/users.repository';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserModelType } from '../domain/user.schema';
-import { EmailManagers } from '../../auth/application/managers/email.managers';
-import {
-  PasswordRecovery,
-  PasswordRecoveryType,
-} from '../../auth/domain/password-recovery.schema';
-import { DeviceRepository } from '../../sessions/infrastructure/device.repository';
-import { PostsRepository } from '../../posts/infrastructure/posts.repository';
-import { CommentsRepository } from '../../comments/infractructure/comments.repository';
-import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
+import { Injectable } from "@nestjs/common";
+import { UsersRepository } from "../infrastructure/users.repository";
+import { InjectModel } from "@nestjs/mongoose";
+import { User, UserModelType } from "../domain/user.schema";
+import { EmailManagers } from "../../auth/application/managers/email.managers";
+import { PasswordRecovery, PasswordRecoveryType } from "../../auth/domain/password-recovery.schema";
+import { DeviceRepository } from "../../sessions/infrastructure/device.repository";
+import { PostsRepository } from "../../posts/infrastructure/posts.repository";
+import { CommentsRepository } from "../../comments/infractructure/comments.repository";
+import { BlogsRepository } from "../../blogs/infrastructure/blogs.repository";
 
 @Injectable()
 export class UsersService {

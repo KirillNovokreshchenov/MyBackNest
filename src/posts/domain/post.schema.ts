@@ -1,10 +1,10 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model, Types } from 'mongoose';
-import { CreatePostDto } from '../application/dto/CreatePostDto';
-import { UpdatePostDto } from '../application/dto/UpdatePostDto';
-import { LIKE_STATUS } from '../../models/LikeStatusEnum';
-import { PostLikeDocument, PostLikeModelType } from './post-like.schema';
-import { IdType } from '../../models/IdType';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { HydratedDocument, Model, Types } from "mongoose";
+import { CreatePostDto } from "../application/dto/CreatePostDto";
+import { UpdatePostDto } from "../application/dto/UpdatePostDto";
+import { LIKE_STATUS } from "../../models/LikeStatusEnum";
+import { PostLikeDocument, PostLikeModelType } from "./post-like.schema";
+import { IdType } from "../../models/IdType";
 
 @Schema()
 export class LikesInfo {

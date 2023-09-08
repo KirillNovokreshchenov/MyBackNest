@@ -1,6 +1,6 @@
-import { ViewModelAll } from '../../../models/ViewModelAll';
-import { BlogViewModel } from './BlogViewModel';
-import { BlogByAdminViewModel } from './BlogByAdminViewModel';
+import { ViewModelAll } from "../../../models/ViewModelAll";
+import { BlogViewModel } from "./BlogViewModel";
+import { BlogByAdminViewModel } from "./BlogByAdminViewModel";
 
 export class BlogViewModelAll extends ViewModelAll {
   constructor(

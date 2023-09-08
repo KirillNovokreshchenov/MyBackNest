@@ -1,6 +1,5 @@
-import { BanInfo } from '../../domain/user.schema';
-import { Types } from 'mongoose';
-import { IdType } from '../../../models/IdType';
+import { BanInfo } from "../../domain/user.schema";
+import { IdType } from "../../../models/IdType";
 
 export class BannedUserForBlogViewModel {
   id: string;

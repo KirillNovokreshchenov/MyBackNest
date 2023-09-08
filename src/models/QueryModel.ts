@@ -1,5 +1,5 @@
-import { QueryInputType } from './QueryInputType';
-import { QueryConstants } from './QueryConstants';
+import { QueryInputType } from "./QueryInputType";
+import { QueryConstants } from "./QueryConstants";
 
 export class QueryModel {
   sortBy: string;
@@ -10,7 +10,9 @@ export class QueryModel {
   constructor(public dataQuery: QueryInputType) {
     this.sortBy = dataQuery.sortBy || QueryConstants.SortBy;
     this.sortDirection =
-      dataQuery.sortDirection || QueryConstants.SortDirectionDesc;
+      dataQuery.sortDirection === 'asc'
+        ? QueryConstants.SortDirectionAsc
+        : QueryConstants.SortDirectionDesc;
     this.pageNumber = +(dataQuery.pageNumber || QueryConstants.PageNumber);
     this.pageSize = +(dataQuery.pageSize || QueryConstants.PageSize);
   }

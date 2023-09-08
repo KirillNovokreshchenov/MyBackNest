@@ -1,10 +1,10 @@
-import { BanDto } from '../dto/BanDto';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { PostsRepository } from '../../../posts/infrastructure/posts.repository';
-import { CommentsRepository } from '../../../comments/infractructure/comments.repository';
-import { UsersRepository } from '../../infrastructure/users.repository';
-import { DeviceRepository } from '../../../sessions/infrastructure/device.repository';
-import { IdType } from '../../../models/IdType';
+import { BanDto } from "../dto/BanDto";
+import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
+import { PostsRepository } from "../../../posts/infrastructure/posts.repository";
+import { CommentsRepository } from "../../../comments/infractructure/comments.repository";
+import { UsersRepository } from "../../infrastructure/users.repository";
+import { DeviceRepository } from "../../../sessions/infrastructure/device.repository";
+import { IdType } from "../../../models/IdType";
 
 export class UserBanCommand {
   constructor(public userId: IdType, public banDto: BanDto) {}
