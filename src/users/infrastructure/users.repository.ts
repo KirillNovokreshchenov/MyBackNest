@@ -226,7 +226,7 @@ VALUES ($1, $2, $3, $4);`,
             WHERE user_id = $1 AND is_deleted <> true;`,
         [id],
       );
-      return res[1];
+      return res[1] === 1;
     } catch {
       return false;
     }
