@@ -166,7 +166,7 @@ WHERE user_id = $1
       `
     SELECT user_id, login, email, password, "createdAt"
 FROM public.users
-WHERE login ILIKE $1 AND email ILIKE $2 AND is_deleted <> true
+WHERE login ILIKE $1 OR email ILIKE $2 AND is_deleted <> true
 ORDER BY "${query.sortBy}" ${query.sortDirection}
 LIMIT $3 OFFSET $4
     `,
