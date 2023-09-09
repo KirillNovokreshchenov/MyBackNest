@@ -1,10 +1,10 @@
-import { Injectable } from "@nestjs/common";
-import { PostsRepository } from "../infrastructure/posts.repository";
-import { InjectModel } from "@nestjs/mongoose";
-import { Post, PostModelType } from "../domain/post.schema";
-import { PostLike, PostLikeModelType } from "../domain/post-like.schema";
-import { UsersRepository } from "../../users/infrastructure/users.repository";
-import { BlogsRepository } from "../../blogs/infrastructure/blogs.repository";
+import { Injectable } from '@nestjs/common';
+import { PostsRepository } from '../infrastructure/posts.repository';
+import { InjectModel } from '@nestjs/mongoose';
+import { Post, PostModelType } from '../domain/post.schema';
+import { PostLike, PostLikeModelType } from '../domain/post-like.schema';
+import { UsersRepository } from '../../users/infrastructure/users.repository';
+import { BlogsRepository } from '../../blogs/infrastructure/blogs.repository';
 
 @Injectable()
 export class PostsService {

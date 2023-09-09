@@ -1,6 +1,6 @@
-import { QueryModel } from "../../../models/QueryModel";
-import { UserQueryInputType } from "../../api/input-model/UserQueryInputType";
-import { BanStatus } from "../../users-helpers/ban-status-enum";
+import { QueryModel } from '../../../models/QueryModel';
+import { UserQueryInputType } from '../../api/input-model/UserQueryInputType';
+import { BanStatus } from '../../users-helpers/ban-status-enum';
 
 export class UserMongoQueryModel extends QueryModel {
   searchLoginTerm: string | null;

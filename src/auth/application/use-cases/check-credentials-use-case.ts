@@ -1,8 +1,8 @@
-import { LoginDto } from "../dto/loginDto";
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { UsersRepository } from "../../../users/infrastructure/users.repository";
-import { IdType } from "../../../models/IdType";
-import { BcryptAdapter } from "../../../users/infrastructure/adapters/bcryptAdapter";
+import { LoginDto } from '../dto/loginDto';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { UsersRepository } from '../../../users/infrastructure/users.repository';
+import { IdType } from '../../../models/IdType';
+import { BcryptAdapter } from '../../../users/infrastructure/adapters/bcryptAdapter';
 
 export class CheckCredentialsCommand {
   constructor(public loginDto: LoginDto) {}

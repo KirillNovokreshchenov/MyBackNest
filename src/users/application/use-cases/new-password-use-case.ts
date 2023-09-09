@@ -1,8 +1,8 @@
-import { NewPasswordDto } from "../../../auth/application/dto/NewPasswordDto";
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { UsersRepository } from "../../infrastructure/users.repository";
-import { IdType } from "../../../models/IdType";
-import { BcryptAdapter } from "../../infrastructure/adapters/bcryptAdapter";
+import { NewPasswordDto } from '../../../auth/application/dto/NewPasswordDto';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { UsersRepository } from '../../infrastructure/users.repository';
+import { IdType } from '../../../models/IdType';
+import { BcryptAdapter } from '../../infrastructure/adapters/bcryptAdapter';
 
 export class NewPasswordCommand {
   constructor(public newPasswordDto: NewPasswordDto) {}

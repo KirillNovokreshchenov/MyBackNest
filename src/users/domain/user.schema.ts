@@ -1,11 +1,14 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument, Model, Types } from "mongoose";
-import { EmailConfirmation, EmailConfirmationSchema } from "../../auth/domain/email-confirmation.schema";
-import { BanDto } from "../application/dto/BanDto";
-import { BanUserForBlogDto } from "../application/dto/BanuserForBlogDto";
-import { TransformCreateUserDto } from "../application/dto/TransformCreateUserDto";
-import { EmailConfirmationDto } from "../application/dto/EmailConfirmationDto";
-import { IdType } from "../../models/IdType";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument, Model, Types } from 'mongoose';
+import {
+  EmailConfirmation,
+  EmailConfirmationSchema,
+} from '../../auth/domain/email-confirmation.schema';
+import { BanDto } from '../application/dto/BanDto';
+import { BanUserForBlogDto } from '../application/dto/BanuserForBlogDto';
+import { TransformCreateUserDto } from '../application/dto/TransformCreateUserDto';
+import { EmailConfirmationDto } from '../application/dto/EmailConfirmationDto';
+import { IdType } from '../../models/IdType';
 
 @Schema({ _id: false })
 export class BanInfo {

@@ -1,7 +1,7 @@
-import { BlogUserIdInputType } from "../../api/input-model/BlogUserIdInputType";
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { BlogsRepository } from "../../infrastructure/blogs.repository";
-import { IdType } from "../../../models/IdType";
+import { BlogUserIdInputType } from '../../api/input-model/BlogUserIdInputType';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { BlogsRepository } from '../../infrastructure/blogs.repository';
+import { IdType } from '../../../models/IdType';
 
 export class BindBlogCommand {
   constructor(public blogAndUserId: BlogUserIdInputType) {}

@@ -1,18 +1,18 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Post, PostModelType } from "../domain/post.schema";
-import { PostViewModel } from "../api/view-models/PostViewModel";
-import { QueryModel } from "../../models/QueryModel";
-import { QueryInputType } from "../../models/QueryInputType";
-import { pagesCount } from "../../helpers/pages-count";
-import { sortQuery } from "../../helpers/sort-query";
-import { skipPages } from "../../helpers/skip-pages";
-import { PostViewModelAll } from "../api/view-models/PostViewModelAll";
-import { PostFilterType } from "./types/filter-query.types";
-import { PostLike, PostLikeModelType } from "../domain/post-like.schema";
-import { NewestLikes } from "../api/view-models/NewestLikeModel";
-import { LIKE_STATUS } from "../../models/LikeStatusEnum";
-import { IdType } from "../../models/IdType";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Post, PostModelType } from '../domain/post.schema';
+import { PostViewModel } from '../api/view-models/PostViewModel';
+import { QueryModel } from '../../models/QueryModel';
+import { QueryInputType } from '../../models/QueryInputType';
+import { pagesCount } from '../../helpers/pages-count';
+import { sortQuery } from '../../helpers/sort-query';
+import { skipPages } from '../../helpers/skip-pages';
+import { PostViewModelAll } from '../api/view-models/PostViewModelAll';
+import { PostFilterType } from './types/filter-query.types';
+import { PostLike, PostLikeModelType } from '../domain/post-like.schema';
+import { NewestLikes } from '../api/view-models/NewestLikeModel';
+import { LIKE_STATUS } from '../../models/LikeStatusEnum';
+import { IdType } from '../../models/IdType';
 
 @Injectable()
 export class PostsQueryRepository {

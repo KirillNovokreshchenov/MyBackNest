@@ -1,5 +1,5 @@
-import { QueryModel } from "../../../models/QueryModel";
-import { UserQueryInputType } from "../../api/input-model/UserQueryInputType";
+import { QueryModel } from '../../../models/QueryModel';
+import { UserQueryInputType } from '../../api/input-model/UserQueryInputType';
 
 export class UserSQLQueryModel extends QueryModel {
   searchLoginTerm: string;

@@ -10,22 +10,22 @@ import {
   Post,
   Put,
   Query,
-  UseGuards
-} from "@nestjs/common";
-import { ParseObjectIdPipe } from "../../pipes-global/parse-object-id-pipe.service";
-import { BasicAuthGuard } from "../../auth/guards/basic-auth.guard";
-import { UsersService } from "../application/users.service";
-import { BanDto } from "../application/dto/BanDto";
-import { UserQueryInputType } from "./input-model/UserQueryInputType";
-import { UserViewModelAll } from "./view-model/UserViewModelAll";
-import { UsersQueryRepository } from "../infrastructure/users.query.repository";
-import { CreateUserDto } from "../application/dto/CreateUserDto";
-import { UserViewModel } from "./view-model/UserViewModel";
-import { CommandBus } from "@nestjs/cqrs";
-import { CreateUserByAdminCommand } from "../application/use-cases/create -user-by-admin-use-case";
-import { DeleteUserCommand } from "../application/use-cases/delete-user-use-case";
-import { UserBanCommand } from "../application/use-cases/user-ban-use-case";
-import { IdType } from "../../models/IdType";
+  UseGuards,
+} from '@nestjs/common';
+import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
+import { BasicAuthGuard } from '../../auth/guards/basic-auth.guard';
+import { UsersService } from '../application/users.service';
+import { BanDto } from '../application/dto/BanDto';
+import { UserQueryInputType } from './input-model/UserQueryInputType';
+import { UserViewModelAll } from './view-model/UserViewModelAll';
+import { UsersQueryRepository } from '../infrastructure/users.query.repository';
+import { CreateUserDto } from '../application/dto/CreateUserDto';
+import { UserViewModel } from './view-model/UserViewModel';
+import { CommandBus } from '@nestjs/cqrs';
+import { CreateUserByAdminCommand } from '../application/use-cases/create -user-by-admin-use-case';
+import { DeleteUserCommand } from '../application/use-cases/delete-user-use-case';
+import { UserBanCommand } from '../application/use-cases/user-ban-use-case';
+import { IdType } from '../../models/IdType';
 
 @Controller('sa/users')
 @UseGuards(BasicAuthGuard)

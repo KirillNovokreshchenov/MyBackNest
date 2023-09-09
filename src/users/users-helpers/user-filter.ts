@@ -1,5 +1,5 @@
-import { BanStatus } from "./ban-status-enum";
-import { IdType } from "../../models/IdType";
+import { BanStatus } from './ban-status-enum';
+import { IdType } from '../../models/IdType';
 
 export function userFilter(
   searchLoginTerm: string | null,

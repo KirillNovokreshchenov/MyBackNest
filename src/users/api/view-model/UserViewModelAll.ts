@@ -1,6 +1,6 @@
-import { UserViewModel } from "./UserViewModel";
-import { ViewModelAll } from "../../../models/ViewModelAll";
-import { BannedUserForBlogViewModel } from "./BannedUserForBlogViewModel";
+import { UserViewModel } from './UserViewModel';
+import { ViewModelAll } from '../../../models/ViewModelAll';
+import { BannedUserForBlogViewModel } from './BannedUserForBlogViewModel';
 
 export class UserViewModelAll extends ViewModelAll {
   constructor(

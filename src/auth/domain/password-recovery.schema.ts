@@ -1,7 +1,7 @@
-import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
-import { HydratedDocument, Model, Types } from "mongoose";
-import { RecoveryPasswordDto } from "../../users/application/dto/RecoveryPasswordDto";
-import { IdType } from "../../models/IdType";
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { HydratedDocument, Model, Types } from 'mongoose';
+import { RecoveryPasswordDto } from '../../users/application/dto/RecoveryPasswordDto';
+import { IdType } from '../../models/IdType';
 
 @Schema()
 export class PasswordRecovery {

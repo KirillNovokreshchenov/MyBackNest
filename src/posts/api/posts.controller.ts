@@ -10,25 +10,28 @@ import {
   Post,
   Put,
   Query,
-  UseGuards
-} from "@nestjs/common";
-import { PostsService } from "../application/posts.service";
-import { PostsQueryRepository } from "../infrastructure/posts.query.repository";
-import { QueryInputType } from "../../models/QueryInputType";
-import { CommentsQueryRepository } from "../../comments/infractructure/comments.query.repository";
-import { ParseObjectIdPipe } from "../../pipes-global/parse-object-id-pipe.service";
-import { JwtAuthGuard } from "../../auth/guards/jwt-auth.guard";
-import { CurrentUserId, ParseCurrentIdDecorator } from "../../auth/decorators/create-param-current-id.decarator";
-import { CreateCommentDto } from "../../comments/application/dto/CreateCommentDto";
-import { CommentService } from "../../comments/application/comment.service";
-import { JwtLikeAuthGuard } from "../../auth/guards/jwt-like-auth.guard";
-import { LikeStatusDto } from "../../models/LikeStatusDto";
-import { BlogsQueryRepository } from "../../blogs/infrastructure/blogs.query.repository";
-import { RESPONSE_OPTIONS } from "../../models/ResponseOptionsEnum";
-import { CommandBus } from "@nestjs/cqrs";
-import { UpdateLikeStatusPostCommand } from "../application/use-cases/update-like-status-post-use-case";
-import { CreateCommentCommand } from "../../comments/application/use-cases/create-comment-use-case";
-import { IdType } from "../../models/IdType";
+  UseGuards,
+} from '@nestjs/common';
+import { PostsService } from '../application/posts.service';
+import { PostsQueryRepository } from '../infrastructure/posts.query.repository';
+import { QueryInputType } from '../../models/QueryInputType';
+import { CommentsQueryRepository } from '../../comments/infractructure/comments.query.repository';
+import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
+import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
+import {
+  CurrentUserId,
+  ParseCurrentIdDecorator,
+} from '../../auth/decorators/create-param-current-id.decarator';
+import { CreateCommentDto } from '../../comments/application/dto/CreateCommentDto';
+import { CommentService } from '../../comments/application/comment.service';
+import { JwtLikeAuthGuard } from '../../auth/guards/jwt-like-auth.guard';
+import { LikeStatusDto } from '../../models/LikeStatusDto';
+import { BlogsQueryRepository } from '../../blogs/infrastructure/blogs.query.repository';
+import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
+import { CommandBus } from '@nestjs/cqrs';
+import { UpdateLikeStatusPostCommand } from '../application/use-cases/update-like-status-post-use-case';
+import { CreateCommentCommand } from '../../comments/application/use-cases/create-comment-use-case';
+import { IdType } from '../../models/IdType';
 
 @Controller('posts')
 export class PostsController {

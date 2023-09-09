@@ -10,21 +10,21 @@ import {
   Post,
   Put,
   Query,
-  UseGuards
-} from "@nestjs/common";
-import { BasicAuthGuard } from "../../auth/guards/basic-auth.guard";
-import { ParseObjectIdPipe } from "../../pipes-global/parse-object-id-pipe.service";
-import { BlogUserIdInputType } from "./input-model/BlogUserIdInputType";
-import { BlogsService } from "../application/blogs.service";
-import { BlogQueryInputType } from "./input-model/BlogQueryInputType";
-import { BlogsQueryRepository } from "../infrastructure/blogs.query.repository";
-import { BlogViewModelAll } from "./view-model/BlogViewModelAll";
-import { BanBlogDto } from "../application/dto/BanBlogDto";
-import { UsersService } from "../../users/application/users.service";
-import { BindBlogCommand } from "../application/use-cases/bind-blog-use-case";
-import { CommandBus } from "@nestjs/cqrs";
-import { BanBlogCommand } from "../../users/application/use-cases/ban-blog-use-case";
-import { IdType } from "../../models/IdType";
+  UseGuards,
+} from '@nestjs/common';
+import { BasicAuthGuard } from '../../auth/guards/basic-auth.guard';
+import { ParseObjectIdPipe } from '../../pipes-global/parse-object-id-pipe.service';
+import { BlogUserIdInputType } from './input-model/BlogUserIdInputType';
+import { BlogsService } from '../application/blogs.service';
+import { BlogQueryInputType } from './input-model/BlogQueryInputType';
+import { BlogsQueryRepository } from '../infrastructure/blogs.query.repository';
+import { BlogViewModelAll } from './view-model/BlogViewModelAll';
+import { BanBlogDto } from '../application/dto/BanBlogDto';
+import { UsersService } from '../../users/application/users.service';
+import { BindBlogCommand } from '../application/use-cases/bind-blog-use-case';
+import { CommandBus } from '@nestjs/cqrs';
+import { BanBlogCommand } from '../../users/application/use-cases/ban-blog-use-case';
+import { IdType } from '../../models/IdType';
 
 @Controller('sa/blogs')
 @UseGuards(BasicAuthGuard)

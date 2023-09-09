@@ -1,5 +1,5 @@
-import { AuthGuard } from "@nestjs/passport";
-import { ExecutionContext } from "@nestjs/common";
+import { AuthGuard } from '@nestjs/passport';
+import { ExecutionContext } from '@nestjs/common';
 
 export class JwtLikeAuthGuard extends AuthGuard('access') {
   canActivate(context: ExecutionContext) {

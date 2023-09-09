@@ -1,10 +1,10 @@
-import { CreateUserDto } from "../dto/CreateUserDto";
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { User, UserModelType } from "../../domain/user.schema";
-import { UsersRepository } from "../../infrastructure/users.repository";
-import { InjectModel } from "@nestjs/mongoose";
-import { BcryptAdapter } from "../../infrastructure/adapters/bcryptAdapter";
-import { IdType } from "../../../models/IdType";
+import { CreateUserDto } from '../dto/CreateUserDto';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { User, UserModelType } from '../../domain/user.schema';
+import { UsersRepository } from '../../infrastructure/users.repository';
+import { InjectModel } from '@nestjs/mongoose';
+import { BcryptAdapter } from '../../infrastructure/adapters/bcryptAdapter';
+import { IdType } from '../../../models/IdType';
 
 export class CreateUserByAdminCommand {
   constructor(public userDto: CreateUserDto) {}

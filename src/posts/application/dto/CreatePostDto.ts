@@ -1,6 +1,6 @@
-import { IsNotEmpty, IsString, MaxLength, Validate } from "class-validator";
-import { Transform, TransformFnParams } from "class-transformer";
-import { BlogExistsRule } from "../../validators/custom-blogId.validator";
+import { IsNotEmpty, IsString, MaxLength, Validate } from 'class-validator';
+import { Transform, TransformFnParams } from 'class-transformer';
+import { BlogExistsRule } from '../../validators/custom-blogId.validator';
 
 export class CreatePostDto {
   @MaxLength(30)

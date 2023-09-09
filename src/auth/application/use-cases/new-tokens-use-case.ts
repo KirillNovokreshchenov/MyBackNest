@@ -1,8 +1,8 @@
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { UserFromRefreshType } from "../../api/input-model/user-from-refresh.type";
-import { DeviceRepository } from "../../../sessions/infrastructure/device.repository";
-import { AuthService } from "../auth.service";
-import { BcryptAdapter } from "../../../users/infrastructure/adapters/bcryptAdapter";
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { UserFromRefreshType } from '../../api/input-model/user-from-refresh.type';
+import { DeviceRepository } from '../../../sessions/infrastructure/device.repository';
+import { AuthService } from '../auth.service';
+import { BcryptAdapter } from '../../../users/infrastructure/adapters/bcryptAdapter';
 
 export class NewTokensCommand {
   constructor(public userFromRefresh: UserFromRefreshType) {}

@@ -1,5 +1,5 @@
-import { ViewModelAll } from "../../../models/ViewModelAll";
-import { PostViewModel } from "./PostViewModel";
+import { ViewModelAll } from '../../../models/ViewModelAll';
+import { PostViewModel } from './PostViewModel';
 
 export class PostViewModelAll extends ViewModelAll {
   constructor(

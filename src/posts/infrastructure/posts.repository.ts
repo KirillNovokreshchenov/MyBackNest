@@ -1,12 +1,16 @@
-import { Injectable } from "@nestjs/common";
-import { InjectModel } from "@nestjs/mongoose";
-import { Blog, BlogModelType } from "../../blogs/domain/blog.schema";
-import { Post, PostDocument, PostModelType } from "../domain/post.schema";
-import { PostLike, PostLikeDocument, PostLikeModelType } from "../domain/post-like.schema";
-import { IdType } from "../../models/IdType";
-import { CreatePostDto } from "../application/dto/CreatePostDto";
-import { UpdatePostDto } from "../application/dto/UpdatePostDto";
-import { LIKE_STATUS } from "../../models/LikeStatusEnum";
+import { Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Blog, BlogModelType } from '../../blogs/domain/blog.schema';
+import { Post, PostDocument, PostModelType } from '../domain/post.schema';
+import {
+  PostLike,
+  PostLikeDocument,
+  PostLikeModelType,
+} from '../domain/post-like.schema';
+import { IdType } from '../../models/IdType';
+import { CreatePostDto } from '../application/dto/CreatePostDto';
+import { UpdatePostDto } from '../application/dto/UpdatePostDto';
+import { LIKE_STATUS } from '../../models/LikeStatusEnum';
 
 @Injectable()
 export class PostsRepository {

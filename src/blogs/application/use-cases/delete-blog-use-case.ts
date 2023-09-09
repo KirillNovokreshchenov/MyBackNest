@@ -1,7 +1,7 @@
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { RESPONSE_OPTIONS } from "../../../models/ResponseOptionsEnum";
-import { BlogsRepository } from "../../infrastructure/blogs.repository";
-import { IdType } from "../../../models/IdType";
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
+import { BlogsRepository } from '../../infrastructure/blogs.repository';
+import { IdType } from '../../../models/IdType';
 
 export class DeleteBlogCommand {
   constructor(public blogId: IdType, public userId: IdType) {}

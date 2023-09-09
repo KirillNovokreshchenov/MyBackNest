@@ -1,7 +1,7 @@
-import { BadRequestException, Injectable, PipeTransform } from "@nestjs/common";
-import { CreateUserDto } from "../../users/application/dto/CreateUserDto";
-import { InjectModel } from "@nestjs/mongoose";
-import { User, UserModelType } from "../../users/domain/user.schema";
+import { BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
+import { CreateUserDto } from '../../users/application/dto/CreateUserDto';
+import { InjectModel } from '@nestjs/mongoose';
+import { User, UserModelType } from '../../users/domain/user.schema';
 
 @Injectable()
 export class RegistrationPipe implements PipeTransform {

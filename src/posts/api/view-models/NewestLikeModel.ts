@@ -1,4 +1,4 @@
-import { PostLike } from "../../domain/post-like.schema";
+import { PostLike } from '../../domain/post-like.schema';
 
 export class NewestLikes {
   addedAt: string;

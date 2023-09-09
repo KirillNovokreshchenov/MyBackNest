@@ -1,5 +1,5 @@
-import { QueryInputType } from "./QueryInputType";
-import { QueryConstants } from "./QueryConstants";
+import { QueryInputType } from './QueryInputType';
+import { QueryConstants } from './QueryConstants';
 
 export class QueryModel {
   sortBy: string;

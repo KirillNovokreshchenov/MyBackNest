@@ -1,7 +1,7 @@
-import { Controller } from "@nestjs/common";
-import { UsersService } from "../application/users.service";
-import { UsersQueryRepository } from "../infrastructure/users.query.repository";
-import { CommandBus } from "@nestjs/cqrs";
+import { Controller } from '@nestjs/common';
+import { UsersService } from '../application/users.service';
+import { UsersQueryRepository } from '../infrastructure/users.query.repository';
+import { CommandBus } from '@nestjs/cqrs';
 
 @Controller('users')
 export class UsersController {

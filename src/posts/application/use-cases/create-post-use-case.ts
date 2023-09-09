@@ -1,11 +1,11 @@
-import { CreatePostDto } from "../dto/CreatePostDto";
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { RESPONSE_OPTIONS } from "../../../models/ResponseOptionsEnum";
-import { Post, PostModelType } from "../../domain/post.schema";
-import { PostsRepository } from "../../infrastructure/posts.repository";
-import { BlogsRepository } from "../../../blogs/infrastructure/blogs.repository";
-import { InjectModel } from "@nestjs/mongoose";
-import { IdType } from "../../../models/IdType";
+import { CreatePostDto } from '../dto/CreatePostDto';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
+import { Post, PostModelType } from '../../domain/post.schema';
+import { PostsRepository } from '../../infrastructure/posts.repository';
+import { BlogsRepository } from '../../../blogs/infrastructure/blogs.repository';
+import { InjectModel } from '@nestjs/mongoose';
+import { IdType } from '../../../models/IdType';
 
 export class CreatePostCommand {
   constructor(public postDto: CreatePostDto, public userId: IdType) {}

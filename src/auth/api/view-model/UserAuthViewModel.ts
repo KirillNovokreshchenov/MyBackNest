@@ -1,4 +1,4 @@
-import { User } from "../../../users/domain/user.schema";
+import { User } from '../../../users/domain/user.schema';
 
 export class UserAuthViewModel {
   userId: string;
