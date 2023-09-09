@@ -105,6 +105,8 @@ import { UpdateLikeStatusCommentUseCase } from './comments/application/use-cases
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as process from 'process';
 import { TestingService, TestingSQLService } from './testing/testing.service';
+import { LoginExistsRule } from './users/validators/custom-login-exists.validator';
+import { EmailExistsRule } from './users/validators/custom-email-exists.validator';
 
 const useCases = [
   CreateBlogUseCase,
@@ -304,6 +306,8 @@ const useCases = [
     CommentService,
     CommentsRepository,
     BlogExistsRule,
+    LoginExistsRule,
+    EmailExistsRule,
     BcryptAdapter,
     ...useCases,
   ],
