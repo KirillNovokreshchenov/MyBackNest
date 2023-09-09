@@ -1,7 +1,7 @@
-import { CodeDto } from "../dto/CodeDto";
-import { CommandHandler, ICommandHandler } from "@nestjs/cqrs";
-import { UsersRepository } from "../../infrastructure/users.repository";
-import { IdType } from "../../../models/IdType";
+import { CodeDto } from '../dto/CodeDto';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { UsersRepository } from '../../infrastructure/users.repository';
+import { IdType } from '../../../models/IdType';
 
 export class ConfirmByEmailCommand {
   constructor(public codeDto: CodeDto) {}

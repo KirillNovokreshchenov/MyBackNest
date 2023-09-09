@@ -187,15 +187,10 @@ export class UsersSQLRepository {
     const user = await this.dataSource.query(
       `
 INSERT INTO public.users(
-login, email, password, "createdAt")
-VALUES ($1, $2, $3, $4)
+login, email, password)
+VALUES ($1, $2, $3)
 RETURNING user_id;`,
-      [
-        transformDto.login,
-        transformDto.email,
-        transformDto.passwordHash,
-        new Date().toISOString(),
-      ],
+      [transformDto.login, transformDto.email, transformDto.passwordHash],
     );
     return user[0].user_id;
   }
@@ -213,7 +208,7 @@ VALUES ($1, $2, $3, $4);`,
         [
           userId,
           emailConfirm.confirmationCode,
-          emailConfirm.expirationDate.toISOString(),
+          emailConfirm.expirationDate,
           emailConfirm.isConfirmed,
         ],
       );
@@ -316,7 +311,7 @@ VALUES ($1, $2, $3);
       [
         recoveryPas.userId,
         recoveryPas.recoveryCode,
-        recoveryPas.expirationDate.toISOString(),
+        recoveryPas.expirationDate,
       ],
     );
   }
