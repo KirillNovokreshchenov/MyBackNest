@@ -1,10 +1,15 @@
-import { BanBlogInfo, Blog, BlogOwnerInfo } from '../../domain/blog.schema';
-import { BlogViewModel } from './BlogViewModel';
+import {
+  BanBlogInfo,
+  Blog,
+  BlogDocument,
+  BlogOwnerInfo,
+} from '../../domain/blog.schema';
+import { BlogMongoViewModel, BlogViewModel } from './BlogViewModel';
 
-export class BlogByAdminViewModel extends BlogViewModel {
+export class BlogByAdminViewModel extends BlogMongoViewModel {
   blogOwnerInfo: BlogOwnerInfo;
   banInfo: BanBlogInfo;
-  constructor(blog: Blog) {
+  constructor(blog: BlogDocument) {
     super(blog);
     this.blogOwnerInfo = {
       userId: blog.blogOwnerInfo.userId,

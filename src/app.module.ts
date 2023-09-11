@@ -27,7 +27,10 @@ import {
   BlogsSQLRepository,
 } from './blogs/infrastructure/blogs.repository';
 
-import { BlogsQueryRepository } from './blogs/infrastructure/blogs.query.repository';
+import {
+  BlogsQueryRepository,
+  BlogsSQLQueryRepository,
+} from './blogs/infrastructure/blogs.query.repository';
 import { PostsController } from './posts/api/posts.controller';
 import { PostsService } from './posts/application/posts.service';
 import { PostsRepository } from './posts/infrastructure/posts.repository';
@@ -72,7 +75,7 @@ import {
 } from './comments/domain/comment-like.schema';
 import { BlogExistsRule } from './posts/validators/custom-blogId.validator';
 import { BloggerController } from './blogs/api/blogger.controller';
-import { SaController } from './blogs/api/sa.controller';
+import { SaBlogController } from './blogs/api/saBlogController';
 import { SaUsersController } from './users/api/sa-users.controller';
 import { CreateBlogUseCase } from './blogs/application/use-cases/create-blog-use-case';
 import { CqrsModule } from '@nestjs/cqrs';
@@ -168,8 +171,8 @@ const useCases = [
       inject: [ConfigService],
     }),
     ThrottlerModule.forRoot({
-      // ttl: 10,
-      // limit: 5,
+      ttl: 10,
+      limit: 5,
     }),
     MongooseModule.forFeature([
       {
@@ -221,17 +224,21 @@ const useCases = [
       }),
       inject: [ConfigService],
     }),
-    MailerModule.forRoot({
-      transport: {
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
-        auth: {
-          user: 'kirochkaqwerty123@gmail.com',
-          pass: 'otzaxohazcnetzvc',
-        },
-      },
-    }),
+    // MailerModule.forRoot({
+    //   transport: {
+    //     // host: 'smtp.gmail.com',
+    //     // port: 465,
+    //     service: 'Gmail',
+    //     // secure: true,
+    //     auth: {
+    //       user: 'kirochkaqwerty123@gmail.com',
+    //       pass: 'otzaxohazcnetzvc',
+    //     },
+    //   },
+    //   defaults: {
+    //     from: 'Your Name <kirochkaqwerty123@gmail.com>',
+    //   },
+    // }),
   ],
   controllers: [
     AppController,
@@ -242,7 +249,7 @@ const useCases = [
     AuthController,
     DeviceController,
     BloggerController,
-    SaController,
+    SaBlogController,
     SaUsersController,
     TestingController,
   ],
@@ -291,7 +298,13 @@ const useCases = [
       useClass:
         process.env.REPO_TYPE === 'MONGO' ? TestingService : TestingSQLService,
     },
-    BlogsQueryRepository,
+    {
+      provide: BlogsQueryRepository,
+      useClass:
+        process.env.REPO_TYPE === 'MONGO'
+          ? BlogsQueryRepository
+          : BlogsSQLQueryRepository,
+    },
     PostsService,
     PostsRepository,
     PostsQueryRepository,

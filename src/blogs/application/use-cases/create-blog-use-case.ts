@@ -11,19 +11,9 @@ export class CreateBlogCommand {
 }
 @CommandHandler(CreateBlogCommand)
 export class CreateBlogUseCase implements ICommandHandler<CreateBlogCommand> {
-  constructor(
-    protected blogsRepository: BlogsRepository,
-    @InjectModel(Blog.name) private BlogModel: BlogModelType,
-  ) {}
+  constructor(protected blogsRepository: BlogsRepository) {}
 
-  async execute(command: CreateBlogCommand): Promise<Types.ObjectId | null> {
-    const userData: { userId: IdType; userLogin: string } | null =
-      await this.blogsRepository.findUserForBlog(command.userId);
-    if (!userData) return null;
-    return this.blogsRepository.createBlog(
-      userData.userId,
-      userData.userLogin,
-      command.blogDto,
-    );
+  async execute(command: CreateBlogCommand): Promise<IdType | null> {
+    return this.blogsRepository.createBlog(command.userId, command.blogDto);
   }
 }

@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { Types } from 'mongoose';
-import { BlogViewModel } from '../api/view-model/BlogViewModel';
+import {
+  BlogMongoViewModel,
+  BlogSQLViewModel,
+  BlogViewModel,
+} from '../api/view-model/BlogViewModel';
 import { InjectModel } from '@nestjs/mongoose';
 import { Blog, BlogModelType } from '../domain/blog.schema';
 import { BlogQueryInputType } from '../api/input-model/BlogQueryInputType';
@@ -12,6 +16,8 @@ import { sortQuery } from '../../helpers/sort-query';
 import { skipPages } from '../../helpers/skip-pages';
 import { BlogByAdminViewModel } from '../api/view-model/BlogByAdminViewModel';
 import { IdType } from '../../models/IdType';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class BlogsQueryRepository {
@@ -24,7 +30,7 @@ export class BlogsQueryRepository {
     const dataAllBlogs = await this._dataAllBlogs(query, filter, userId);
 
     const mapBlogs = dataAllBlogs.allBlogs.map(
-      (blog) => new BlogViewModel(blog),
+      (blog) => new BlogMongoViewModel(blog),
     );
 
     return new BlogViewModelAll(
@@ -76,14 +82,28 @@ export class BlogsQueryRepository {
     };
   }
 
-  async findBlog(
-    blogId: IdType | Types.ObjectId,
-  ): Promise<BlogViewModel | null> {
+  async findBlog(blogId: IdType): Promise<BlogViewModel | null> {
     const blog = await this.BlogModel.findOne({
       _id: blogId,
       'banInfo.isBanned': { $ne: true },
     }).lean();
     if (!blog) return null;
-    return new BlogViewModel(blog);
+    return new BlogMongoViewModel(blog);
+  }
+}
+
+export class BlogsSQLQueryRepository {
+  constructor(@InjectDataSource() protected dataSource: DataSource) {}
+  async findBlog(blogId: IdType): Promise<BlogViewModel | null> {
+    const blog = await this.dataSource.query(
+      `
+    SELECT blog_id, name, description, website_url, created_at, is_membership
+   FROM public.blogs
+   WHERE blog_id = $1;
+    `,
+      [blogId],
+    );
+    if (!blog) return null;
+    return new BlogSQLViewModel(blog[0]);
   }
 }

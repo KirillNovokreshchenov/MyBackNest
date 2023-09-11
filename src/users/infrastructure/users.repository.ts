@@ -221,9 +221,18 @@ VALUES ($1, $2, $3, $4);`,
   async deleteUser(id: IdType): Promise<boolean> {
     try {
       const res = await this.dataSource.query(
-        `UPDATE public.users
-            SET is_deleted=true
-            WHERE user_id = $1 AND is_deleted <> true;`,
+        `WITH blogs_update as (update blogs
+SET is_deleted = true
+WHERE owner_id = $1),
+posts_update as (
+update posts
+SET is_deleted = true
+WHERE owner_id = $1), comments_update as (update comments
+SET is_deleted = true
+WHERE owner_id = $1)
+update users 
+SET is_deleted = true
+Where user_id = $1;`,
         [id],
       );
       return res[1] === 1;

@@ -184,7 +184,7 @@ LIMIT $3 OFFSET $4
     try {
       const user = await this.dataSource.query(
         `
-SELECT email, login, user_id
+SELECT email, login, user_id as "userId"
 FROM public.users
 WHERE user_id = $1;
 `,

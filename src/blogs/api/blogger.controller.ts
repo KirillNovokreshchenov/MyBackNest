@@ -109,7 +109,6 @@ export class BloggerController {
     const blogId = await this.commandBus.execute(
       new CreateBlogCommand(dto, userId),
     );
-    new HttpException('server error', HttpStatus.INTERNAL_SERVER_ERROR);
     if (!blogId) {
       throw new HttpException('server error', HttpStatus.INTERNAL_SERVER_ERROR);
     }

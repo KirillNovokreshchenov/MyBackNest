@@ -28,7 +28,7 @@ import { IdType } from '../../models/IdType';
 
 @Controller('sa/blogs')
 @UseGuards(BasicAuthGuard)
-export class SaController {
+export class SaBlogController {
   constructor(
     private blogsService: BlogsService,
     private blogsQueryRepository: BlogsQueryRepository,

@@ -15,10 +15,7 @@ export class UpdateBlogCommand {
 }
 @CommandHandler(UpdateBlogCommand)
 export class UpdateBlogUseCase implements ICommandHandler<UpdateBlogCommand> {
-  constructor(
-    protected blogsRepository: BlogsRepository,
-    @InjectModel(Post.name) private PostModel: PostModelType,
-  ) {}
+  constructor(protected blogsRepository: BlogsRepository) {}
   async execute(command: UpdateBlogCommand): Promise<RESPONSE_OPTIONS> {
     const blogOwnerId = await this.blogsRepository.findOwnerId(command.blogId);
     if (!blogOwnerId) return RESPONSE_OPTIONS.NOT_FOUND;

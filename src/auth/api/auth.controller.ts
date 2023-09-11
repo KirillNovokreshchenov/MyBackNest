@@ -14,7 +14,7 @@ import {
 } from '@nestjs/common';
 import { CreateUserDto } from '../../users/application/dto/CreateUserDto';
 import { UsersService } from '../../users/application/users.service';
-import { ThrottlerGuard } from '@nestjs/throttler';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { RegistrationPipe } from '../pipes/registration.pipe';
 import { CodeDto } from '../../users/application/dto/CodeDto';
 import { EmailDto } from '../../users/application/dto/EmailDto';
