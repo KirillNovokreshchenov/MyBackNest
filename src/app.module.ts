@@ -33,8 +33,14 @@ import {
 } from './blogs/infrastructure/blogs.query.repository';
 import { PostsController } from './posts/api/posts.controller';
 import { PostsService } from './posts/application/posts.service';
-import { PostsRepository } from './posts/infrastructure/posts.repository';
-import { PostsQueryRepository } from './posts/infrastructure/posts.query.repository';
+import {
+  PostsRepository,
+  PostsSQLRepository,
+} from './posts/infrastructure/posts.repository';
+import {
+  PostsQueryRepository,
+  PostsSQLQueryRepository,
+} from './posts/infrastructure/posts.query.repository';
 import { Post, PostSchema } from './posts/domain/post.schema';
 import { CommentsController } from './comments/api/comments.controller';
 import { CommentsQueryRepository } from './comments/infractructure/comments.query.repository';
@@ -305,9 +311,21 @@ const useCases = [
           ? BlogsQueryRepository
           : BlogsSQLQueryRepository,
     },
+    {
+      provide: PostsRepository,
+      useClass:
+        process.env.REPO_TYPE === 'MONGO'
+          ? PostsRepository
+          : PostsSQLRepository,
+    },
+    {
+      provide: PostsQueryRepository,
+      useClass:
+        process.env.REPO_TYPE === 'MONGO'
+          ? PostsQueryRepository
+          : PostsSQLQueryRepository,
+    },
     PostsService,
-    PostsRepository,
-    PostsQueryRepository,
     CommentsQueryRepository,
     AuthService,
     EmailAdapter,

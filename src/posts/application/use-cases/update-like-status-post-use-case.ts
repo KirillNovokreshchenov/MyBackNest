@@ -24,10 +24,10 @@ export class UpdateLikeStatusPostUseCase
     @InjectModel(PostLike.name) private PostLikeModel: PostLikeModelType,
   ) {}
   async execute(command: UpdateLikeStatusPostCommand) {
-    const post = await this.postsRepository.findPostDocument(command.postId);
-    if (!post) return false;
-    const userLogin = await this.usersRepo.findUserLogin(command.userId);
-    if (!userLogin) return false;
+    const postId = await this.postsRepository.findPostId(command.postId);
+    if (!postId) return false;
+    // const userLogin = await this.usersRepo.findUserLogin(command.userId);
+    // if (!userLogin) return false;
     const likeData = await this.postsRepository.findLikeStatus(
       command.userId,
       command.postId,
@@ -39,7 +39,6 @@ export class UpdateLikeStatusPostUseCase
       const likeStatusIsCreated = await this.postsRepository.createLikeStatus(
         command.userId,
         command.postId,
-        userLogin,
         command.likeStatusDto.likeStatus,
       );
       if (likeStatusIsCreated === null) return false;

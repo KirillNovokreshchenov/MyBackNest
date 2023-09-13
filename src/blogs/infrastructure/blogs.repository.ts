@@ -97,6 +97,21 @@ export class BlogsRepository {
 @Injectable()
 export class BlogsSQLRepository {
   constructor(@InjectDataSource() protected dataSource: DataSource) {}
+  async findDataBlog(blogId: string) {
+    try {
+      const blog = await this.dataSource.query(
+        `
+    SELECT owner_id as "ownerId", name as "blogName"
+FROM public.blogs
+WHERE blog_id = $1 AND is_deleted <> true
+    `,
+        [blogId],
+      );
+      return blog[0];
+    } catch (e) {
+      return null;
+    }
+  }
   async findOwnerId(blogId: IdType) {
     try {
       const blog = await this.dataSource.query(
@@ -132,7 +147,6 @@ RETURNING blog_id;
       `,
         [userId, blogDto.name, blogDto.description, blogDto.websiteUrl],
       );
-      console.log(newBlog);
       return newBlog[0].blog_id;
     } catch (e) {
       return null;

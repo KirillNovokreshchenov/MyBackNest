@@ -68,7 +68,6 @@ export class BloggerController {
     @Query() dataQuery: BlogQueryInputType,
     @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
   ): Promise<BlogViewModelAll> {
-    console.log(userId);
     return this.blogsQueryRepository.findAllBlogs(dataQuery, userId);
   }
   @Get('/blogs/comments')

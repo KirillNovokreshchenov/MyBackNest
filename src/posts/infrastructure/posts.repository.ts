@@ -11,12 +11,16 @@ import { IdType } from '../../models/IdType';
 import { CreatePostDto } from '../application/dto/CreatePostDto';
 import { UpdatePostDto } from '../application/dto/UpdatePostDto';
 import { LIKE_STATUS } from '../../models/LikeStatusEnum';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { User, UserModelType } from '../../users/domain/user.schema';
 
 @Injectable()
 export class PostsRepository {
   constructor(
     @InjectModel(Post.name) private PostModel: PostModelType,
     @InjectModel(Blog.name) private BlogModel: BlogModelType,
+    @InjectModel(User.name) private UserModel: UserModelType,
     @InjectModel(PostLike.name) private PostLikeModel: PostLikeModelType,
   ) {}
   async findBlogName(blogId: IdType): Promise<string | null> {
@@ -31,6 +35,11 @@ export class PostsRepository {
 
   async findPostDocument(postId: IdType): Promise<PostDocument | null> {
     return this.PostModel.findById(postId);
+  }
+  async findPostId(postId: IdType) {
+    const post = await this.findPostDocument(postId);
+    if (!post) return null;
+    return post._id;
   }
 
   async deletePost(postId: IdType) {
@@ -117,15 +126,16 @@ export class PostsRepository {
   async createLikeStatus(
     userId: IdType,
     postId: IdType,
-    userLogin: string,
     likeStatus: LIKE_STATUS,
   ) {
     const post = await this.findPostDocument(postId);
     if (!post) return null;
+    const user = await this.UserModel.findById(userId);
+    if (!user) return null;
     const likeStatusCreated = post.createLikeStatus(
       userId,
       postId,
-      userLogin,
+      user.login,
       likeStatus,
       this.PostLikeModel,
     );
@@ -154,5 +164,152 @@ export class PostsRepository {
     post.updateLike(likeStatus, oldLike);
     await this.savePost(post);
     await this.saveStatus(oldLike);
+  }
+}
+
+@Injectable()
+export class PostsSQLRepository {
+  constructor(@InjectDataSource() protected dataSource: DataSource) {}
+
+  async findPostId(postId: IdType) {
+    try {
+      const post = await this.dataSource.query(
+        `
+    SELECT post_id
+    FROM public.posts
+    WHERE post_id = $1
+    `,
+        [postId],
+      );
+      return post[0].post_id;
+    } catch (e) {
+      return null;
+    }
+  }
+  async findPostOwnerId(postId: IdType) {
+    console.log(postId);
+    try {
+      const post = await this.dataSource.query(
+        `
+    SELECT owner_id
+    FROM public.posts
+    WHERE post_id = $1
+    `,
+        [postId],
+      );
+      return post[0].owner_id;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  async createPost(postDto: CreatePostDto, blogName: string, userId: IdType) {
+    const newPost = await this.dataSource.query(
+      `
+    INSERT INTO public.posts(
+owner_id, blog_id, title, short_description, content)
+SELECT $1, $2, $3, $4, $5
+WHERE NOT EXISTS(SELECT user_id FROM users WHERE user_id = $1 AND is_deleted = true)
+RETURNING post_id
+    `,
+      [
+        userId,
+        postDto.blogId,
+        postDto.title,
+        postDto.shortDescription,
+        postDto.content,
+      ],
+    );
+    return newPost[0].post_id;
+  }
+
+  async updatePost(postId: IdType, postDto: UpdatePostDto) {
+    const post = await this.dataSource.query(
+      `
+    UPDATE public.posts
+SET title=$2, short_description=$3, content=$4
+WHERE post_id = $1;
+    `,
+      [postId, postDto.title, postDto.shortDescription, postDto.content],
+    );
+    if (post[1] === 0) return null;
+  }
+
+  async findLikeStatus(userId: IdType, postId: IdType) {
+    try {
+      const likeData = await this.dataSource.query(
+        `
+      SELECT like_id as "likeId",like_status as "likeStatus"
+      FROM public.posts_likes
+      WHERE post_id = $1 AND owner_id = $2;
+      `,
+        [postId, userId],
+      );
+      return likeData[0];
+    } catch (e) {
+      return null;
+    }
+  }
+  async createLikeStatus(
+    userId: IdType,
+    postId: IdType,
+    likeStatus: LIKE_STATUS,
+  ) {
+    try {
+      await this.dataSource.query(
+        `
+     INSERT INTO public.posts_likes(
+owner_id, post_id, like_status)
+VALUES ($1, $2, $3);
+     `,
+        [userId, postId, likeStatus],
+      );
+    } catch (e) {
+      return null;
+    }
+  }
+  async updateLikeNone(
+    postId: IdType,
+    likeData: { likeId: IdType; likeStatus: LIKE_STATUS },
+  ) {
+    const isDeleted = await this.dataSource.query(
+      `
+    DELETE FROM public.posts_likes
+    WHERE like_id = $1;
+    `,
+      [likeData.likeId],
+    );
+    if (isDeleted[1] !== 1) return null;
+  }
+  async updateLike(
+    postId: IdType,
+    likeStatus: LIKE_STATUS,
+    likeData: { likeId: IdType; likeStatus: LIKE_STATUS },
+  ) {
+    const isUpdated = this.dataSource.query(
+      `
+    UPDATE public.posts_likes
+SET like_status= $1
+WHERE like_id = $2;
+    `,
+      [likeStatus, likeData.likeId],
+    );
+    if (isUpdated[1] !== 1) return null;
+  }
+  async deletePost(postId: IdType) {
+    await this.dataSource.query(
+      `
+      WITH 
+comments_update as (
+update comments
+SET is_deleted = true
+WHERE post_id = $1 
+  )
+update posts 
+SET is_deleted = true
+Where post_id = $1
+      `,
+      [postId],
+    );
   }
 }
