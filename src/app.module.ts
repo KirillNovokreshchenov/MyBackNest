@@ -50,7 +50,6 @@ import { AuthController } from './auth/api/auth.controller';
 import { AuthService } from './auth/application/auth.service';
 import { EmailAdapter } from './auth/infrastructure/adapters/email.adapter';
 import { EmailManagers } from './auth/application/managers/email.managers';
-import { MailerModule } from '@nestjs-modules/mailer';
 import { ThrottlerModule } from '@nestjs/throttler';
 import {
   PasswordRecovery,
@@ -81,7 +80,7 @@ import {
 } from './comments/domain/comment-like.schema';
 import { BlogExistsRule } from './posts/validators/custom-blogId.validator';
 import { BloggerController } from './blogs/api/blogger.controller';
-import { SaBlogController } from './blogs/api/saBlogController';
+import { SaBlogController } from './blogs/api/sa-blog.controller';
 import { SaUsersController } from './users/api/sa-users.controller';
 import { CreateBlogUseCase } from './blogs/application/use-cases/create-blog-use-case';
 import { CqrsModule } from '@nestjs/cqrs';

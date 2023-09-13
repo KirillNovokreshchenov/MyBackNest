@@ -1,8 +1,5 @@
 import { BlogsRepository } from '../../infrastructure/blogs.repository';
-import { InjectModel } from '@nestjs/mongoose';
-import { Blog, BlogModelType } from '../../domain/blog.schema';
 import { CreateBlogDto } from '../dto/CreateBlogDto';
-import { Types } from 'mongoose';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { IdType } from '../../../models/IdType';
 

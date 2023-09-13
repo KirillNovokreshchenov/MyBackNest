@@ -3,8 +3,6 @@ import {
   ValidatorConstraintInterface,
 } from 'class-validator';
 import { Injectable } from '@nestjs/common';
-import { BlogsQueryRepository } from '../../blogs/infrastructure/blogs.query.repository';
-import { Types } from 'mongoose';
 import { UsersRepository } from '../infrastructure/users.repository';
 
 @ValidatorConstraint({ name: 'EmailExists', async: true })

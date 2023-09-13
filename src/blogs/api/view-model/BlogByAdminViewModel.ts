@@ -1,10 +1,9 @@
 import {
   BanBlogInfo,
-  Blog,
   BlogDocument,
   BlogOwnerInfo,
 } from '../../domain/blog.schema';
-import { BlogMongoViewModel, BlogViewModel } from './BlogViewModel';
+import { BlogMongoViewModel } from './BlogViewModel';
 
 export class BlogByAdminViewModel extends BlogMongoViewModel {
   blogOwnerInfo: BlogOwnerInfo;

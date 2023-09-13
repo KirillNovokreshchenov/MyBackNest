@@ -1,4 +1,4 @@
-import { Blog, BlogDocument } from '../../domain/blog.schema';
+import { BlogDocument } from '../../domain/blog.schema';
 import { BlogSQLModel } from '../../infrastructure/models/BlogSQLModel';
 
 export class BlogViewModel {
