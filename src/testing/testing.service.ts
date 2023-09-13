@@ -58,6 +58,21 @@ export class TestingSQLService {
   constructor(@InjectDataSource() protected dataSource: DataSource) {}
   async deleteAllData() {
     await this.dataSource.query(`
+    DELETE FROM public.comments_likes
+    `);
+    await this.dataSource.query(`
+    DELETE FROM public.posts_likes
+    `);
+    await this.dataSource.query(`
+    DELETE FROM public.comments
+    `);
+    await this.dataSource.query(`
+    DELETE FROM public.posts
+    `);
+    await this.dataSource.query(`
+    DELETE FROM public.blogs
+    `);
+    await this.dataSource.query(`
     DELETE FROM public.sessions
     `);
     await this.dataSource.query(`

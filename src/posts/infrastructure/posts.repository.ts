@@ -187,7 +187,6 @@ export class PostsSQLRepository {
     }
   }
   async findPostOwnerId(postId: IdType) {
-    console.log(postId);
     try {
       const post = await this.dataSource.query(
         `
