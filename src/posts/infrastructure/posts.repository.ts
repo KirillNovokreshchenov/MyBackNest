@@ -170,13 +170,25 @@ export class PostsRepository {
 @Injectable()
 export class PostsSQLRepository {
   constructor(@InjectDataSource() protected dataSource: DataSource) {}
-
   async findPostId(postId: IdType) {
+    // try {
+    //   const post = await this.dataSource.query(
+    //     `
+    // SELECT post_id
+    // FROM public.posts
+    // WHERE post_id = $1
+    // `,
+    //     [postId],
+    //   );
+    //   return post[0].post_id;
+    // } catch (e) {
+    //   return null;
+    // }
     try {
       const post = await this.dataSource.query(
         `
     SELECT post_id
-    FROM public.posts
+    FROM public.sa_posts
     WHERE post_id = $1
     `,
         [postId],

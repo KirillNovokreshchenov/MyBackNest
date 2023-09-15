@@ -154,16 +154,19 @@ export class BlogsSQLQueryRepository {
   //     };
   //   }
   async findBlog(blogId: IdType): Promise<BlogViewModel | null> {
-    const blog = await this.dataSource.query(
-      `
+    try {
+      const blog = await this.dataSource.query(
+        `
     SELECT blog_id, name, description, website_url as "websiteUrl", created_at as "createdAt", is_membership as "isMembership"
    FROM public.sa_blogs
    WHERE blog_id = $1 AND is_deleted <> true;
     `,
-      [blogId],
-    );
-    if (!blog) return null;
-    return new BlogSQLViewModel(blog[0]);
+        [blogId],
+      );
+      return new BlogSQLViewModel(blog[0]);
+    } catch (e) {
+      return null;
+    }
   }
   async findAllBlogs(dataQuery: BlogQueryInputType, userId?: IdType) {
     const dataAllBlogs = await this._dataAllBlogs(dataQuery, userId);

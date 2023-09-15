@@ -20,14 +20,17 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
     private blogsRepo: BlogsRepository,
   ) {}
   async execute(command: UpdatePostCommand) {
-    const blogOwnerId = await this.blogsRepo.findOwnerId(
+    // const blogOwnerId = await this.blogsRepo.findOwnerId(
+    //   command.PostAndBlogId.blogId,
+    // );
+    const blogOwnerId = await this.blogsRepo.findBlogId(
       command.PostAndBlogId.blogId,
     );
     if (!blogOwnerId) return RESPONSE_OPTIONS.NOT_FOUND;
     // if (blogOwnerId.toString() !== command.userId.toString())
     //   return RESPONSE_OPTIONS.FORBIDDEN;
 
-    const postOwnerId = await this.postsRepository.findPostOwnerId(
+    const postOwnerId = await this.postsRepository.findPostId(
       command.PostAndBlogId.postId,
     );
     if (!postOwnerId) return RESPONSE_OPTIONS.NOT_FOUND;

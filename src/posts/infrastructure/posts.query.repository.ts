@@ -273,16 +273,21 @@ export class PostsSQLQueryRepository {
       postId,
       userId,
     );
-
-    const post = await this.dataSource.query(
-      `
+    try {
+      const post = await this.dataSource.query(
+        `
       SELECT post_id, blog_id as "blogId", b.name as "blogName", title, short_description as "shortDescription", content, p.created_at as "createdAt"
 FROM public.sa_posts as p
 LEFT JOIN sa_blogs b USING(blog_id)
+WHERE post_id = $1 AND p.is_deleted <> true
       `,
-    );
-    if (!post) return null;
-    return new PostSQLViewModel(post[0], extendedLikeInfo);
+        [postId],
+      );
+
+      return new PostSQLViewModel(post[0], extendedLikeInfo);
+    } catch (e) {
+      return null;
+    }
   }
 
   private async _extendedLikeInfo(postId: IdType, userId?: IdType) {

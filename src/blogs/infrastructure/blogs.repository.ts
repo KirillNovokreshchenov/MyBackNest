@@ -28,6 +28,11 @@ export class BlogsRepository {
   ): Promise<BlogDocument | null> {
     return this.BlogModel.findById(blogId);
   }
+  async findBlogId(blogId: IdType) {
+    const blog = await this.BlogModel.findById(blogId);
+    if (!blog) return null;
+    return blog._id;
+  }
   async findPostsByBlogName(blogName: string) {
     return this.PostModel.find({ blogName });
   }
@@ -103,6 +108,21 @@ export class BlogsRepository {
 @Injectable()
 export class BlogsSQLRepository {
   constructor(@InjectDataSource() protected dataSource: DataSource) {}
+  async findBlogId(blogId: IdType) {
+    try {
+      const blog = await this.dataSource.query(
+        `
+    SELECT blog_id
+    FROM public.sa_blogs
+    WHERE blog_id = $1
+    `,
+        [blogId],
+      );
+      return blog[0].blog_id;
+    } catch (e) {
+      return null;
+    }
+  }
   async findDataBlog(blogId: string) {
     try {
       const blog = await this.dataSource.query(
@@ -118,6 +138,7 @@ WHERE blog_id = $1 AND is_deleted <> true
       return null;
     }
   }
+
   async findBlogName(blogId: string) {
     try {
       const blog = await this.dataSource.query(
