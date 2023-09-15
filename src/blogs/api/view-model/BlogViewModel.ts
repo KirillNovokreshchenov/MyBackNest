@@ -26,8 +26,8 @@ export class BlogSQLViewModel extends BlogViewModel {
     this.id = blog.blog_id;
     this.name = blog.name;
     this.description = blog.description;
-    this.websiteUrl = blog.website_url;
-    this.createdAt = blog.created_at;
-    this.isMembership = blog.is_membership;
+    this.websiteUrl = blog.websiteUrl;
+    this.createdAt = blog.createdAt;
+    this.isMembership = blog.isMembership;
   }
 }

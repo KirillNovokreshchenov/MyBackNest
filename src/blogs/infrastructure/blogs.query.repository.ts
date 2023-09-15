@@ -156,9 +156,9 @@ export class BlogsSQLQueryRepository {
   async findBlog(blogId: IdType): Promise<BlogViewModel | null> {
     const blog = await this.dataSource.query(
       `
-    SELECT blog_id, name, description, website_url, created_at, is_membership
+    SELECT blog_id, name, description, website_url as "websiteUrl", created_at as "createdAt", is_membership as "isMembership"
    FROM public.sa_blogs
-   WHERE blog_id = $1;
+   WHERE blog_id = $1 AND is_deleted <> true;
     `,
       [blogId],
     );
