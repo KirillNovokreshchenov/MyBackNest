@@ -203,16 +203,30 @@ export class PostsSQLRepository {
   }
 
   async createPost(postDto: CreatePostDto, blogName: string, userId: IdType) {
+    //     const newPost = await this.dataSource.query(
+    //       `
+    //     INSERT INTO public.posts(
+    // owner_id, blog_id, title, short_description, content)
+    // SELECT $1, $2, $3, $4, $5
+    // WHERE NOT EXISTS(SELECT user_id FROM users WHERE user_id = $1 AND is_deleted = true)
+    // RETURNING post_id
+    //     `,
+    //       [
+    //         userId,
+    //         postDto.blogId,
+    //         postDto.title,
+    //         postDto.shortDescription,
+    //         postDto.content,
+    //       ],
+    //     );
     const newPost = await this.dataSource.query(
       `
-    INSERT INTO public.posts(
-owner_id, blog_id, title, short_description, content)
-SELECT $1, $2, $3, $4, $5
-WHERE NOT EXISTS(SELECT user_id FROM users WHERE user_id = $1 AND is_deleted = true)
+    INSERT INTO public.sa_posts(
+blog_id, title, short_description, content)
+SELECT $1, $2, $3, $4
 RETURNING post_id
     `,
       [
-        userId,
         postDto.blogId,
         postDto.title,
         postDto.shortDescription,
@@ -223,9 +237,17 @@ RETURNING post_id
   }
 
   async updatePost(postId: IdType, postDto: UpdatePostDto) {
+    //     const post = await this.dataSource.query(
+    //       `
+    //     UPDATE public.posts
+    // SET title=$2, short_description=$3, content=$4
+    // WHERE post_id = $1;
+    //     `,
+    //       [postId, postDto.title, postDto.shortDescription, postDto.content],
+    //     );
     const post = await this.dataSource.query(
       `
-    UPDATE public.posts
+    UPDATE public.sa_posts
 SET title=$2, short_description=$3, content=$4
 WHERE post_id = $1;
     `,
@@ -296,6 +318,20 @@ WHERE like_id = $2;
     if (isUpdated[1] !== 1) return null;
   }
   async deletePost(postId: IdType) {
+    //     await this.dataSource.query(
+    //       `
+    //       WITH
+    // comments_update as (
+    // update comments
+    // SET is_deleted = true
+    // WHERE post_id = $1
+    //   )
+    // update posts
+    // SET is_deleted = true
+    // Where post_id = $1
+    //       `,
+    //       [postId],
+    //     );
     await this.dataSource.query(
       `
       WITH 
@@ -304,7 +340,7 @@ update comments
 SET is_deleted = true
 WHERE post_id = $1 
   )
-update posts 
+update sa_posts 
 SET is_deleted = true
 Where post_id = $1
       `,

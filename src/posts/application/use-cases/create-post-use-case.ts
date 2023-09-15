@@ -18,14 +18,15 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
     @InjectModel(Post.name) private PostModel: PostModelType,
   ) {}
   async execute(command: CreatePostCommand) {
-    const blogData: { ownerId: IdType; blogName: string } | null =
-      await this.blogsRepo.findDataBlog(command.postDto.blogId);
-    if (!blogData) return RESPONSE_OPTIONS.NOT_FOUND;
-    if (blogData.ownerId.toString() !== command.userId.toString())
-      return RESPONSE_OPTIONS.FORBIDDEN;
+    const blogName: string | null = await this.blogsRepo.findBlogName(
+      command.postDto.blogId,
+    );
+    if (!blogName) return RESPONSE_OPTIONS.NOT_FOUND;
+    // if (blogData.ownerId.toString() !== command.userId.toString())
+    //   return RESPONSE_OPTIONS.FORBIDDEN;
     const postId = await this.postsRepository.createPost(
       command.postDto,
-      blogData.blogName,
+      blogName,
       command.userId,
     );
     return postId;

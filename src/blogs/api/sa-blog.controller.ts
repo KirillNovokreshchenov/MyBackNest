@@ -112,25 +112,25 @@ export class SaBlogController {
       userId,
     );
   }
-  @Get('users/blog/:id')
-  async findBannedUsers(
-    @Query() dataQuery: UserQueryInputType,
-    @Param('id', ParseObjectIdPipe) blogId: IdType,
-    @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
-  ) {
-    const bannedUsers = await this.queryUsersRepo.findBannedUsersForBlogs(
-      dataQuery,
-      blogId,
-      userId,
-    );
-    if (bannedUsers === RESPONSE_OPTIONS.NOT_FOUND) {
-      throw new NotFoundException();
-    }
-    if (bannedUsers === RESPONSE_OPTIONS.FORBIDDEN) {
-      throw new ForbiddenException();
-    }
-    return bannedUsers;
-  }
+  // @Get('users/blog/:id')
+  // async findBannedUsers(
+  //   @Query() dataQuery: UserQueryInputType,
+  //   @Param('id', ParseObjectIdPipe) blogId: IdType,
+  //   @CurrentUserId(ParseCurrentIdDecorator) userId: IdType,
+  // ) {
+  //   const bannedUsers = await this.queryUsersRepo.findBannedUsersForBlogs(
+  //     dataQuery,
+  //     blogId,
+  //     userId,
+  //   );
+  //   if (bannedUsers === RESPONSE_OPTIONS.NOT_FOUND) {
+  //     throw new NotFoundException();
+  //   }
+  //   if (bannedUsers === RESPONSE_OPTIONS.FORBIDDEN) {
+  //     throw new ForbiddenException();
+  //   }
+  //   return bannedUsers;
+  // }
   @Post('/blogs')
   async createBlog(
     @Body() dto: CreateBlogDto,

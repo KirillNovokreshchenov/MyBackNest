@@ -93,6 +93,12 @@ export class BlogsRepository {
     await blog.updateBlog(blogDto);
     await this.saveBlog(blog);
   }
+
+  async findBlogName(blogId: string) {
+    const blog = await this.findBlogById(new Types.ObjectId(blogId));
+    if (!blog) return null;
+    return blog.name;
+  }
 }
 @Injectable()
 export class BlogsSQLRepository {
@@ -103,6 +109,21 @@ export class BlogsSQLRepository {
         `
     SELECT owner_id as "ownerId", name as "blogName"
 FROM public.blogs
+WHERE blog_id = $1 AND is_deleted <> true
+    `,
+        [blogId],
+      );
+      return blog[0];
+    } catch (e) {
+      return null;
+    }
+  }
+  async findBlogName(blogId: string) {
+    try {
+      const blog = await this.dataSource.query(
+        `
+    SELECT name as "blogName"
+FROM public.sa_blogs
 WHERE blog_id = $1 AND is_deleted <> true
     `,
         [blogId],
@@ -129,24 +150,34 @@ WHERE blog_id = $1 AND is_deleted <> true
   }
   async createBlog(userId: IdType, blogDto: CreateBlogDto) {
     try {
-      //       const newBlog = await this.dataSource.query(
-      //         `
+      const newBlog = await this.dataSource.query(
+        `
+            INSERT INTO public.sa_blogs(
+      name, description, website_url)
+      VALUES ( $1, $2, $3)
+      RETURNING blog_id;
+            `,
+        [blogDto.name, blogDto.description, blogDto.websiteUrl],
+      );
+      // const newBlog = await this.dataSource.query(
+      //   `
       //       INSERT INTO public.blogs(
       // owner_id, name, description, website_url)
       // VALUES ( $1, $2, $3, $4)
       // RETURNING blog_id;
       //       `,
+      //   [userId, blogDto.name, blogDto.description, blogDto.websiteUrl],
+      // );
+      //       console.log(blogDto);
+      //       const newBlog = await this.dataSource.query(
+      //         `
+      // INSERT INTO public.blogs(owner_id, name, description, website_url)
+      // SELECT $1, $2, $3,$4
+      // WHERE NOT EXISTS(SELECT user_id FROM users WHERE user_id = $1 AND is_deleted = true)
+      // RETURNING blog_id;
+      //       `,
       //         [userId, blogDto.name, blogDto.description, blogDto.websiteUrl],
       //       );
-      const newBlog = await this.dataSource.query(
-        `
-INSERT INTO public.blogs(owner_id, name, description, website_url)
-SELECT $1, $2, $3,$4
-WHERE NOT EXISTS(SELECT user_id FROM users WHERE user_id = $1 AND is_deleted = true)
-RETURNING blog_id;
-      `,
-        [userId, blogDto.name, blogDto.description, blogDto.websiteUrl],
-      );
       return newBlog[0].blog_id;
     } catch (e) {
       return null;
@@ -154,9 +185,17 @@ RETURNING blog_id;
   }
 
   async updateBlog(blogId: IdType, blogDto: UpdateBlogDto) {
+    //     const isUpdated = await this.dataSource.query(
+    //       `
+    //     UPDATE public.blogs
+    // SET name=$2, description=$3, website_url=$4
+    // WHERE blog_id = $1;
+    //     `,
+    //       [blogId, blogDto.name, blogDto.description, blogDto.websiteUrl],
+    //     );
     const isUpdated = await this.dataSource.query(
       `
-    UPDATE public.blogs
+    UPDATE public.sa_blogs
 SET name=$2, description=$3, website_url=$4
 WHERE blog_id = $1;
     `,
@@ -165,9 +204,31 @@ WHERE blog_id = $1;
     if (isUpdated[1] === 0) return null;
   }
   async deleteBlog(blogId: IdType) {
-    await this.dataSource.query(
+    //     await this.dataSource.query(
+    //       `
+    //       WITH posts_update as (update posts
+    // SET is_deleted = true
+    // WHERE blog_id = $1),
+    // comments_posts as(
+    // SELECT post_id
+    // FROM posts
+    // LEFT JOIN comments c USING (post_id)
+    // WHERE blog_id = $1
+    // ),
+    // comments_update as (
+    // update comments
+    // SET is_deleted = true
+    // WHERE post_id IN(SELECT post_id FROM comments_posts)
+    //   )
+    // update blogs
+    // SET is_deleted = true
+    // Where blog_id = $1
+    //       `,
+    //       [blogId],
+    //     );
+    const isDeleted = await this.dataSource.query(
       `
-      WITH posts_update as (update posts
+      WITH posts_update as (update sa_posts
 SET is_deleted = true
 WHERE blog_id = $1),
 comments_posts as(
@@ -181,11 +242,12 @@ update comments
 SET is_deleted = true
 WHERE post_id IN(SELECT post_id FROM comments_posts) 
   )
-update blogs 
+update sa_blogs 
 SET is_deleted = true
 Where blog_id = $1
       `,
       [blogId],
     );
+    if (isDeleted[1] === 0) return null;
   }
 }

@@ -24,15 +24,15 @@ export class UpdatePostUseCase implements ICommandHandler<UpdatePostCommand> {
       command.PostAndBlogId.blogId,
     );
     if (!blogOwnerId) return RESPONSE_OPTIONS.NOT_FOUND;
-    if (blogOwnerId.toString() !== command.userId.toString())
-      return RESPONSE_OPTIONS.FORBIDDEN;
+    // if (blogOwnerId.toString() !== command.userId.toString())
+    //   return RESPONSE_OPTIONS.FORBIDDEN;
 
     const postOwnerId = await this.postsRepository.findPostOwnerId(
       command.PostAndBlogId.postId,
     );
     if (!postOwnerId) return RESPONSE_OPTIONS.NOT_FOUND;
-    if (postOwnerId.toString() !== command.userId.toString())
-      return RESPONSE_OPTIONS.FORBIDDEN;
+    // if (postOwnerId.toString() !== command.userId.toString())
+    //   return RESPONSE_OPTIONS.FORBIDDEN;
     const isUpdated = await this.postsRepository.updatePost(
       command.PostAndBlogId.postId,
       command.postDto,
