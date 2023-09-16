@@ -103,9 +103,10 @@ export class PostsController {
     const commentId = await this.commandBus.execute(
       new CreateCommentCommand(userId, postId, commentDto),
     );
-    if (commentId === RESPONSE_OPTIONS.NOT_FOUND) throw new NotFoundException();
-    if (commentId === RESPONSE_OPTIONS.FORBIDDEN)
-      throw new ForbiddenException();
+    // if (commentId === RESPONSE_OPTIONS.NOT_FOUND) throw new NotFoundException();
+    // if (commentId === RESPONSE_OPTIONS.FORBIDDEN)
+    //   throw new ForbiddenException();
+    if (!commentId) throw new NotFoundException();
     return this.queryCommentsRepository.findComment(commentId);
   }
 

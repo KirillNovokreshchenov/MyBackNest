@@ -21,8 +21,8 @@ export class UpdateCommentUseCase
     private commentRepo: CommentsRepository,
   ) {}
   async execute(command: UpdateCommentCommand) {
-    const userId = await this.usersRepo.findUserId(command.userId);
-    if (!userId) return RESPONSE_OPTIONS.NOT_FOUND;
+    // const userId = await this.usersRepo.findUserId(command.userId);
+    // if (!userId) return RESPONSE_OPTIONS.NOT_FOUND;
     const commentOwnerId = await this.commentRepo.findCommentOwnerId(
       command.commentId,
     );

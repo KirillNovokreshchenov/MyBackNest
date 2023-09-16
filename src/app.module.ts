@@ -43,7 +43,10 @@ import {
 } from './posts/infrastructure/posts.query.repository';
 import { Post, PostSchema } from './posts/domain/post.schema';
 import { CommentsController } from './comments/api/comments.controller';
-import { CommentsQueryRepository } from './comments/infractructure/comments.query.repository';
+import {
+  CommentsQueryRepository,
+  CommentsSQLQueryRepository,
+} from './comments/infractructure/comments.query.repository';
 import { Comment, CommentSchema } from './comments/domain/comment.schema';
 import { TestingController } from './testing/testing.controller';
 import { AuthController } from './auth/api/auth.controller';
@@ -72,7 +75,10 @@ import {
   DeviceSQLQueryRepository,
 } from './sessions/infrastructure/device.query.repository';
 import { CommentService } from './comments/application/comment.service';
-import { CommentsRepository } from './comments/infractructure/comments.repository';
+import {
+  CommentsRepository,
+  CommentsSQLRepository,
+} from './comments/infractructure/comments.repository';
 import { PostLike, PostLikeSchema } from './posts/domain/post-like.schema';
 import {
   CommentLike,
@@ -324,8 +330,21 @@ const useCases = [
           ? PostsQueryRepository
           : PostsSQLQueryRepository,
     },
+    {
+      provide: CommentsRepository,
+      useClass:
+        process.env.REPO_TYPE === 'MONGO'
+          ? CommentsRepository
+          : CommentsSQLRepository,
+    },
+    {
+      provide: CommentsQueryRepository,
+      useClass:
+        process.env.REPO_TYPE === 'MONGO'
+          ? CommentsQueryRepository
+          : CommentsSQLQueryRepository,
+    },
     PostsService,
-    CommentsQueryRepository,
     AuthService,
     EmailAdapter,
     EmailManagers,
@@ -335,7 +354,6 @@ const useCases = [
     JwtRefreshStrategy,
     DeviceService,
     CommentService,
-    CommentsRepository,
     BlogExistsRule,
     LoginExistsRule,
     EmailExistsRule,

@@ -23,24 +23,22 @@ export class CreateCommentUseCase
     private commentRepo: CommentsRepository,
   ) {}
   async execute(command: CreateCommentCommand) {
-    const userLogin = await this.usersRepo.findUserLogin(command.userId);
-    if (!userLogin) return RESPONSE_OPTIONS.NOT_FOUND;
-    const blogDataByPost: { ownerBlogId: IdType; blogId: IdType } | null =
-      await this.postRepo.findOwnerBlogId(command.postId);
-    if (!blogDataByPost) return RESPONSE_OPTIONS.NOT_FOUND;
-    const isBannedForBlog = await this.usersRepo.isBannedForBlog(
-      blogDataByPost.blogId,
-      command.userId,
-    );
-    if (isBannedForBlog) {
-      return RESPONSE_OPTIONS.FORBIDDEN;
-    }
+    // const userLogin = await this.usersRepo.findUserLogin(command.userId);
+    // if (!userLogin) return RESPONSE_OPTIONS.NOT_FOUND;
+    // const blogDataByPost: { ownerBlogId: IdType; blogId: IdType } | null =
+    //   await this.postRepo.findOwnerBlogId(command.postId);
+    // if (!blogDataByPost) return RESPONSE_OPTIONS.NOT_FOUND;
+    // const isBannedForBlog = await this.usersRepo.isBannedForBlog(
+    //   blogDataByPost.blogId,
+    //   command.userId,
+    // );
+    // if (isBannedForBlog) {
+    //   return RESPONSE_OPTIONS.FORBIDDEN;
+    // }
 
     const commentId = await this.commentRepo.createComment(
       command.userId,
       command.postId,
-      blogDataByPost.ownerBlogId,
-      userLogin,
       command.commentDto,
     );
 

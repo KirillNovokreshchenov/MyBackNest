@@ -73,6 +73,12 @@ export class TestingSQLService {
     DELETE FROM public.blogs
     `);
     await this.dataSource.query(`
+    DELETE FROM public.sa_posts
+    `);
+    await this.dataSource.query(`
+    DELETE FROM public.sa_blogs
+    `);
+    await this.dataSource.query(`
     DELETE FROM public.sessions
     `);
     await this.dataSource.query(`
@@ -85,12 +91,6 @@ export class TestingSQLService {
     DELETE FROM public.users
     `);
 
-    await this.dataSource.query(`
-    DELETE FROM public.sa_posts
-    `);
-    await this.dataSource.query(`
-    DELETE FROM public.sa_blogs
-    `);
     throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
   }
 }

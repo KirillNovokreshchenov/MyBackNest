@@ -1,8 +1,8 @@
-import { CommentViewModel } from './CommentViewModel';
+import { CommentMongoViewModel, CommentViewModel } from './CommentViewModel';
 import { Comment, PostInfo } from '../../domain/comment.schema';
 import { LIKE_STATUS } from '../../../models/LikeStatusEnum';
 
-export class CommentForBlogViewModel extends CommentViewModel {
+export class CommentForBlogViewModel extends CommentMongoViewModel {
   postInfo: PostInfo;
   constructor(comment: Comment, likeStatus?: LIKE_STATUS) {
     super(comment, likeStatus);

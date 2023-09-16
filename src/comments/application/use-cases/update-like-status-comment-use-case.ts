@@ -20,16 +20,10 @@ export class UpdateLikeStatusCommentCommand {
 export class UpdateLikeStatusCommentUseCase
   implements ICommandHandler<UpdateLikeStatusCommentCommand>
 {
-  constructor(
-    private commentRepo: CommentsRepository,
-    @InjectModel(CommentLike.name)
-    private CommentLikeModel: CommentLikeModelType,
-  ) {}
+  constructor(private commentRepo: CommentsRepository) {}
   async execute(command: UpdateLikeStatusCommentCommand) {
-    const commentOwnerId = await this.commentRepo.findCommentOwnerId(
-      command.commentId,
-    );
-    if (!commentOwnerId) return false;
+    const commentId = await this.commentRepo.findCommentId(command.commentId);
+    if (!commentId) return false;
     const likeData: { likeId: IdType; likeStatus: LIKE_STATUS } | null =
       await this.commentRepo.findLikeStatus(command.userId, command.commentId);
     if (!likeData && command.likeStatusDto.likeStatus === LIKE_STATUS.NONE) {
