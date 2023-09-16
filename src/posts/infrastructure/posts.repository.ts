@@ -298,6 +298,7 @@ VALUES ($1, $2, $3);
         [userId, postId, likeStatus],
       );
     } catch (e) {
+      console.log(2);
       return null;
     }
   }

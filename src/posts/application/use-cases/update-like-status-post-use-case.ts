@@ -21,7 +21,6 @@ export class UpdateLikeStatusPostUseCase
   constructor(
     protected postsRepository: PostsRepository,
     protected usersRepo: UsersRepository,
-    @InjectModel(PostLike.name) private PostLikeModel: PostLikeModelType,
   ) {}
   async execute(command: UpdateLikeStatusPostCommand) {
     const postId = await this.postsRepository.findPostId(command.postId);
