@@ -19,16 +19,20 @@ export class CreateUserByRegistrationUseCase
   ) {}
   async execute(command: CreateUserByRegistrationCommand) {
     const userId: IdType = await this.createUser(command);
-    const confirmCode = await this._createEmailConfirmation(userId);
-    if (!confirmCode) return false;
+    const confirmationCode = this.bcryptAdapter.uuid();
     try {
       await this.emailManager.emailRegistration(
         command.userDto.email,
-        confirmCode,
+        confirmationCode,
       );
     } catch {
       return false;
     }
+    const createEmailConfirm = await this._createEmailConfirmation(
+      userId,
+      confirmationCode,
+    );
+    if (!createEmailConfirm) return false;
     return true;
   }
   async createUser(command: CreateUserByRegistrationCommand) {
@@ -41,8 +45,7 @@ export class CreateUserByRegistrationUseCase
     });
     return userId;
   }
-  async _createEmailConfirmation(userId: IdType) {
-    const confirmationCode = this.bcryptAdapter.uuid();
+  async _createEmailConfirmation(userId: IdType, confirmationCode: string) {
     const expirationDate = this.bcryptAdapter.addMinutes(60);
     const emailConfirmation = {
       confirmationCode,

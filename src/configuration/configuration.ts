@@ -20,6 +20,7 @@ export const getConfiguration = () => ({
     PASSWORD_DB: process.env.PASSWORD_DB,
     NAME_DB: process.env.NAME_DB,
     DB_URL: process.env.DB_URL,
+    NAME_TEST_DB: process.env.NAME_TEST_DB,
   },
 });
 export type ConfigType = ReturnType<typeof getConfiguration>;

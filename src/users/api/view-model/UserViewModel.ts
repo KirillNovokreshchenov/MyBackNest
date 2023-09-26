@@ -6,7 +6,7 @@ export class UserViewModel {
   login: string;
   email: string;
   createdAt: Date;
-  banInfo: BanInfo;
+  banInfo?: BanInfo;
 }
 
 export class UserMongoViewModel extends UserViewModel {
