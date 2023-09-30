@@ -32,7 +32,7 @@ export class CreateUserByRegistrationUseCase
       userId,
       confirmationCode,
     );
-    if (!createEmailConfirm) return false;
+    if (createEmailConfirm === null) return false;
     return true;
   }
   async createUser(command: CreateUserByRegistrationCommand) {
@@ -57,6 +57,5 @@ export class CreateUserByRegistrationUseCase
       emailConfirmation,
     );
     if (isCreated === null) return null;
-    return confirmationCode;
   }
 }

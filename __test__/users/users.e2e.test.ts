@@ -1,12 +1,29 @@
-import { httpServer, testConfig } from '../test-config';
+import {
+  app,
+  dbConfiguration,
+  httpServer,
+  testBeforeConfig,
+} from '../test-config';
 import request from 'supertest';
 import { HttpStatus } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
 import { usersTestManager } from './users-test-manager';
 import { UserViewModelAll } from '../../src/users/api/view-model/UserViewModelAll';
+import { Test, TestingModule } from '@nestjs/testing';
+import { AppModule } from '../../src/app.module';
 
 describe('usersTests', () => {
-  testConfig();
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [dbConfiguration, AppModule],
+      // providers: [AppService],
+    }).compile();
+    await testBeforeConfig(moduleFixture);
+  });
+  afterAll(async () => {
+    await app.close();
+  });
+
   describe('create user', () => {
     let newUser;
     it('should return unauthorised status for incorrect password or login', async () => {

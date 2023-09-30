@@ -1,10 +1,26 @@
 import { HttpStatus } from '@nestjs/common';
-import { httpServer, testConfig } from '../test-config';
+import {
+  app,
+  dbConfiguration,
+  httpServer,
+  testBeforeConfig,
+} from '../test-config';
 import request from 'supertest';
 import { usersTestManager } from '../users/users-test-manager';
+import { Test, TestingModule } from '@nestjs/testing';
+import { AppModule } from '../../src/app.module';
 
 describe('devicesTests', () => {
-  testConfig();
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [dbConfiguration, AppModule],
+      // providers: [AppService],
+    }).compile();
+    await testBeforeConfig(moduleFixture);
+  });
+  afterAll(async () => {
+    await app.close();
+  });
 
   let userDataOne;
   let userDataTwo;
@@ -29,19 +45,13 @@ describe('devicesTests', () => {
   });
 
   it('should login userTwo ', async () => {
-    const res = await request(httpServer)
-      .post('/auth/login')
-      .send({
-        loginOrEmail: userDataTwo.login,
-        password: userDataTwo.password,
-      })
-      .expect(HttpStatus.OK);
+    const res = await usersTestManager.login(userDataTwo);
     refreshTokenUserTwo = res.headers['set-cookie'][0].split('=')[1];
   });
 
   //
   it('should return unauthorized for incorrect password or login', async () => {
-    const res = await request(httpServer)
+    await request(httpServer)
       .post('/auth/login')
       .send({
         loginOrEmail: userDataOne.login,

@@ -3,13 +3,14 @@ import { configModule } from '../src/configuration/ConfigModule';
 import { ConfigService } from '@nestjs/config';
 import { ConfigType } from '../src/configuration/configuration';
 import { INestApplication } from '@nestjs/common';
-import { Test, TestingModule } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
+import { TestingModule } from '@nestjs/testing';
 import { appSettings } from '../src/app.settings';
 import request from 'supertest';
+import { DataSource, DataSourceOptions } from 'typeorm';
 
 export const dbConfiguration = TypeOrmModule.forRootAsync({
   imports: [configModule],
+  inject: [ConfigService],
   useFactory: (configService: ConfigService<ConfigType>) => ({
     type: 'postgres',
     host: configService.get('sql.HOST_DB', { infer: true }),
@@ -21,24 +22,13 @@ export const dbConfiguration = TypeOrmModule.forRootAsync({
     synchronize: false,
     ssl: true,
   }),
-  inject: [ConfigService],
 });
 export let httpServer;
-export const testConfig = () => {
-  let app: INestApplication;
-  beforeAll(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [dbConfiguration, AppModule],
-      // providers: [AppService],
-    }).compile();
-    // appController = app.get<AppController>(AppController);
-    app = moduleFixture.createNestApplication();
-    appSettings(app);
-    await app.init();
-    httpServer = app.getHttpServer();
-    await request(httpServer).delete('/testing/all-data');
-  });
-  afterAll(async () => {
-    await app.close();
-  });
+export let app: INestApplication;
+export const testBeforeConfig = async (moduleFixture: TestingModule) => {
+  app = moduleFixture.createNestApplication();
+  appSettings(app);
+  await app.init();
+  httpServer = app.getHttpServer();
+  await request(httpServer).delete('/testing/all-data');
 };

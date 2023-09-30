@@ -22,4 +22,20 @@ export const usersTestManager = {
     }
     return { response, userCreated };
   },
+  async createUserByRegTest(userData: CreateUserDto) {
+    await request(httpServer)
+      .post('/auth/registration')
+      .send(userData)
+      .expect(HttpStatus.NO_CONTENT);
+  },
+  async login(userData) {
+    const response = await request(httpServer)
+      .post('/auth/login')
+      .send({
+        loginOrEmail: userData.login,
+        password: userData.password,
+      })
+      .expect(HttpStatus.OK);
+    return response;
+  },
 };

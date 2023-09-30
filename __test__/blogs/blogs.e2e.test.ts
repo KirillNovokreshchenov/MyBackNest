@@ -3,26 +3,26 @@ import request from 'supertest';
 import { blogTestManager } from './blog-test-manager';
 import { v4 as uuidv4 } from 'uuid';
 import { BlogViewModelAll } from '../../src/blogs/api/view-model/BlogViewModelAll';
-import { httpServer, testConfig } from '../test-config';
+import {
+  app,
+  dbConfiguration,
+  httpServer,
+  testBeforeConfig,
+} from '../test-config';
+import { Test, TestingModule } from '@nestjs/testing';
+import { AppModule } from '../../src/app.module';
 
 describe('blogsTests', () => {
-  // let app: INestApplication;
-  // beforeAll(async () => {
-  //   const moduleFixture: TestingModule = await Test.createTestingModule({
-  //     imports: [dbConfiguration, AppModule],
-  //     // providers: [AppService],
-  //   }).compile();
-  //   // appController = app.get<AppController>(AppController);
-  //   app = moduleFixture.createNestApplication();
-  //   appSettings(app);
-  //   await app.init();
-  //   httpServerBlogs = app.getHttpServer();
-  //   await request(httpServerBlogs).delete('/testing/all-data');
-  // });
-  // afterAll(async () => {
-  //   await app.close();
-  // });
-  testConfig();
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [dbConfiguration, AppModule],
+      // providers: [AppService],
+    }).compile();
+    await testBeforeConfig(moduleFixture);
+  });
+  afterAll(async () => {
+    await app.close();
+  });
 
   describe('create blog', () => {
     let newBlog;

@@ -183,7 +183,7 @@ const useCases = [
     }),
     ThrottlerModule.forRoot({
       ttl: 10,
-      limit: 5,
+      limit: 20,
     }),
     MongooseModule.forFeature([
       {

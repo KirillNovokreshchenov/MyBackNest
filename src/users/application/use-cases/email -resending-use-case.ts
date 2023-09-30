@@ -23,19 +23,23 @@ export class EmailResendingUseCase
         command.emailDto.email,
       );
     if (!confirmData || confirmData.isConfirmed) return false;
-    const confirmCode = await this._createEmailConfirmation(confirmData.userId);
+    const confirmationCode = this.bcryptAdapter.uuid();
     try {
       await this.emailManager.emailRegistration(
         command.emailDto.email,
-        confirmCode,
+        confirmationCode,
       );
     } catch {
       return false;
     }
+    const emailConfirm = await this._createEmailConfirmation(
+      confirmData.userId,
+      confirmationCode,
+    );
+    if (emailConfirm === null) return false;
     return true;
   }
-  async _createEmailConfirmation(userId: IdType) {
-    const confirmationCode = this.bcryptAdapter.uuid();
+  async _createEmailConfirmation(userId: IdType, confirmationCode: string) {
     const expirationDate = this.bcryptAdapter.addMinutes(60);
     const emailConfirmation = {
       confirmationCode,
@@ -47,6 +51,5 @@ export class EmailResendingUseCase
       emailConfirmation,
     );
     if (isCreated === null) return null;
-    return confirmationCode;
   }
 }
