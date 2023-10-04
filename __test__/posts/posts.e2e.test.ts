@@ -264,7 +264,7 @@ describe('postsTests', () => {
         .auth('admin', 'qwerty')
         .expect(HttpStatus.NO_CONTENT);
     });
-    it('should not return deleted blog by id', async () => {
+    it('should not return deleted post by id', async () => {
       await request(httpServer)
         .get('/posts/' + post.id)
         .expect(HttpStatus.NOT_FOUND);

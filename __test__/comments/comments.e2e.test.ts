@@ -6,13 +6,12 @@ import {
   testBeforeConfig,
 } from '../test-config';
 import { AppModule } from '../../src/app.module';
-import { blogTestManager } from '../blogs/blog-test-manager';
 import { HttpStatus } from '@nestjs/common';
 import request from 'supertest';
-import { postTestManager } from '../posts/post-test-manager';
-import { usersTestManager } from '../users/users-test-manager';
 import { v4 as uuidv4 } from 'uuid';
 import { commentsTestManager } from './comments-test-manager';
+import { CommentViewModelAll } from '../../src/comments/api/view-models/CommentViewModelAll';
+import { LIKE_STATUS } from '../../src/models/LikeStatusEnum';
 
 describe('commentsTests', () => {
   beforeAll(async () => {
@@ -26,52 +25,19 @@ describe('commentsTests', () => {
   });
 
   describe('create comment', () => {
-    let blog;
     let post;
     let comment;
     let user;
     let userAccessToken;
-    const notExistingPostId = uuidv4();
-    it('should return new created blog', async () => {
-      const blogData = {
-        name: 'ItsTest',
-        description: 'ItsTest',
-        websiteUrl: 'https://testBlog.com',
-      };
-      const { blogCreated } = await blogTestManager.createBlogTest(
-        blogData,
-        HttpStatus.CREATED,
-      );
-      blog = blogCreated;
+    const notExistingId = uuidv4();
+    it('preparation data for test comment', async () => {
+      const preparationData =
+        await commentsTestManager.preparationTestComment();
+      post = preparationData.post;
+      user = preparationData.userOne;
+      userAccessToken = preparationData.userAccessTokenOne;
     });
-    it('should return new created post', async () => {
-      const postData = {
-        title: 'testTitle',
-        shortDescription: 'testDescription',
-        content: 'testContent',
-      };
-      const { postCreated } = await postTestManager.createPostTest(
-        postData,
-        blog.id,
-        blog.name,
-        HttpStatus.CREATED,
-      );
-      post = postCreated;
-    });
-    it('should return new created user', async () => {
-      const userData = {
-        login: 'Testlogin',
-        password: 'TestPass',
-        email: 'TestEmail@gmail.com',
-      };
-      const { userCreated } = await usersTestManager.createUserTest(
-        userData,
-        HttpStatus.CREATED,
-      );
-      user = userCreated;
-      const resLogin = await usersTestManager.login(userCreated);
-      userAccessToken = resLogin.body;
-    });
+
     it('should return unauthorised status for incorrect token', async () => {
       const commentData = {
         content: 'TestContent',
@@ -86,11 +52,11 @@ describe('commentsTests', () => {
     });
     it('should not find post for create comment with incorrect post id', async () => {
       const commentData = {
-        content: 'TestContent',
+        content: 'TestContentContentTest',
       };
       await commentsTestManager.createCommentTest(
         commentData,
-        notExistingPostId,
+        notExistingId,
         userAccessToken,
         user,
         HttpStatus.NOT_FOUND,
@@ -117,533 +83,409 @@ describe('commentsTests', () => {
     });
     it('should create comment', async () => {
       const commentData = {
-        content: 'TestContent',
+        content: 'TestContentContentTest',
       };
-      const { commentCreated } = await commentsTestManager.createCommentTest(
-        commentData,
-        post.id,
-        userAccessToken,
-        user,
-        HttpStatus.BAD_REQUEST,
-      );
+      comment = (
+        await commentsTestManager.createCommentTest(
+          commentData,
+          post.id,
+          userAccessToken,
+          user,
+          HttpStatus.CREATED,
+        )
+      ).commentCreated;
     });
 
-    it('should return found post by id', async () => {
+    it('should return found comment by id', async () => {
       await request(httpServer)
-        .get('/posts/' + post.id)
-        .expect(HttpStatus.OK, post);
+        .get('/comments/' + comment.id)
+        .expect(HttpStatus.OK, comment);
     });
-    it('should not return post by not existing id', async () => {
+    it('should not return comment by not existing id', async () => {
       await request(httpServer)
-        .get('/post/' + notExistingPostId)
+        .get('/comments/' + notExistingId)
         .expect(HttpStatus.NOT_FOUND);
     });
   });
-  // describe('update post', () => {
-  //   beforeAll(async () => {
-  //     await request(httpServer).delete('/testing/all-data');
-  //   });
-  //   const notExistingUuid = uuidv4();
-  //   let blog;
-  //   let post;
-  //
-  //   it('should return new created blog', async () => {
-  //     const blogData = {
-  //       name: 'ItsTest',
-  //       description: 'ItsTest',
-  //       websiteUrl: 'https://testBlog.com',
-  //     };
-  //     const { blogCreated } = await blogTestManager.createBlogTest(
-  //       blogData,
-  //       HttpStatus.CREATED,
-  //     );
-  //     blog = blogCreated;
-  //   });
-  //
-  //   it('should return new created post', async () => {
-  //     const postData = {
-  //       title: 'testTitle',
-  //       shortDescription: 'testDescription',
-  //       content: 'testContent',
-  //     };
-  //     const { postCreated } = await postTestManager.createPostTest(
-  //       postData,
-  //       blog.id,
-  //       blog.name,
-  //       HttpStatus.CREATED,
-  //     );
-  //     post = postCreated;
-  //   });
-  //   it('should return unauthorised status for incorrect password or login', async () => {
-  //     await request(httpServer)
-  //       .put('/sa/blogs/' + blog.id + '/posts/' + post.id)
-  //       .auth('xxx', 'xxx')
-  //       .expect(HttpStatus.UNAUTHORIZED);
-  //   });
-  //   it('should return bad request for incorrect input data', async () => {
-  //     const postUpdateIncorrectData = {
-  //       title: '',
-  //       shortDescription: '',
-  //       content: '',
-  //     };
-  //     const expected = {
-  //       message: expect.any(String),
-  //       field: expect.any(String),
-  //     };
-  //     const response = await request(httpServer)
-  //       .put('/sa/blogs/' + blog.id + '/posts/' + post.id)
-  //       .auth('admin', 'qwerty')
-  //       .send(postUpdateIncorrectData)
-  //       .expect(HttpStatus.BAD_REQUEST);
-  //     expect(response.body.errorsMessages).toContainEqual(expected);
-  //     expect(response.body.errorsMessages).toHaveLength(3);
-  //   });
-  //   it('should not update post by not existing blog id', async () => {
-  //     const postUpdateData = {
-  //       title: 'testTitleUpdate',
-  //       shortDescription: 'testDescriptionUpdate',
-  //       content: 'testContentUpdate',
-  //     };
-  //     await request(httpServer)
-  //       .put('/sa/blogs/' + notExistingUuid + '/posts/' + post.id)
-  //       .auth('admin', 'qwerty')
-  //       .send(postUpdateData)
-  //       .expect(HttpStatus.NOT_FOUND);
-  //   });
-  //   it('should not update post by not existing post id', async () => {
-  //     const postUpdateData = {
-  //       title: 'testTitleUpdate',
-  //       shortDescription: 'testDescriptionUpdate',
-  //       content: 'testContentUpdate',
-  //     };
-  //     await request(httpServer)
-  //       .put('/sa/blogs/' + blog.id + '/posts/' + notExistingUuid)
-  //       .auth('admin', 'qwerty')
-  //       .send(postUpdateData)
-  //       .expect(HttpStatus.NOT_FOUND);
-  //   });
-  //   it('should return no content status for existing blog id and update post', async () => {
-  //     const postUpdateData = {
-  //       title: 'testTitleUpdate',
-  //       shortDescription: 'testDescriptionUpdate',
-  //       content: 'testContentUpdate',
-  //     };
-  //     await request(httpServer)
-  //       .put('/sa/blogs/' + blog.id + '/posts/' + post.id)
-  //       .auth('admin', 'qwerty')
-  //       .send(postUpdateData)
-  //       .expect(HttpStatus.NO_CONTENT);
-  //     const response = await request(httpServer)
-  //       .get('/posts/' + post.id)
-  //       .expect(HttpStatus.OK);
-  //     expect(response.body).toEqual({ ...post, ...postUpdateData });
-  //   });
-  // });
-  // describe('delete post', () => {
-  //   beforeAll(async () => {
-  //     await request(httpServer).delete('/testing/all-data');
-  //   });
-  //   let blog;
-  //   let post;
-  //   const notExistingUuid = uuidv4();
-  //
-  //   it('should return new created blog', async () => {
-  //     const blogData = {
-  //       name: 'ItsTest',
-  //       description: 'ItsTest',
-  //       websiteUrl: 'https://itstest.com',
-  //     };
-  //     const { blogCreated } = await blogTestManager.createBlogTest(
-  //       blogData,
-  //       HttpStatus.CREATED,
-  //     );
-  //     blog = blogCreated;
-  //   });
-  //   it('should return new created post', async () => {
-  //     const postData = {
-  //       title: 'testTitle',
-  //       shortDescription: 'testDescription',
-  //       content: 'testContent',
-  //     };
-  //     const { postCreated } = await postTestManager.createPostTest(
-  //       postData,
-  //       blog.id,
-  //       blog.name,
-  //       HttpStatus.CREATED,
-  //     );
-  //     post = postCreated;
-  //   });
-  //   it('should return found post by id', async () => {
-  //     await request(httpServer)
-  //       .get('/posts/' + post.id)
-  //       .expect(HttpStatus.OK, post);
-  //   });
-  //   it('should return unauthorised status for incorrect password or login', async () => {
-  //     await request(httpServer)
-  //       .delete('/sa/blogs/' + blog.id + '/posts/' + post.id)
-  //       .auth('xxx', 'xxx')
-  //       .expect(HttpStatus.UNAUTHORIZED);
-  //   });
-  //   it('should return not found for not existing post id', async () => {
-  //     await request(httpServer)
-  //       .delete('/sa/blogs/' + blog.id + '/posts/' + notExistingUuid)
-  //       .auth('admin', 'qwerty')
-  //       .expect(HttpStatus.NOT_FOUND);
-  //   });
-  //   it('should return no content for valid id and delete post', async () => {
-  //     await request(httpServer)
-  //       .delete('/sa/blogs/' + blog.id + '/posts/' + post.id)
-  //       .auth('admin', 'qwerty')
-  //       .expect(HttpStatus.NO_CONTENT);
-  //   });
-  //   it('should not return deleted blog by id', async () => {
-  //     await request(httpServer)
-  //       .get('/posts/' + post.id)
-  //       .expect(HttpStatus.NOT_FOUND);
-  //   });
-  // });
-  // describe('find all posts with pagination and sorting', () => {
-  //   beforeAll(async () => {
-  //     await request(httpServer).delete('/testing/all-data');
-  //   });
-  //   let blogOne;
-  //   let blogTwo;
-  //   let newPostOne;
-  //   let newPostTwo;
-  //   let newPostThree;
-  //   let newPostBlogTwo;
-  //   it('should created two blog', async () => {
-  //     const blogData = {
-  //       name: 'ItsTest',
-  //       description: 'ItsTest',
-  //       websiteUrl: 'https://itstest.com',
-  //     };
-  //     blogOne = (
-  //       await blogTestManager.createBlogTest(blogData, HttpStatus.CREATED)
-  //     ).blogCreated;
-  //
-  //     blogTwo = (
-  //       await blogTestManager.createBlogTest(
-  //         { ...blogData, name: 'ItsTestTwo' },
-  //         HttpStatus.CREATED,
-  //       )
-  //     ).blogCreated;
-  //   });
-  //
-  //   it('should create 4 posts for two blogs', async () => {
-  //     const postData = {
-  //       title: 'testTitle',
-  //       shortDescription: 'testDescription',
-  //       content: 'testContent',
-  //     };
-  //     newPostOne = (
-  //       await postTestManager.createPostTest(
-  //         { ...postData, title: 'OneTestTitle' },
-  //         blogOne.id,
-  //         blogOne.name,
-  //         HttpStatus.CREATED,
-  //       )
-  //     ).postCreated;
-  //     newPostTwo = (
-  //       await postTestManager.createPostTest(
-  //         { ...postData, shortDescription: 'TwoTestDescription' },
-  //         blogOne.id,
-  //         blogOne.name,
-  //         HttpStatus.CREATED,
-  //       )
-  //     ).postCreated;
-  //     newPostThree = (
-  //       await postTestManager.createPostTest(
-  //         { ...postData, content: 'ThreeTestContent' },
-  //         blogOne.id,
-  //         blogOne.name,
-  //         HttpStatus.CREATED,
-  //       )
-  //     ).postCreated;
-  //     newPostBlogTwo = (
-  //       await postTestManager.createPostTest(
-  //         { ...postData, title: 'testTitleBlogTwo' },
-  //         blogTwo.id,
-  //         blogTwo.name,
-  //         HttpStatus.CREATED,
-  //       )
-  //     ).postCreated;
-  //   });
-  //   it('should return all posts for two blogs', async () => {
-  //     const pagesCount = 1;
-  //     const page = 1;
-  //     const pageSize = 10;
-  //     const totalCount = 4;
-  //     const allPosts = new BlogViewModelAll(
-  //       pagesCount,
-  //       page,
-  //       pageSize,
-  //       totalCount,
-  //       [newPostBlogTwo, newPostThree, newPostTwo, newPostOne],
-  //     );
-  //     const response = await request(httpServer)
-  //       .get('/posts')
-  //       .expect(HttpStatus.OK, { ...allPosts });
-  //
-  //     expect(response.body.items).toHaveLength(4);
-  //   });
-  //   it('should return unauthorised status for incorrect password or login', async () => {
-  //     await request(httpServer)
-  //       .get('/sa/blogs/' + blogOne.id + '/posts')
-  //       .auth('xxx', 'xxx')
-  //       .expect(HttpStatus.UNAUTHORIZED);
-  //   });
-  //   it('should return all posts with default pagination and sort', async () => {
-  //     const pagesCount = 1;
-  //     const page = 1;
-  //     const pageSize = 10;
-  //     const totalCount = 3;
-  //     const allPosts = new BlogViewModelAll(
-  //       pagesCount,
-  //       page,
-  //       pageSize,
-  //       totalCount,
-  //       [newPostThree, newPostTwo, newPostOne],
-  //     );
-  //     const response = await request(httpServer)
-  //       .get('/sa/blogs/' + blogOne.id + '/posts')
-  //       .auth('admin', 'qwerty')
-  //       .expect(HttpStatus.OK, { ...allPosts });
-  //
-  //     expect(response.body.items).toHaveLength(3);
-  //   });
-  //   it('should return all posts sorted by title asc ', async () => {
-  //     const pagesCount = 1;
-  //     const page = 1;
-  //     const pageSize = 10;
-  //     const totalCount = 3;
-  //     const allPosts = new BlogViewModelAll(
-  //       pagesCount,
-  //       page,
-  //       pageSize,
-  //       totalCount,
-  //       [newPostOne, newPostTwo, newPostThree],
-  //     );
-  //     await request(httpServer)
-  //       .get('/sa/blogs/' + blogOne.id + '/posts')
-  //       .auth('admin', 'qwerty')
-  //       .query({ sortBy: 'title', sortDirection: 'asc' })
-  //       .expect(HttpStatus.OK, { ...allPosts });
-  //   });
-  //   it('should return second blog with page size equal 1 and page equal 2', async () => {
-  //     const pagesCount = 3;
-  //     const page = 2;
-  //     const pageSize = 1;
-  //     const totalCount = 3;
-  //     const allPosts = new BlogViewModelAll(
-  //       pagesCount,
-  //       page,
-  //       pageSize,
-  //       totalCount,
-  //       [newPostTwo],
-  //     );
-  //     await request(httpServer)
-  //       .get('/sa/blogs/' + blogOne.id + '/posts')
-  //       .auth('admin', 'qwerty')
-  //       .query({ pageNumber: 2, pageSize: 1 })
-  //       .expect(HttpStatus.OK, { ...allPosts });
-  //   });
-  // });
-  // describe('test like/dislike', () => {
-  //   beforeAll(async () => {
-  //     await request(httpServer).delete('/testing/all-data');
-  //   });
-  //   let blog;
-  //   let post;
-  //   let userOne;
-  //   let userTwo;
-  //   let userOneAccessToken;
-  //   let userTwoAccessToken;
-  //   const incorrectUuid = uuidv4();
-  //
-  //   it('should return new created blog', async () => {
-  //     const blogData = {
-  //       name: 'ItsTest',
-  //       description: 'ItsTest',
-  //       websiteUrl: 'https://itstest.com',
-  //     };
-  //     const { blogCreated } = await blogTestManager.createBlogTest(
-  //       blogData,
-  //       HttpStatus.CREATED,
-  //     );
-  //     blog = blogCreated;
-  //   });
-  //   it('should return new created post', async () => {
-  //     const postData = {
-  //       title: 'testTitle',
-  //       shortDescription: 'testDescription',
-  //       content: 'testContent',
-  //     };
-  //     const { postCreated } = await postTestManager.createPostTest(
-  //       postData,
-  //       blog.id,
-  //       blog.name,
-  //       HttpStatus.CREATED,
-  //     );
-  //     post = postCreated;
-  //   });
-  //   it('create and login two user', async () => {
-  //     const userDataOne = {
-  //       login: 'KirOch',
-  //       password: 'Kira1997',
-  //       email: 'Kira@gmail.com',
-  //     };
-  //     const userDataTwo = {
-  //       login: 'Asta',
-  //       password: 'Asta1997',
-  //       email: 'Asta@gmail.com',
-  //     };
-  //     userOne = (
-  //       await usersTestManager.createUserTest(userDataOne, HttpStatus.CREATED)
-  //     ).userCreated;
-  //     userTwo = (
-  //       await usersTestManager.createUserTest(userDataTwo, HttpStatus.CREATED)
-  //     ).userCreated;
-  //     const resOne = await request(httpServer).post('/auth/login').send({
-  //       loginOrEmail: userDataOne.login,
-  //       password: userDataOne.password,
-  //     });
-  //     userOneAccessToken = resOne.body.accessToken;
-  //     const resTwo = await request(httpServer)
-  //       .post('/auth/login')
-  //       .send({
-  //         loginOrEmail: userDataTwo.login,
-  //         password: userDataTwo.password,
-  //       })
-  //       .expect(HttpStatus.OK);
-  //     userTwoAccessToken = resTwo.body.accessToken;
-  //   });
-  //   it('should not return not existing post with update status like ', async () => {
-  //     await request(httpServer)
-  //       .put('/posts/' + incorrectUuid + '/like-status')
-  //       .set('Authorization', `Bearer ${userOneAccessToken}`)
-  //       .send({
-  //         likeStatus: LIKE_STATUS.LIKE,
-  //       })
-  //       .expect(HttpStatus.NOT_FOUND);
-  //   });
-  //   it('should not return post with incorrect status like ', async () => {
-  //     await request(httpServer)
-  //       .put('/posts/' + post.id + '/like-status')
-  //       .set('Authorization', `Bearer ${userOneAccessToken}`)
-  //       .send({
-  //         likeStatus: '',
-  //       })
-  //       .expect(HttpStatus.BAD_REQUEST);
-  //   });
-  //   it('should return post with update status to like by user one', async () => {
-  //     await request(httpServer)
-  //       .put('/posts/' + post.id + '/like-status')
-  //       .set('Authorization', `Bearer ${userOneAccessToken}`)
-  //       .send({
-  //         likeStatus: LIKE_STATUS.LIKE,
-  //       })
-  //       .expect(HttpStatus.NO_CONTENT);
-  //     const newestLikeUserOne = {
-  //       addedAt: expect.any(String),
-  //       userId: userOne.id,
-  //       login: userOne.login,
-  //     };
-  //     const res = await request(httpServer)
-  //       .get('/posts/' + post.id)
-  //       .expect(HttpStatus.OK);
-  //     expect(res.body.extendedLikesInfo.myStatus).toBe(LIKE_STATUS.NONE);
-  //     expect(res.body.extendedLikesInfo.likesCount).toBe(1);
-  //     expect(res.body.extendedLikesInfo.newestLikes).toHaveLength(1);
-  //     expect(res.body.extendedLikesInfo.newestLikes).toContainEqual(
-  //       newestLikeUserOne,
-  //     );
-  //     const resWithSet = await request(httpServer)
-  //       .get('/posts/' + post.id)
-  //       .set('Authorization', `Bearer ${userOneAccessToken}`)
-  //       .expect(HttpStatus.OK);
-  //     expect(resWithSet.body.extendedLikesInfo.myStatus).toBe(LIKE_STATUS.LIKE);
-  //     expect(resWithSet.body.extendedLikesInfo.likesCount).toBe(1);
-  //     expect(resWithSet.body.extendedLikesInfo.newestLikes).toHaveLength(1);
-  //     expect(resWithSet.body.extendedLikesInfo.newestLikes).toContainEqual(
-  //       newestLikeUserOne,
-  //     );
-  //   });
-  //   it('should return post with update status to like by user two', async () => {
-  //     await request(httpServer)
-  //       .put('/posts/' + post.id + '/like-status')
-  //       .set('Authorization', `Bearer ${userTwoAccessToken}`)
-  //       .send({
-  //         likeStatus: LIKE_STATUS.LIKE,
-  //       })
-  //       .expect(HttpStatus.NO_CONTENT);
-  //     const newestLikeUserTwo = {
-  //       addedAt: expect.any(String),
-  //       userId: userTwo.id,
-  //       login: userTwo.login,
-  //     };
-  //     const resWithSet = await request(httpServer)
-  //       .get('/posts/' + post.id)
-  //       .set('Authorization', `Bearer ${userTwoAccessToken}`)
-  //       .expect(HttpStatus.OK);
-  //     expect(resWithSet.body.extendedLikesInfo.myStatus).toBe(LIKE_STATUS.LIKE);
-  //     expect(resWithSet.body.extendedLikesInfo.likesCount).toBe(2);
-  //     expect(resWithSet.body.extendedLikesInfo.newestLikes).toHaveLength(2);
-  //     expect(resWithSet.body.extendedLikesInfo.newestLikes).toContainEqual(
-  //       newestLikeUserTwo,
-  //     );
-  //   });
-  //   it('should return post with update status to dislike by user two', async () => {
-  //     await request(httpServer)
-  //       .put('/posts/' + post.id + '/like-status')
-  //       .set('Authorization', `Bearer ${userTwoAccessToken}`)
-  //       .send({
-  //         likeStatus: LIKE_STATUS.DISLIKE,
-  //       })
-  //       .expect(HttpStatus.NO_CONTENT);
-  //     const newestLikeUserTwo = {
-  //       addedAt: expect.any(String),
-  //       userId: userTwo.id,
-  //       login: userTwo.login,
-  //     };
-  //     const resWithSet = await request(httpServer)
-  //       .get('/posts/' + post.id)
-  //       .set('Authorization', `Bearer ${userTwoAccessToken}`)
-  //       .expect(HttpStatus.OK);
-  //     expect(resWithSet.body.extendedLikesInfo.myStatus).toBe(
-  //       LIKE_STATUS.DISLIKE,
-  //     );
-  //     expect(resWithSet.body.extendedLikesInfo.likesCount).toBe(1);
-  //     expect(resWithSet.body.extendedLikesInfo.dislikesCount).toBe(1);
-  //     expect(resWithSet.body.extendedLikesInfo.newestLikes).toHaveLength(1);
-  //     expect(resWithSet.body.extendedLikesInfo.newestLikes).not.toContainEqual(
-  //       newestLikeUserTwo,
-  //     );
-  //   });
-  //   it('should return post with update status to none by user one', async () => {
-  //     await request(httpServer)
-  //       .put('/posts/' + post.id + '/like-status')
-  //       .set('Authorization', `Bearer ${userOneAccessToken}`)
-  //       .send({
-  //         likeStatus: LIKE_STATUS.NONE,
-  //       })
-  //       .expect(HttpStatus.NO_CONTENT);
-  //     const newestLikeUserOne = {
-  //       addedAt: expect.any(String),
-  //       userId: userOne.id,
-  //       login: userOne.login,
-  //     };
-  //     const resWithSet = await request(httpServer)
-  //       .get('/posts/' + post.id)
-  //       .set('Authorization', `Bearer ${userOneAccessToken}`)
-  //       .expect(HttpStatus.OK);
-  //     expect(resWithSet.body.extendedLikesInfo.myStatus).toBe(LIKE_STATUS.NONE);
-  //     expect(resWithSet.body.extendedLikesInfo.likesCount).toBe(0);
-  //     expect(resWithSet.body.extendedLikesInfo.dislikesCount).toBe(1);
-  //     expect(resWithSet.body.extendedLikesInfo.newestLikes).toHaveLength(0);
-  //     expect(resWithSet.body.extendedLikesInfo.newestLikes).not.toContainEqual(
-  //       newestLikeUserOne,
-  //     );
-  //   });
-  // });
+  describe('update comment', () => {
+    beforeAll(async () => {
+      await request(httpServer).delete('/testing/all-data');
+    });
+    let post;
+    let comment;
+    let user;
+    let userAccessTokenOne;
+    let userAccessTokenTwo;
+    const notExistingId = uuidv4();
+    it('preparation data for test comment', async () => {
+      const preparationData =
+        await commentsTestManager.preparationTestComment();
+      post = preparationData.post;
+      user = preparationData.userOne;
+      userAccessTokenOne = preparationData.userAccessTokenOne;
+      userAccessTokenTwo = preparationData.userAccessTokenTwo;
+    });
+    it('should create comment', async () => {
+      const commentData = {
+        content: 'TestContentContentTest',
+      };
+      comment = (
+        await commentsTestManager.createCommentTest(
+          commentData,
+          post.id,
+          userAccessTokenOne,
+          user,
+          HttpStatus.CREATED,
+        )
+      ).commentCreated;
+    });
+    it('should return unauthorised status for incorrect password or login', async () => {
+      await request(httpServer)
+        .put('/comments/' + comment.id)
+        .set('Authorization', `Bearer ${-1}`)
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+    it('should return bad request for incorrect input data', async () => {
+      const commentUpdateData = {
+        content: '',
+      };
+      const expected = {
+        message: expect.any(String),
+        field: 'content',
+      };
+      const response = await request(httpServer)
+        .put('/comments/' + comment.id)
+        .set('Authorization', `Bearer ${userAccessTokenOne}`)
+        .send(commentUpdateData)
+        .expect(HttpStatus.BAD_REQUEST);
+      expect(response.body.errorsMessages).toContainEqual(expected);
+      expect(response.body.errorsMessages).toHaveLength(1);
+    });
+    it('should not update comment by not existing comment id', async () => {
+      const commentUpdateData = {
+        content: 'testContentUpdateTest',
+      };
+      await request(httpServer)
+        .put('/comments/' + notExistingId)
+        .set('Authorization', `Bearer ${userAccessTokenOne}`)
+        .send(commentUpdateData)
+        .expect(HttpStatus.NOT_FOUND);
+    });
+    it('should return forbidden status when trying update comment by other user', async () => {
+      const commentUpdateData = {
+        content: 'testContentUpdateTest',
+      };
+      await request(httpServer)
+        .put('/comments/' + comment.id)
+        .set('Authorization', `Bearer ${userAccessTokenTwo}`)
+        .send(commentUpdateData)
+        .expect(HttpStatus.FORBIDDEN);
+    });
+    it('should return no content status for existing comment id and update comment', async () => {
+      const commentUpdateData = {
+        content: 'testContentUpdateTest',
+      };
+      await request(httpServer)
+        .put('/comments/' + comment.id)
+        .set('Authorization', `Bearer ${userAccessTokenOne}`)
+        .send(commentUpdateData)
+        .expect(HttpStatus.NO_CONTENT);
+      const response = await request(httpServer)
+        .get('/comments/' + comment.id)
+        .expect(HttpStatus.OK);
+      expect(response.body).toEqual({ ...comment, ...commentUpdateData });
+    });
+  });
+  describe('delete comment', () => {
+    beforeAll(async () => {
+      await request(httpServer).delete('/testing/all-data');
+    });
+    let post;
+    let comment;
+    let user;
+    let userAccessTokenOne;
+    let userAccessTokenTwo;
+    const notExistingId = uuidv4();
+    it('preparation data for test comment', async () => {
+      const preparationData =
+        await commentsTestManager.preparationTestComment();
+      post = preparationData.post;
+      user = preparationData.userOne;
+      userAccessTokenOne = preparationData.userAccessTokenOne;
+      userAccessTokenTwo = preparationData.userAccessTokenTwo;
+    });
+    it('should create comment', async () => {
+      const commentData = {
+        content: 'TestContentContentTest',
+      };
+      comment = (
+        await commentsTestManager.createCommentTest(
+          commentData,
+          post.id,
+          userAccessTokenOne,
+          user,
+          HttpStatus.CREATED,
+        )
+      ).commentCreated;
+    });
+    it('should return found comment by id', async () => {
+      await request(httpServer)
+        .get('/comments/' + comment.id)
+        .expect(HttpStatus.OK, comment);
+    });
+    it('should return unauthorised status for incorrect password or login', async () => {
+      await request(httpServer)
+        .delete('/comments/' + comment.id)
+        .set('Authorization', `Bearer ${-1}`)
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+    it('should return not found for not existing comment id', async () => {
+      await request(httpServer)
+        .delete('/comments/' + notExistingId)
+        .set('Authorization', `Bearer ${userAccessTokenOne}`)
+        .expect(HttpStatus.NOT_FOUND);
+    });
+    it('should return forbidden status when trying delete comment by other user', async () => {
+      await request(httpServer)
+        .delete('/comments/' + comment.id)
+        .set('Authorization', `Bearer ${userAccessTokenTwo}`)
+        .expect(HttpStatus.FORBIDDEN);
+    });
+    it('should return no content for valid id and delete comment', async () => {
+      await request(httpServer)
+        .delete('/comments/' + comment.id)
+        .set('Authorization', `Bearer ${userAccessTokenOne}`)
+        .expect(HttpStatus.NO_CONTENT);
+    });
+    it('should not return deleted comment by id', async () => {
+      await request(httpServer)
+        .get('/comments/' + comment.id)
+        .expect(HttpStatus.NOT_FOUND);
+    });
+  });
+  describe('find all comments with pagination and sorting', () => {
+    beforeAll(async () => {
+      await request(httpServer).delete('/testing/all-data');
+    });
+    let post;
+    let commentOne;
+    let commentTwo;
+    let commentThree;
+    let user;
+    let userAccessToken;
+    const notExistingId = uuidv4();
+    it('preparation data for test comment', async () => {
+      const preparationData =
+        await commentsTestManager.preparationTestComment();
+      post = preparationData.post;
+      user = preparationData.userOne;
+      userAccessToken = preparationData.userAccessTokenOne;
+    });
+
+    it('should create 3 comments for post', async () => {
+      commentOne = (
+        await commentsTestManager.createCommentTest(
+          { content: 'TestContentContentTestOne' },
+          post.id,
+          userAccessToken,
+          user,
+          HttpStatus.CREATED,
+        )
+      ).commentCreated;
+      commentTwo = (
+        await commentsTestManager.createCommentTest(
+          { content: 'TestContentContentTestTwo' },
+          post.id,
+          userAccessToken,
+          user,
+          HttpStatus.CREATED,
+        )
+      ).commentCreated;
+      commentThree = (
+        await commentsTestManager.createCommentTest(
+          { content: 'TestContentContentTestThree' },
+          post.id,
+          userAccessToken,
+          user,
+          HttpStatus.CREATED,
+        )
+      ).commentCreated;
+    });
+    it('should not return comments for not existing post', async () => {
+      await request(httpServer)
+        .get('/posts/' + notExistingId + '/comments')
+        .expect(HttpStatus.NOT_FOUND);
+    });
+    it('should return all comments with default pagination and sort', async () => {
+      const pagesCount = 1;
+      const page = 1;
+      const pageSize = 10;
+      const totalCount = 3;
+      const allComments = new CommentViewModelAll(
+        pagesCount,
+        page,
+        pageSize,
+        totalCount,
+        [commentThree, commentTwo, commentOne],
+      );
+      const response = await request(httpServer)
+        .get('/posts/' + post.id + '/comments')
+        .expect(HttpStatus.OK, { ...allComments });
+
+      expect(response.body.items).toHaveLength(3);
+    });
+
+    it('should return all comments sorted by content asc ', async () => {
+      const pagesCount = 1;
+      const page = 1;
+      const pageSize = 10;
+      const totalCount = 3;
+      const allComments = new CommentViewModelAll(
+        pagesCount,
+        page,
+        pageSize,
+        totalCount,
+        [commentOne, commentThree, commentTwo],
+      );
+      await request(httpServer)
+        .get('/posts/' + post.id + '/comments')
+        .query({ sortBy: 'content', sortDirection: 'asc' })
+        .expect(HttpStatus.OK, { ...allComments });
+    });
+    it('should return second comment with page size equal 1 and page equal 2', async () => {
+      const pagesCount = 3;
+      const page = 2;
+      const pageSize = 1;
+      const totalCount = 3;
+      const allComments = new CommentViewModelAll(
+        pagesCount,
+        page,
+        pageSize,
+        totalCount,
+        [commentTwo],
+      );
+      await request(httpServer)
+        .get('/posts/' + post.id + '/comments')
+        .query({ pageNumber: 2, pageSize: 1 })
+        .expect(HttpStatus.OK, { ...allComments });
+    });
+  });
+  describe('test like/dislike', () => {
+    beforeAll(async () => {
+      await request(httpServer).delete('/testing/all-data');
+    });
+    let post;
+    let comment;
+    let user;
+    let userOneAccessToken;
+    let userTwoAccessToken;
+    const notExistingId = uuidv4();
+    it('preparation data for test comment', async () => {
+      const preparationData =
+        await commentsTestManager.preparationTestComment();
+      post = preparationData.post;
+      user = preparationData.userOne;
+      userOneAccessToken = preparationData.userAccessTokenOne;
+      userTwoAccessToken = preparationData.userAccessTokenTwo;
+    });
+    it('should create comment', async () => {
+      const commentData = {
+        content: 'TestContentContentTest',
+      };
+      comment = (
+        await commentsTestManager.createCommentTest(
+          commentData,
+          post.id,
+          userOneAccessToken,
+          user,
+          HttpStatus.CREATED,
+        )
+      ).commentCreated;
+    });
+    it('should not return not existing comment with update status like ', async () => {
+      await request(httpServer)
+        .put('/comments/' + notExistingId + '/like-status')
+        .set('Authorization', `Bearer ${userOneAccessToken}`)
+        .send({
+          likeStatus: LIKE_STATUS.LIKE,
+        })
+        .expect(HttpStatus.NOT_FOUND);
+    });
+    it('should not return comment with incorrect status like ', async () => {
+      await request(httpServer)
+        .put('/comments/' + comment.id + '/like-status')
+        .set('Authorization', `Bearer ${userOneAccessToken}`)
+        .send({
+          likeStatus: '',
+        })
+        .expect(HttpStatus.BAD_REQUEST);
+    });
+    it('should return comment with update status to like by user one', async () => {
+      await request(httpServer)
+        .put('/comments/' + comment.id + '/like-status')
+        .set('Authorization', `Bearer ${userOneAccessToken}`)
+        .send({
+          likeStatus: LIKE_STATUS.LIKE,
+        })
+        .expect(HttpStatus.NO_CONTENT);
+      const res = await request(httpServer)
+        .get('/comments/' + comment.id)
+        .expect(HttpStatus.OK);
+      expect(res.body.likesInfo.myStatus).toBe(LIKE_STATUS.NONE);
+      expect(res.body.likesInfo.likesCount).toBe(1);
+      const resWithSet = await request(httpServer)
+        .get('/comments/' + comment.id)
+        .set('Authorization', `Bearer ${userOneAccessToken}`)
+        .expect(HttpStatus.OK);
+      expect(resWithSet.body.likesInfo.myStatus).toBe(LIKE_STATUS.LIKE);
+      expect(resWithSet.body.likesInfo.likesCount).toBe(1);
+    });
+    it('should return comment with update status to like by user two', async () => {
+      await request(httpServer)
+        .put('/comments/' + comment.id + '/like-status')
+        .set('Authorization', `Bearer ${userTwoAccessToken}`)
+        .send({
+          likeStatus: LIKE_STATUS.LIKE,
+        })
+        .expect(HttpStatus.NO_CONTENT);
+      const resWithSet = await request(httpServer)
+        .get('/comments/' + comment.id)
+        .set('Authorization', `Bearer ${userTwoAccessToken}`)
+        .expect(HttpStatus.OK);
+      expect(resWithSet.body.likesInfo.myStatus).toBe(LIKE_STATUS.LIKE);
+      expect(resWithSet.body.likesInfo.likesCount).toBe(2);
+    });
+    it('should return comment with update status to dislike by user two', async () => {
+      await request(httpServer)
+        .put('/comments/' + comment.id + '/like-status')
+        .set('Authorization', `Bearer ${userTwoAccessToken}`)
+        .send({
+          likeStatus: LIKE_STATUS.DISLIKE,
+        })
+        .expect(HttpStatus.NO_CONTENT);
+      const resWithSet = await request(httpServer)
+        .get('/comments/' + comment.id)
+        .set('Authorization', `Bearer ${userTwoAccessToken}`)
+        .expect(HttpStatus.OK);
+      expect(resWithSet.body.likesInfo.myStatus).toBe(LIKE_STATUS.DISLIKE);
+      expect(resWithSet.body.likesInfo.likesCount).toBe(1);
+      expect(resWithSet.body.likesInfo.dislikesCount).toBe(1);
+    });
+    it('should return comment with update status to none by user one', async () => {
+      await request(httpServer)
+        .put('/comments/' + comment.id + '/like-status')
+        .set('Authorization', `Bearer ${userOneAccessToken}`)
+        .send({
+          likeStatus: LIKE_STATUS.NONE,
+        })
+        .expect(HttpStatus.NO_CONTENT);
+      const resWithSet = await request(httpServer)
+        .get('/comments/' + comment.id)
+        .set('Authorization', `Bearer ${userOneAccessToken}`)
+        .expect(HttpStatus.OK);
+      expect(resWithSet.body.likesInfo.myStatus).toBe(LIKE_STATUS.NONE);
+      expect(resWithSet.body.likesInfo.likesCount).toBe(0);
+      expect(resWithSet.body.likesInfo.dislikesCount).toBe(1);
+    });
+  });
 });
