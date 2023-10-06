@@ -5,7 +5,6 @@ import {
   HttpException,
   HttpStatus,
   Param,
-  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { RefreshJwtAuthGuard } from '../../auth/guards/refresh-auth.guard';
@@ -22,6 +21,8 @@ import { DeleteAllSessionsCommand } from '../application/use-cases/delete-all-se
 import { DeleteSessionCommand } from '../application/use-cases/delete -session-use-case';
 import { switchError } from '../../helpers/switch-error';
 import { IdType } from '../../models/IdType';
+import { isError } from '../../models/RESPONSE_ERROR';
+import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
 
 @Controller('security/devices')
 export class DeviceController {
@@ -35,8 +36,7 @@ export class DeviceController {
     @CurrentUserRefresh(ParseCurrentRefreshPipe)
     userFromRefresh: UserFromRefreshType,
   ): Promise<DeviceViewModel[]> {
-    const devices = await this.deviceQueryRepo.findAllSession(userFromRefresh);
-    return devices;
+    return this.deviceQueryRepo.findAllSession(userFromRefresh);
   }
   @UseGuards(RefreshJwtAuthGuard)
   @Delete()
@@ -47,8 +47,8 @@ export class DeviceController {
     const isDeleted = await this.commandBus.execute(
       new DeleteAllSessionsCommand(userFromRefresh),
     );
-    if (!isDeleted) throw new UnauthorizedException();
-    throw new HttpException('No content', HttpStatus.NO_CONTENT);
+    if (isError(isDeleted)) return switchError(isDeleted);
+    throw new HttpException(RESPONSE_SUCCESS.NO_CONTENT, HttpStatus.NO_CONTENT);
   }
   @UseGuards(RefreshJwtAuthGuard)
   @Delete('/:id')
@@ -60,6 +60,7 @@ export class DeviceController {
     const isDeleted = await this.commandBus.execute(
       new DeleteSessionCommand(deviceId, userFromRefresh),
     );
-    switchError(isDeleted);
+    if (isError(isDeleted)) return switchError(isDeleted);
+    throw new HttpException(RESPONSE_SUCCESS.NO_CONTENT, HttpStatus.NO_CONTENT);
   }
 }

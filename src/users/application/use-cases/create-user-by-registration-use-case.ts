@@ -28,12 +28,7 @@ export class CreateUserByRegistrationUseCase
     } catch {
       return false;
     }
-    const createEmailConfirm = await this._createEmailConfirmation(
-      userId,
-      confirmationCode,
-    );
-    if (createEmailConfirm === null) return false;
-    return true;
+    return this._createEmailConfirmation(userId, confirmationCode);
   }
   async createUser(command: CreateUserByRegistrationCommand) {
     const { login, email, password } = command.userDto;
@@ -52,10 +47,9 @@ export class CreateUserByRegistrationUseCase
       expirationDate,
       isConfirmed: false,
     };
-    const isCreated = await this.usersRepository.createEmailConfirmation(
+    return this.usersRepository.createEmailConfirmation(
       userId,
       emailConfirmation,
     );
-    if (isCreated === null) return null;
   }
 }

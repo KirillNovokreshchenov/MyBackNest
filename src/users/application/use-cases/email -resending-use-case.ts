@@ -4,6 +4,7 @@ import { UsersRepository } from '../../infrastructure/users.repository';
 import { EmailManagers } from '../../../auth/application/managers/email.managers';
 import { IdType } from '../../../models/IdType';
 import { BcryptAdapter } from '../../infrastructure/adapters/bcryptAdapter';
+import { isError, RESPONSE_ERROR } from '../../../models/RESPONSE_ERROR';
 
 export class EmailResendingCommand {
   constructor(public emailDto: EmailDto) {}
@@ -18,11 +19,11 @@ export class EmailResendingUseCase
     private bcryptAdapter: BcryptAdapter,
   ) {}
   async execute(command: EmailResendingCommand) {
-    const confirmData: { userId: IdType; isConfirmed: boolean } | null =
-      await this.usersRepository.findDataConfirmedByEmail(
-        command.emailDto.email,
-      );
-    if (!confirmData || confirmData.isConfirmed) return false;
+    const confirmData = await this.usersRepository.findDataConfirmedByEmail(
+      command.emailDto.email,
+    );
+    if (isError(confirmData) || confirmData.isConfirmed)
+      return RESPONSE_ERROR.BAD_REQUEST;
     const confirmationCode = this.bcryptAdapter.uuid();
     try {
       await this.emailManager.emailRegistration(
@@ -30,14 +31,9 @@ export class EmailResendingUseCase
         confirmationCode,
       );
     } catch {
-      return false;
+      return RESPONSE_ERROR.SERVER_ERROR;
     }
-    const emailConfirm = await this._createEmailConfirmation(
-      confirmData.userId,
-      confirmationCode,
-    );
-    if (emailConfirm === null) return false;
-    return true;
+    return this._createEmailConfirmation(confirmData.userId, confirmationCode);
   }
   async _createEmailConfirmation(userId: IdType, confirmationCode: string) {
     const expirationDate = this.bcryptAdapter.addMinutes(60);
@@ -46,10 +42,9 @@ export class EmailResendingUseCase
       expirationDate,
       isConfirmed: false,
     };
-    const isCreated = await this.usersRepository.createEmailConfirmation(
+    return this.usersRepository.createEmailConfirmation(
       userId,
       emailConfirmation,
     );
-    if (isCreated === null) return null;
   }
 }

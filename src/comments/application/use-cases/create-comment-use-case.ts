@@ -1,6 +1,6 @@
 import { CreateCommentDto } from '../dto/CreateCommentDto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { RESPONSE_ERROR } from '../../../models/RESPONSE_ERROR';
+import { isError, RESPONSE_ERROR } from '../../../models/RESPONSE_ERROR';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { PostsRepository } from '../../../posts/infrastructure/posts.repository';
 import { CommentsRepository } from '../../infractructure/comments.repository';
@@ -22,7 +22,9 @@ export class CreateCommentUseCase
     private postRepo: PostsRepository,
     private commentRepo: CommentsRepository,
   ) {}
-  async execute(command: CreateCommentCommand) {
+  async execute(
+    command: CreateCommentCommand,
+  ): Promise<IdType | RESPONSE_ERROR> {
     // const userLogin = await this.usersRepo.findUserLogin(command.userId);
     // if (!userLogin) return RESPONSE_OPTIONS.NOT_FOUND;
     // const blogDataByPost: { ownerBlogId: IdType; blogId: IdType } | null =
@@ -35,13 +37,13 @@ export class CreateCommentUseCase
     // if (isBannedForBlog) {
     //   return RESPONSE_OPTIONS.FORBIDDEN;
     // }
+    const postIsExists = await this.postRepo.findPostId(command.postId);
+    if (isError(postIsExists)) return postIsExists;
 
-    const commentId = await this.commentRepo.createComment(
+    return this.commentRepo.createComment(
       command.userId,
       command.postId,
       command.commentDto,
     );
-
-    return commentId;
   }
 }

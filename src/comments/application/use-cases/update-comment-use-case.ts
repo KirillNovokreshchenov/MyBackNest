@@ -1,6 +1,6 @@
 import { UpdateCommentDto } from '../dto/UpdateCommentDto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { RESPONSE_ERROR } from '../../../models/RESPONSE_ERROR';
+import { isError, RESPONSE_ERROR } from '../../../models/RESPONSE_ERROR';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CommentsRepository } from '../../infractructure/comments.repository';
 import { IdType } from '../../../models/IdType';
@@ -27,14 +27,12 @@ export class UpdateCommentUseCase
     const commentOwnerId = await this.commentRepo.findCommentOwnerId(
       command.commentId,
     );
-    if (!commentOwnerId) return RESPONSE_ERROR.NOT_FOUND;
+    if (isError(commentOwnerId)) return commentOwnerId;
     if (command.userId.toString() !== commentOwnerId.toString())
       return RESPONSE_ERROR.FORBIDDEN;
-    const isUpdate = await this.commentRepo.updateComment(
+    return this.commentRepo.updateComment(
       command.commentId,
       command.commentDto,
     );
-    if (isUpdate === null) return RESPONSE_ERROR.NOT_FOUND;
-    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 }

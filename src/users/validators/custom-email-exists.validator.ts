@@ -4,6 +4,7 @@ import {
 } from 'class-validator';
 import { Injectable } from '@nestjs/common';
 import { UsersRepository } from '../infrastructure/users.repository';
+import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
 
 @ValidatorConstraint({ name: 'EmailExists', async: true })
 @Injectable()
@@ -12,8 +13,8 @@ export class EmailExistsRule implements ValidatorConstraintInterface {
 
   async validate(value: string) {
     const userId = await this.usersRepo.findUserByEmailOrLogin(value);
-    if (userId) return false;
-    return true;
+    if (userId === RESPONSE_ERROR.NOT_FOUND) return true;
+    return false;
   }
   defaultMessage() {
     return `Incorrect Email`;

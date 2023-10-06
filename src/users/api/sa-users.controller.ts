@@ -26,6 +26,9 @@ import { CreateUserByAdminCommand } from '../application/use-cases/create -user-
 import { DeleteUserCommand } from '../application/use-cases/delete-user-use-case';
 import { UserBanCommand } from '../application/use-cases/user-ban-use-case';
 import { IdType } from '../../models/IdType';
+import { isError } from '../../models/RESPONSE_ERROR';
+import { switchError } from '../../helpers/switch-error';
+import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
 
 @Controller('sa/users')
 @UseGuards(BasicAuthGuard)
@@ -58,22 +61,17 @@ export class SaUsersController {
       new CreateUserByAdminCommand(dto),
     );
     const newUser = await this.usersQueryRepository.findUserById(userId);
-    if (!newUser) {
-      throw new HttpException('Server Error', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    if (isError(newUser)) return switchError(newUser);
     return newUser;
   }
   @Delete('/:id')
   async deleteUser(
-    @Param('id', ParseObjectIdPipe) id: IdType,
+    @Param('id', ParseObjectIdPipe) userId: IdType,
   ): Promise<HttpException> {
-    const userIsDeleted = await this.commandBus.execute(
-      new DeleteUserCommand(id),
+    const isDeleted = await this.commandBus.execute(
+      new DeleteUserCommand(userId),
     );
-    if (userIsDeleted) {
-      throw new HttpException('No Content', HttpStatus.NO_CONTENT);
-    } else {
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
-    }
+    if (isError(isDeleted)) return switchError(isDeleted);
+    throw new HttpException(RESPONSE_SUCCESS.NO_CONTENT, HttpStatus.NO_CONTENT);
   }
 }

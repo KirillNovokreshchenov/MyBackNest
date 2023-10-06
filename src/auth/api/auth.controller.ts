@@ -48,6 +48,9 @@ import { EmailResendingCommand } from '../../users/application/use-cases/email -
 import { RecoveryPasswordCommand } from '../../users/application/use-cases/recovery -password-use-case';
 import { NewPasswordCommand } from '../../users/application/use-cases/new-password-use-case';
 import { IdType } from '../../models/IdType';
+import { isError } from '../../models/RESPONSE_ERROR';
+import { switchError } from '../../helpers/switch-error';
+import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
 
 @Controller('auth')
 export class AuthController {
@@ -61,7 +64,7 @@ export class AuthController {
   @Get('/me')
   async me(@CurrentUserId(ParseCurrentIdDecorator) id: IdType) {
     const user = this.usersQueryRepo.findUserAuth(id);
-    if (!user) throw new UnauthorizedException();
+    if (isError(user)) return switchError(user);
     return user;
   }
 
@@ -77,7 +80,7 @@ export class AuthController {
     const tokens = await this.commandBus.execute(
       new CreateTokensCommand(userData),
     );
-    if (!tokens) throw new InternalServerErrorException();
+    if (isError(tokens)) return switchError(tokens);
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
@@ -95,7 +98,7 @@ export class AuthController {
     const tokens = await this.commandBus.execute(
       new NewTokensCommand(userFromRefresh),
     );
-    if (!tokens) throw new UnauthorizedException();
+    if (isError(tokens)) return switchError(tokens);
     res.cookie('refreshToken', tokens.refreshToken, {
       httpOnly: true,
       secure: true,
@@ -111,8 +114,8 @@ export class AuthController {
     const logout = await this.commandBus.execute(
       new LogoutCommand(userFromRefresh),
     );
-    if (!logout) throw new UnauthorizedException();
-    throw new HttpException('No content', HttpStatus.NO_CONTENT);
+    if (isError(logout)) return switchError(logout);
+    throw new HttpException(RESPONSE_SUCCESS.NO_CONTENT, HttpStatus.NO_CONTENT);
   }
   @UseGuards(ThrottlerGuard)
   @Post('/registration')
@@ -120,10 +123,8 @@ export class AuthController {
     const userCreate = await this.commandBus.execute(
       new CreateUserByRegistrationCommand(userDto),
     );
-    if (!userCreate) {
-      throw new HttpException('', HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    throw new HttpException('', HttpStatus.NO_CONTENT);
+    if (isError(userCreate)) return switchError(userCreate);
+    throw new HttpException(RESPONSE_SUCCESS.NO_CONTENT, HttpStatus.NO_CONTENT);
   }
   @UseGuards(ThrottlerGuard)
   @Post('/registration-confirmation')
@@ -131,12 +132,11 @@ export class AuthController {
     const isConfirmed = await this.commandBus.execute(
       new ConfirmByEmailCommand(codeDto),
     );
-    if (!isConfirmed) {
-      throw new BadRequestException([
+    if (isError(isConfirmed))
+      return switchError(isConfirmed, [
         { message: 'incorrect code', field: 'code' },
       ]);
-    }
-    throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
+    throw new HttpException(RESPONSE_SUCCESS.NO_CONTENT, HttpStatus.NO_CONTENT);
   }
   @UseGuards(ThrottlerGuard)
   @Post('/registration-email-resending')
@@ -144,18 +144,17 @@ export class AuthController {
     const emailResending = await this.commandBus.execute(
       new EmailResendingCommand(emailDto),
     );
-    if (!emailResending) {
-      throw new BadRequestException([
+    if (isError(emailResending))
+      return switchError(emailResending, [
         { message: 'incorrect email', field: 'email' },
       ]);
-    }
-    throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
+    throw new HttpException(RESPONSE_SUCCESS.NO_CONTENT, HttpStatus.NO_CONTENT);
   }
   @UseGuards(ThrottlerGuard)
   @Post('/password-recovery')
   async passwordRecovery(@Body() emailDto: EmailDto) {
     await this.commandBus.execute(new RecoveryPasswordCommand(emailDto));
-    throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
+    throw new HttpException(RESPONSE_SUCCESS.NO_CONTENT, HttpStatus.NO_CONTENT);
   }
   @UseGuards(ThrottlerGuard)
   @Post('/new-password')
@@ -163,11 +162,10 @@ export class AuthController {
     const newPassword = await this.commandBus.execute(
       new NewPasswordCommand(newPasswordDto),
     );
-    if (!newPassword) {
-      throw new BadRequestException([
+    if (isError(newPassword))
+      return switchError(newPassword, [
         { message: 'incorrect recovery code', field: 'recoveryCode' },
       ]);
-    }
-    throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
+    throw new HttpException(RESPONSE_SUCCESS.NO_CONTENT, HttpStatus.NO_CONTENT);
   }
 }

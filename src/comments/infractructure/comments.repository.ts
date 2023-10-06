@@ -19,6 +19,9 @@ import { LIKE_STATUS } from '../../models/LikeStatusEnum';
 import { User, UserModelType } from '../../users/domain/user.schema';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
+import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
+import { LikeStatusBLType } from '../../models/LikeStatusBLType';
 
 @Injectable()
 export class CommentsRepository {
@@ -41,12 +44,15 @@ export class CommentsRepository {
     await this.CommentModel.deleteOne({ _id: commentId });
   }
 
-  async findLikeStatus(userId: IdType, commentId: IdType) {
+  async findLikeStatus(
+    userId: IdType,
+    commentId: IdType,
+  ): Promise<LikeStatusBLType | RESPONSE_ERROR> {
     const likeStatus = await this.CommentLikeModel.findOne({
       userId,
       commentId,
     });
-    if (!likeStatus) return null;
+    if (!likeStatus) return RESPONSE_ERROR.NOT_FOUND;
     return { likeId: likeStatus._id, likeStatus: likeStatus.likeStatus };
   }
 
@@ -99,9 +105,9 @@ export class CommentsRepository {
     userId: IdType,
     postId: IdType,
     commentDto: CreateCommentDto,
-  ) {
+  ): Promise<IdType | RESPONSE_ERROR> {
     const post = await this.PostModel.findById(postId);
-    if (!post) return null;
+    if (!post) return RESPONSE_ERROR.SERVER_ERROR;
     const postInfo: PostInfo = {
       id: post._id,
       title: post.title,
@@ -109,7 +115,7 @@ export class CommentsRepository {
       blogName: post.blogName,
     };
     const user = await this.UserModel.findById(userId);
-    if (!user) return null;
+    if (!user) return RESPONSE_ERROR.NOT_FOUND;
     const comment = await this.CommentModel.createComment(
       userId,
       post.userId,
@@ -122,25 +128,31 @@ export class CommentsRepository {
     return comment._id;
   }
 
-  async findCommentOwnerId(commentId: IdType) {
+  async findCommentOwnerId(
+    commentId: IdType,
+  ): Promise<IdType | RESPONSE_ERROR> {
     const comment = await this.findComment(commentId);
-    if (!comment) return null;
+    if (!comment) return RESPONSE_ERROR.NOT_FOUND;
     return comment.userId;
   }
 
-  async updateComment(commentId: IdType, commentDto: UpdateCommentDto) {
+  async updateComment(
+    commentId: IdType,
+    commentDto: UpdateCommentDto,
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     const comment = await this.findComment(commentId);
-    if (!comment) return null;
+    if (!comment) return RESPONSE_ERROR.SERVER_ERROR;
     comment.updateComment(commentDto);
     await this.saveComment(comment);
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
   async createLikeStatus(
     userId: IdType,
     commentId: IdType,
     likeStatus: LIKE_STATUS,
-  ) {
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     const comment = await this.findComment(commentId);
-    if (!comment) return null;
+    if (!comment) return RESPONSE_ERROR.SERVER_ERROR;
     const likeStatusCreated = comment.createLikeStatus(
       userId,
       commentId,
@@ -149,34 +161,37 @@ export class CommentsRepository {
     );
     await this.saveStatus(likeStatusCreated);
     await this.saveComment(comment);
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
   async updateLikeNone(
     commentId: IdType,
-    likeData: { likeId: IdType; likeStatus: LIKE_STATUS },
-  ) {
+    likeData: LikeStatusBLType,
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     const comment = await this.findComment(commentId);
-    if (!comment) return null;
+    if (!comment) return RESPONSE_ERROR.SERVER_ERROR;
     comment.updateLikeNone(likeData.likeStatus);
     await this.saveComment(comment);
     await this.deleteLikeStatus(likeData.likeId);
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
   async updateLike(
     commentId: IdType,
-    likeStatus: LIKE_STATUS,
-    likeData: { likeId: IdType; likeStatus: LIKE_STATUS },
+    newLikeStatus: LIKE_STATUS,
+    likeData: LikeStatusBLType,
   ) {
     const comment = await this.findComment(commentId);
-    if (!comment) return null;
+    if (!comment) return RESPONSE_ERROR.SERVER_ERROR;
     const oldLike = await this.CommentLikeModel.findById(likeData.likeId);
-    if (!oldLike) return null;
-    comment.updateLike(likeStatus, oldLike);
+    if (!oldLike) return RESPONSE_ERROR.SERVER_ERROR;
+    comment.updateLike(newLikeStatus, oldLike);
     await this.saveComment(comment);
     await this.saveStatus(oldLike);
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
-  async findCommentId(commentId: IdType) {
+  async findCommentId(commentId: IdType): Promise<IdType | RESPONSE_ERROR> {
     const comment = await this.findComment(commentId);
-    if (!comment) return null;
+    if (!comment) return RESPONSE_ERROR.NOT_FOUND;
     return comment._id;
   }
 }
@@ -195,7 +210,7 @@ export class CommentsSQLRepository {
       );
       return comment[0].comment_id;
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.NOT_FOUND;
     }
   }
   async findCommentOwnerId(commentId: IdType) {
@@ -207,12 +222,15 @@ export class CommentsSQLRepository {
     `,
       [commentId],
     );
-    if (!comment[0]) return null;
+    if (!comment[0]) return RESPONSE_ERROR.NOT_FOUND;
     return comment[0].owner_id;
   }
-  async findLikeStatus(userId: IdType, commentId: IdType) {
+  async findLikeStatus(
+    userId: IdType,
+    commentId: IdType,
+  ): Promise<LikeStatusBLType | RESPONSE_ERROR> {
     try {
-      const likeStatus = await this.dataSource.query(
+      const likeData = await this.dataSource.query(
         `
       SELECT  like_status as "likeStatus", like_id as "likeId"
       FROM public.comments_likes
@@ -221,9 +239,10 @@ export class CommentsSQLRepository {
       `,
         [commentId, userId],
       );
-      return likeStatus[0];
+      if (!likeData[0]) return RESPONSE_ERROR.NOT_FOUND;
+      return likeData[0];
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.NOT_FOUND;
     }
   }
 
@@ -231,7 +250,7 @@ export class CommentsSQLRepository {
     userId: IdType,
     postId: IdType,
     commentDto: CreateCommentDto,
-  ) {
+  ): Promise<IdType | RESPONSE_ERROR> {
     try {
       const commentId = await this.dataSource.query(
         `
@@ -243,11 +262,14 @@ RETURNING comment_id;
       );
       return commentId[0].comment_id;
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.SERVER_ERROR;
     }
   }
 
-  async updateComment(commentId: IdType, commentDto: UpdateCommentDto) {
+  async updateComment(
+    commentId: IdType,
+    commentDto: UpdateCommentDto,
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     const comment = await this.dataSource.query(
       `
     UPDATE public.comments
@@ -256,7 +278,8 @@ WHERE comment_id = $2;
     `,
       [commentDto.content, commentId],
     );
-    if (comment[1] === 0) return null;
+    if (comment[1] === 0) return RESPONSE_ERROR.SERVER_ERROR;
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
   async deleteComment(commentId: IdType) {
     await this.dataSource.query(
@@ -272,7 +295,7 @@ WHERE comment_id = $1;
     userId: IdType,
     commentId: IdType,
     likeStatus: LIKE_STATUS,
-  ) {
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     try {
       await this.dataSource.query(
         `
@@ -283,28 +306,33 @@ VALUES ($1, $2, $3);
         [userId, commentId, likeStatus],
       );
       await this._incrementLikeCount(likeStatus, commentId);
+      return RESPONSE_SUCCESS.NO_CONTENT;
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.SERVER_ERROR;
     }
   }
   async updateLikeNone(
     commentId: IdType,
-    likeData: { likeId: IdType; likeStatus: LIKE_STATUS },
-  ) {
-    const isDeleted = await this.dataSource.query(
-      `
+    likeData: LikeStatusBLType,
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
+    try {
+      await this.dataSource.query(
+        `
     DELETE FROM public.comments_likes
 WHERE like_id = $1;
     `,
-      [likeData.likeId],
-    );
-    if (isDeleted[1] === 0) return null;
-    await this._decrementLikeCount(likeData.likeStatus, commentId);
+        [likeData.likeId],
+      );
+      await this._decrementLikeCount(likeData.likeStatus, commentId);
+      return RESPONSE_SUCCESS.NO_CONTENT;
+    } catch (e) {
+      return RESPONSE_ERROR.SERVER_ERROR;
+    }
   }
   async updateLike(
     commentId: IdType,
     likeStatus: LIKE_STATUS,
-    likeData: { likeId: IdType; likeStatus: LIKE_STATUS },
+    likeData: LikeStatusBLType,
   ) {
     try {
       await this.dataSource.query(
@@ -317,8 +345,9 @@ WHERE like_id = $2;
       );
       await this._incrementLikeCount(likeStatus, commentId);
       await this._decrementLikeCount(likeData.likeStatus, commentId);
+      return RESPONSE_SUCCESS.NO_CONTENT;
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.SERVER_ERROR;
     }
   }
 

@@ -8,6 +8,7 @@ import {
   CommentLikeModelType,
 } from '../../domain/comment-like.schema';
 import { IdType } from '../../../models/IdType';
+import { isError, RESPONSE_ERROR } from '../../../models/RESPONSE_ERROR';
 
 export class UpdateLikeStatusCommentCommand {
   constructor(
@@ -23,35 +24,32 @@ export class UpdateLikeStatusCommentUseCase
   constructor(private commentRepo: CommentsRepository) {}
   async execute(command: UpdateLikeStatusCommentCommand) {
     const commentId = await this.commentRepo.findCommentId(command.commentId);
-    if (!commentId) return false;
-    const likeData: { likeId: IdType; likeStatus: LIKE_STATUS } | null =
-      await this.commentRepo.findLikeStatus(command.userId, command.commentId);
-    if (!likeData && command.likeStatusDto.likeStatus === LIKE_STATUS.NONE) {
+    if (isError(commentId)) return commentId;
+    const likeData = await this.commentRepo.findLikeStatus(
+      command.userId,
+      command.commentId,
+    );
+    if (
+      isError(likeData) &&
+      command.likeStatusDto.likeStatus === LIKE_STATUS.NONE
+    ) {
       return false;
     }
-    if (!likeData) {
-      const likeStatusIsCreated = await this.commentRepo.createLikeStatus(
+    if (isError(likeData)) {
+      return this.commentRepo.createLikeStatus(
         command.userId,
         command.commentId,
         command.likeStatusDto.likeStatus,
       );
-      if (likeStatusIsCreated === null) return false;
-      return true;
     }
     if (command.likeStatusDto.likeStatus === LIKE_STATUS.NONE) {
-      const isUpdated = await this.commentRepo.updateLikeNone(
-        command.commentId,
-        likeData,
-      );
-      if (isUpdated === null) return false;
+      return this.commentRepo.updateLikeNone(command.commentId, likeData);
     } else {
-      const isUpdated = await this.commentRepo.updateLike(
+      return this.commentRepo.updateLike(
         command.commentId,
         command.likeStatusDto.likeStatus,
         likeData,
       );
-      if (!isUpdated === null) return false;
     }
-    return true;
   }
 }

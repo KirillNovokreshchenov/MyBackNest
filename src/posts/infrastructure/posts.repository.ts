@@ -297,6 +297,7 @@ WHERE post_id = $1;
       `,
         [postId, userId],
       );
+      if (!likeData[0]) return RESPONSE_ERROR.NOT_FOUND;
       return likeData[0];
     } catch (e) {
       return RESPONSE_ERROR.NOT_FOUND;

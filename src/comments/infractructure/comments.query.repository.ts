@@ -27,6 +27,7 @@ import { IdType } from '../../models/IdType';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { LIKE_STATUS } from '../../models/LikeStatusEnum';
+import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
 
 @Injectable()
 export class CommentsQueryRepository {
@@ -40,7 +41,7 @@ export class CommentsQueryRepository {
   async findComment(
     commentId: IdType,
     userId?: IdType,
-  ): Promise<CommentViewModel | null> {
+  ): Promise<CommentViewModel | RESPONSE_ERROR> {
     const like = await this.CommentLikeModel.findOne({
       userId,
       commentId,
@@ -52,7 +53,7 @@ export class CommentsQueryRepository {
       isBanned: { $ne: true },
     }).lean();
 
-    if (!comment) return null;
+    if (!comment) return RESPONSE_ERROR.NOT_FOUND;
     return new CommentMongoViewModel(comment, like?.likeStatus);
   }
   async findAllCommentsForBlogs(dataQuery: QueryInputType, userId: IdType) {
@@ -144,7 +145,7 @@ export class CommentsSQLQueryRepository {
   async findComment(
     commentId: IdType,
     userId?: IdType,
-  ): Promise<CommentViewModel | null> {
+  ): Promise<CommentViewModel | RESPONSE_ERROR> {
     const comment = await this.dataSource.query(
       `
   SELECT comment_id, owner_id as "userId", login as "userLogin", content, created_at as "createdAt", like_count, dislike_count
@@ -155,7 +156,7 @@ export class CommentsSQLQueryRepository {
   `,
       [commentId],
     );
-    if (!comment[0]) return null;
+    if (!comment[0]) return RESPONSE_ERROR.NOT_FOUND;
     let myLikeStatus = await this._likeStatus(commentId, userId);
     if (!myLikeStatus) myLikeStatus = LIKE_STATUS.NONE;
     return new CommentSQLViewModel(comment[0], myLikeStatus);

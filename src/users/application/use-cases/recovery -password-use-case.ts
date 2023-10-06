@@ -4,6 +4,7 @@ import { UsersRepository } from '../../infrastructure/users.repository';
 import { EmailManagers } from '../../../auth/application/managers/email.managers';
 import { IdType } from '../../../models/IdType';
 import { BcryptAdapter } from '../../infrastructure/adapters/bcryptAdapter';
+import { isError } from '../../../models/RESPONSE_ERROR';
 
 export class RecoveryPasswordCommand {
   constructor(public emailDto: EmailDto) {}
@@ -21,7 +22,7 @@ export class RecoveryPasswordUseCase
     const userId = await this.usersRepository.findUserByEmailOrLogin(
       command.emailDto.email,
     );
-    if (!userId) return;
+    if (isError(userId)) return;
     const recoveryPas = await this._createPasswordRecovery(
       userId,
       command.emailDto.email,

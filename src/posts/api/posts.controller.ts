@@ -65,7 +65,7 @@ export class PostsController {
   ) {
     const post = await this.queryPostsRepository.findPost(postId);
     if (isError(post)) return switchError(post);
-    return await this.queryCommentsRepository.findAllComments(
+    return this.queryCommentsRepository.findAllComments(
       dataQuery,
       postId,
       userId,
@@ -101,8 +101,12 @@ export class PostsController {
     // if (commentId === RESPONSE_OPTIONS.NOT_FOUND) throw new NotFoundException();
     // if (commentId === RESPONSE_OPTIONS.FORBIDDEN)
     //   throw new ForbiddenException();
-    if (!commentId) throw new NotFoundException();
-    return this.queryCommentsRepository.findComment(commentId);
+    if (isError(commentId)) return switchError(commentId);
+    const foundComment = await this.queryCommentsRepository.findComment(
+      commentId,
+    );
+    if (isError(foundComment)) return switchError(foundComment);
+    return foundComment;
   }
 
   // @UseGuards(BasicAuthGuard)

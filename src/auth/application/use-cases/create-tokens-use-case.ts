@@ -8,6 +8,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { DeviceRepository } from '../../../sessions/infrastructure/device.repository';
 import { AuthService } from '../auth.service';
 import { BcryptAdapter } from '../../../users/infrastructure/adapters/bcryptAdapter';
+import { isError, RESPONSE_ERROR } from '../../../models/RESPONSE_ERROR';
 
 export class CreateTokensCommand {
   constructor(public sessionData: SessionDataType) {}
@@ -24,7 +25,7 @@ export class CreateTokensUseCase
   ) {}
   async execute(command: CreateTokensCommand) {
     const session = await this._createSession(command.sessionData);
-    if (!session) return null;
+    if (isError(session)) return session;
     return this.authService.tokens(session);
   }
 
@@ -40,7 +41,7 @@ export class CreateTokensUseCase
       expDate: expDate,
     };
     const isCreated = await this.sessionRepo.createSession(session);
-    if (isCreated === null) return null;
+    if (isError(isCreated)) return isCreated;
     return session;
   }
 }

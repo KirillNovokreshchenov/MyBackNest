@@ -486,7 +486,7 @@ describe('postsTests', () => {
         .expect(HttpStatus.OK);
       userTwoAccessToken = resTwo.body.accessToken;
     });
-    it('should not return not existing post with update status like ', async () => {
+    it('should not return not existing post with update status like', async () => {
       await request(httpServer)
         .put('/posts/' + incorrectUuid + '/like-status')
         .set('Authorization', `Bearer ${userOneAccessToken}`)

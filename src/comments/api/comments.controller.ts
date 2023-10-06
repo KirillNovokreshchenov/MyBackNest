@@ -5,7 +5,6 @@ import {
   Get,
   HttpException,
   HttpStatus,
-  NotFoundException,
   Param,
   Put,
   UseGuards,
@@ -28,6 +27,8 @@ import { UpdateCommentCommand } from '../application/use-cases/update-comment-us
 import { DeleteCommentCommand } from '../application/use-cases/delete-comment-use-case';
 import { UpdateLikeStatusCommentCommand } from '../application/use-cases/update-like-status-comment-use-case';
 import { IdType } from '../../models/IdType';
+import { isError } from '../../models/RESPONSE_ERROR';
+import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
 
 @Controller('comments')
 export class CommentsController {
@@ -46,7 +47,7 @@ export class CommentsController {
       commentId,
       userId,
     );
-    if (!comment) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
+    if (isError(comment)) return switchError(comment);
     return comment;
   }
   @UseGuards(JwtAuthGuard)
@@ -59,7 +60,8 @@ export class CommentsController {
     const isUpdated = await this.commandBus.execute(
       new UpdateCommentCommand(userId, commentId, commentDto),
     );
-    switchError(isUpdated);
+    if (isError(isUpdated)) return switchError(isUpdated);
+    throw new HttpException(RESPONSE_SUCCESS.NO_CONTENT, HttpStatus.NO_CONTENT);
   }
   @UseGuards(JwtAuthGuard)
   @Put('/:id/like-status')
@@ -71,8 +73,8 @@ export class CommentsController {
     const likeStatus = await this.commandBus.execute(
       new UpdateLikeStatusCommentCommand(userId, commentId, likeStatusDto),
     );
-    if (!likeStatus) throw new NotFoundException();
-    throw new HttpException('No content', HttpStatus.NO_CONTENT);
+    if (isError(likeStatus)) return switchError(likeStatus);
+    throw new HttpException(RESPONSE_SUCCESS.NO_CONTENT, HttpStatus.NO_CONTENT);
   }
 
   @UseGuards(JwtAuthGuard)
@@ -84,6 +86,7 @@ export class CommentsController {
     const isDeleted = await this.commandBus.execute(
       new DeleteCommentCommand(userId, commentId),
     );
-    switchError(isDeleted);
+    if (isError(isDeleted)) return switchError(isDeleted);
+    throw new HttpException(RESPONSE_SUCCESS.NO_CONTENT, HttpStatus.NO_CONTENT);
   }
 }

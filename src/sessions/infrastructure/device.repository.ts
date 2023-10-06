@@ -9,6 +9,8 @@ import { SessionDto } from '../application/dto/SessionDto';
 import { IdType } from '../../models/IdType';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
+import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
 
 export class DeviceRepository {
   constructor(
@@ -23,20 +25,21 @@ export class DeviceRepository {
   ): Promise<SessionDocument | null> {
     return this.SessionModel.findOne(userFromRefresh);
   }
-  async findSessionById(deviceId: IdType) {
+  async findSessionById(deviceId: IdType): Promise<IdType | RESPONSE_ERROR> {
     const session = await this.SessionModel.findOne({ deviceId });
-    if (!session) return null;
+    if (!session) return RESPONSE_ERROR.NOT_FOUND;
     return session.userId;
   }
 
   async logout(userFromRefresh: UserFromRefreshType) {
     const isDeleted = await this.SessionModel.deleteOne(userFromRefresh);
-    return isDeleted.deletedCount === 1;
+    if (isDeleted.deletedCount !== 1) return RESPONSE_ERROR.SERVER_ERROR;
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
   async deleteAllSession(
     userFromRefresh: UserFromRefreshType,
-  ): Promise<boolean> {
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     await this.SessionModel.deleteMany({
       $and: [
         { userId: userFromRefresh.userId },
@@ -47,11 +50,14 @@ export class DeviceRepository {
     const count = await this.SessionModel.countDocuments({
       userId: userFromRefresh.userId,
     });
-    return count === 1;
+    if (count === 1) return RESPONSE_SUCCESS.NO_CONTENT;
+    return RESPONSE_ERROR.SERVER_ERROR;
   }
 
   async deleteSession(deviceId: IdType) {
-    await this.SessionModel.deleteOne({ deviceId });
+    const isDeleted = await this.SessionModel.deleteOne({ deviceId });
+    if (isDeleted.deletedCount === 1) return RESPONSE_SUCCESS.NO_CONTENT;
+    return RESPONSE_ERROR.SERVER_ERROR;
   }
 
   async deleteAllSessionsBan(userId: IdType) {
@@ -63,7 +69,7 @@ export class DeviceRepository {
       session,
       this.SessionModel,
     );
-    if (!sess) return null;
+    if (!sess) return RESPONSE_ERROR.SERVER_ERROR;
     await this.saveSession(sess);
   }
 
@@ -73,7 +79,7 @@ export class DeviceRepository {
     expDate: Date,
   ) {
     const session = await this.findSession(userData);
-    if (!session) return null;
+    if (!session) return RESPONSE_ERROR.SERVER_ERROR;
     session.sessionUpdate(lastActiveDate, expDate);
     return {
       userId: session.userId,
@@ -107,7 +113,7 @@ VALUES ($1, $2, $3, $4, $5, $6);
         ],
       );
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.SERVER_ERROR;
     }
   }
 
@@ -132,7 +138,7 @@ RETURNING user_id, ip, device_id, title, last_active_date, expiration_date;
           expDate,
         ],
       );
-      if (!session[1]) return null;
+      if (!session[1]) return RESPONSE_ERROR.SERVER_ERROR;
 
       return {
         userId: session[0][0].user_id,
@@ -143,7 +149,7 @@ RETURNING user_id, ip, device_id, title, last_active_date, expiration_date;
         expDate: session[0][0].expiration_date,
       };
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.SERVER_ERROR;
     }
   }
 
@@ -159,7 +165,8 @@ WHERE user_id = $1 AND device_id = $2 AND last_active_date = $3;
         userFromRefresh.lastActiveDate,
       ],
     );
-    return isDeleted[1] === 1;
+    if (isDeleted[1] !== 1) return RESPONSE_ERROR.SERVER_ERROR;
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
   async findSessionById(deviceId: IdType) {
@@ -174,18 +181,23 @@ WHERE device_id = $1;
       );
       return session[0].user_id;
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.NOT_FOUND;
     }
   }
 
   async deleteSession(deviceId: IdType) {
-    await this.dataSource.query(
-      `
+    try {
+      await this.dataSource.query(
+        `
     DELETE FROM public.sessions
 WHERE device_id = $1;
     `,
-      [deviceId],
-    );
+        [deviceId],
+      );
+      return RESPONSE_SUCCESS.NO_CONTENT;
+    } catch (e) {
+      return RESPONSE_ERROR.SERVER_ERROR;
+    }
   }
 
   async deleteAllSession(userFromRefresh: UserFromRefreshType) {
@@ -196,6 +208,7 @@ WHERE user_id = $1 AND device_id <> $2;
     `,
       [userFromRefresh.userId, userFromRefresh.deviceId],
     );
-    return isDeleted[1] !== 0;
+    if (isDeleted[1] !== 0) return RESPONSE_SUCCESS.NO_CONTENT;
+    return RESPONSE_ERROR.SERVER_ERROR;
   }
 }

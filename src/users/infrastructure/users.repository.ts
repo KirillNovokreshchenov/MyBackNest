@@ -14,6 +14,10 @@ import { BanDto } from '../application/dto/BanDto';
 import { BanUserForBlogDto } from '../application/dto/BanuserForBlogDto';
 import { DataSource } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
+import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
+import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
+import { EmailConfirmDataType } from '../../auth/application/types/EmailConfirmDataType';
+import { RecoveryDataType } from '../../auth/application/types/RecoveryDataType';
 
 @Injectable()
 export class UsersRepository {
@@ -23,11 +27,13 @@ export class UsersRepository {
     private passwordRecoveryModel: PasswordRecoveryType,
   ) {}
 
-  async findUserByCode(code: string) {
+  async findEmailConfirmDataByCode(
+    code: string,
+  ): Promise<EmailConfirmDataType | RESPONSE_ERROR> {
     const user = await this.UserModel.findOne({
       'emailConfirmation.confirmationCode': code,
     });
-    if (!user) return null;
+    if (!user) return RESPONSE_ERROR.BAD_REQUEST;
     return {
       userId: user._id,
       expDate: user.emailConfirmation.expirationDate,
@@ -38,25 +44,28 @@ export class UsersRepository {
     const user = await this.UserModel.findOne({
       $or: [{ login: emailOrLogin }, { email: emailOrLogin }],
     });
-    if (!user) return null;
+    if (!user) return RESPONSE_ERROR.NOT_FOUND;
     return user._id;
   }
 
   async saveUser(createdUser: UserDocument) {
     await createdUser.save();
   }
-  async deleteUser(id: IdType): Promise<boolean> {
+  async deleteUser(id: IdType): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     const res = await this.UserModel.deleteOne({ _id: id });
-    return res.deletedCount === 1;
+    if (res.deletedCount === 0) return RESPONSE_ERROR.SERVER_ERROR;
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
   async saveRecovery(pasRecovery: PasswordRecoveryDocument) {
     await pasRecovery.save();
   }
 
-  async findRecovery(recoveryCode: string) {
+  async findRecovery(
+    recoveryCode: string,
+  ): Promise<RecoveryDataType | RESPONSE_ERROR> {
     const recovery = await this.passwordRecoveryModel.findOne({ recoveryCode });
-    if (!recovery) return null;
+    if (!recovery) return RESPONSE_ERROR.BAD_REQUEST;
     return {
       userId: recovery.userId,
       recCode: recovery.recoveryCode,
@@ -82,16 +91,20 @@ export class UsersRepository {
     emailConfirm: EmailConfirmationDto,
   ) {
     const user = await this.findUserById(userId);
-    if (!user) return null;
+    if (!user) return RESPONSE_ERROR.SERVER_ERROR;
     user.createEmailConfirm(emailConfirm);
     await this.saveUser(user);
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
-  async findDataConfirmedByEmail(email: string) {
+  async findDataConfirmedByEmail(
+    email: string,
+  ): Promise<EmailConfirmDataType | RESPONSE_ERROR> {
     const user = await this.UserModel.findOne({ email: email });
-    if (!user) return null;
+    if (!user) return RESPONSE_ERROR.SERVER_ERROR;
     return {
       userId: user._id,
+      expDate: user.emailConfirmation.expirationDate,
       isConfirmed: user.emailConfirmation.isConfirmed,
     };
   }
@@ -118,16 +131,18 @@ export class UsersRepository {
 
   async newPass(userId: IdType, newPass: string) {
     const user = await this.findUserById(userId);
-    if (!user) return null;
+    if (!user) return RESPONSE_ERROR.SERVER_ERROR;
     user.password = newPass;
     await this.saveUser(user);
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
   async emailConfirmed(userId: IdType) {
     const user = await this.findUserById(userId);
-    if (!user) return null;
+    if (!user) return RESPONSE_ERROR.SERVER_ERROR;
     user.emailConfirmation.isConfirmed = true;
     await this.saveUser(user);
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
   async banStatus(userId: IdType) {
@@ -174,7 +189,7 @@ export class UsersRepository {
 
   async findUserId(userId: IdType) {
     const user = await this.findUserById(userId);
-    if (!user) return null;
+    if (!user) return RESPONSE_ERROR.NOT_FOUND;
     return user._id;
   }
 }
@@ -182,7 +197,21 @@ export class UsersRepository {
 @Injectable()
 export class UsersSQLRepository {
   constructor(@InjectDataSource() protected dataSource: DataSource) {}
-
+  async findUserId(userId: IdType) {
+    try {
+      const user = await this.dataSource.query(
+        `
+      SELECT user_id
+      FROM public.users
+WHERE user_id = $1 ;
+      `,
+        [userId],
+      );
+      return user[0].user_id;
+    } catch (e) {
+      return RESPONSE_ERROR.NOT_FOUND;
+    }
+  }
   async createUser(transformDto: TransformCreateUserDto) {
     const user = await this.dataSource.query(
       `
@@ -200,7 +229,7 @@ RETURNING user_id;`,
     emailConfirm: EmailConfirmationDto,
   ) {
     try {
-      const emailConfirmation = await this.dataSource.query(
+      await this.dataSource.query(
         `
     INSERT INTO public.email_confirmation(
 user_id, confirmation_code, expiration_date, is_confirmed)
@@ -212,9 +241,9 @@ VALUES ($1, $2, $3, $4);`,
           emailConfirm.isConfirmed,
         ],
       );
+      return RESPONSE_SUCCESS.NO_CONTENT;
     } catch (e) {
-      console.log(e);
-      return null;
+      return RESPONSE_ERROR.SERVER_ERROR;
     }
   }
 
@@ -241,25 +270,24 @@ Where user_id = $1;`,
     }
   }
 
-  async findUserByCode(code: string) {
-    try {
-      const user = await this.dataSource.query(
-        `
+  async findEmailConfirmDataByCode(
+    code: string,
+  ): Promise<EmailConfirmDataType | RESPONSE_ERROR> {
+    const user = await this.dataSource.query(
+      `
     SELECT user_id as "userId", expiration_date as "expDate", is_confirmed as "isConfirmed"
 FROM public.email_confirmation
 WHERE confirmation_code = $1;
     `,
-        [code],
-      );
-      return user[0];
-    } catch (e) {
-      return null;
-    }
+      [code],
+    );
+    if (!user[0]) return RESPONSE_ERROR.BAD_REQUEST;
+    return user[0];
   }
 
   async emailConfirmed(userId: IdType) {
     try {
-      const user = await this.dataSource.query(
+      await this.dataSource.query(
         `
       UPDATE public.email_confirmation
 SET  is_confirmed= true
@@ -267,12 +295,15 @@ WHERE user_id = $1;
       `,
         [userId],
       );
+      return RESPONSE_SUCCESS.NO_CONTENT;
     } catch {
-      return null;
+      return RESPONSE_ERROR.SERVER_ERROR;
     }
   }
 
-  async findDataConfirmedByEmail(email: string) {
+  async findDataConfirmedByEmail(
+    email: string,
+  ): Promise<EmailConfirmDataType | RESPONSE_ERROR> {
     try {
       const user = await this.dataSource.query(
         `
@@ -287,10 +318,11 @@ LIMIT 1
       );
       return {
         userId: user[0].user_id,
+        expDate: user[0].expiration_date,
         isConfirmed: user[0].is_confirmed,
       };
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.BAD_REQUEST;
     }
   }
 
@@ -306,7 +338,7 @@ WHERE login = $1 OR email = $1;
       );
       return user[0].user_id;
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.NOT_FOUND;
     }
   }
 
@@ -326,19 +358,16 @@ VALUES ($1, $2, $3);
   }
 
   async findRecovery(recoveryCode: string) {
-    try {
-      const recovery = await this.dataSource.query(
-        `
+    const recovery = await this.dataSource.query(
+      `
       SELECT user_id as "userId", recovery_code as "recCode", expiration_date as "expDate"
       FROM public.recovery_password
       WHERE recovery_code = $1;
       `,
-        [recoveryCode],
-      );
-      return recovery[0];
-    } catch (e) {
-      return null;
-    }
+      [recoveryCode],
+    );
+    if (!recovery[0]) return RESPONSE_ERROR.BAD_REQUEST;
+    return recovery[0];
   }
   async newPass(userId: IdType, newPass: string) {
     try {
@@ -350,8 +379,9 @@ WHERE user_id = $1;
       `,
         [userId, newPass],
       );
+      return RESPONSE_SUCCESS.NO_CONTENT;
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.SERVER_ERROR;
     }
   }
   async findUserDataCheckCredentials(loginOrEmail: string) {

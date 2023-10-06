@@ -28,15 +28,15 @@ export class UsersQueryRepository {
     @InjectModel(User.name) private userModel: UserModelType,
     @InjectModel(Blog.name) private BlogModel: BlogModelType,
   ) {}
-  async findUserById(userId: IdType): Promise<UserViewModel | null> {
+  async findUserById(userId: IdType): Promise<UserViewModel | RESPONSE_ERROR> {
     const foundUser = await this.userModel.findById(userId).lean();
-    if (!foundUser) return null;
+    if (!foundUser) return RESPONSE_ERROR.NOT_FOUND;
 
     return new UserMongoViewModel(foundUser);
   }
   async findUserAuth(userId: IdType) {
     const foundUser = await this.userModel.findById(userId).lean();
-    if (!foundUser) return null;
+    if (!foundUser) return RESPONSE_ERROR.UNAUTHORIZED;
     return new UserAuthViewModel(foundUser);
   }
 
@@ -190,9 +190,10 @@ WHERE user_id = $1;
 `,
         [userId],
       );
+      if (!user[0]) return RESPONSE_ERROR.NOT_FOUND;
       return user[0];
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.SERVER_ERROR;
     }
   }
 }
