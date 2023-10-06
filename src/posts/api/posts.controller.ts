@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  ForbiddenException,
   Get,
   HttpException,
   HttpStatus,
@@ -12,7 +11,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { PostsService } from '../application/posts.service';
 import { PostsQueryRepository } from '../infrastructure/posts.query.repository';
 import { QueryInputType } from '../../models/QueryInputType';
 import { CommentsQueryRepository } from '../../comments/infractructure/comments.query.repository';
@@ -23,24 +21,21 @@ import {
   ParseCurrentIdDecorator,
 } from '../../auth/decorators/create-param-current-id.decarator';
 import { CreateCommentDto } from '../../comments/application/dto/CreateCommentDto';
-import { CommentService } from '../../comments/application/comment.service';
 import { JwtLikeAuthGuard } from '../../auth/guards/jwt-like-auth.guard';
 import { LikeStatusDto } from '../../models/LikeStatusDto';
-import { BlogsQueryRepository } from '../../blogs/infrastructure/blogs.query.repository';
-import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
+import { isError } from '../../models/RESPONSE_ERROR';
 import { CommandBus } from '@nestjs/cqrs';
 import { UpdateLikeStatusPostCommand } from '../application/use-cases/update-like-status-post-use-case';
 import { CreateCommentCommand } from '../../comments/application/use-cases/create-comment-use-case';
 import { IdType } from '../../models/IdType';
+import { switchError } from '../../helpers/switch-error';
+import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
 
 @Controller('posts')
 export class PostsController {
   constructor(
-    protected postsService: PostsService,
     protected queryPostsRepository: PostsQueryRepository,
     protected queryCommentsRepository: CommentsQueryRepository,
-    protected queryBlogRepo: BlogsQueryRepository,
-    protected commentService: CommentService,
     private commandBus: CommandBus,
   ) {}
   @UseGuards(JwtLikeAuthGuard)
@@ -58,7 +53,7 @@ export class PostsController {
     @CurrentUserId(ParseCurrentIdDecorator) userId?: IdType,
   ) {
     const post = await this.queryPostsRepository.findPost(postId, userId);
-    if (!post) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
+    if (isError(post)) return switchError(post);
     return post;
   }
   @UseGuards(JwtLikeAuthGuard)
@@ -69,7 +64,7 @@ export class PostsController {
     @CurrentUserId(ParseCurrentIdDecorator) userId?: IdType,
   ) {
     const post = await this.queryPostsRepository.findPost(postId);
-    if (!post) throw new NotFoundException();
+    if (isError(post)) return switchError(post);
     return await this.queryCommentsRepository.findAllComments(
       dataQuery,
       postId,
@@ -136,8 +131,8 @@ export class PostsController {
     const likeStatus = await this.commandBus.execute(
       new UpdateLikeStatusPostCommand(userId, postId, likeStatusDto),
     );
-    if (!likeStatus) throw new NotFoundException();
-    throw new HttpException('No content', HttpStatus.NO_CONTENT);
+    if (isError(likeStatus)) return switchError(likeStatus);
+    throw new HttpException(RESPONSE_SUCCESS.NO_CONTENT, HttpStatus.NO_CONTENT);
   }
 
   // @UseGuards(BasicAuthGuard)

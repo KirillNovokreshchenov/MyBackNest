@@ -1,11 +1,10 @@
 import { LikeStatusDto } from '../../../models/LikeStatusDto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { LIKE_STATUS } from '../../../models/LikeStatusEnum';
-import { InjectModel } from '@nestjs/mongoose';
-import { PostLike, PostLikeModelType } from '../../domain/post-like.schema';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { IdType } from '../../../models/IdType';
+import { isError, RESPONSE_ERROR } from '../../../models/RESPONSE_ERROR';
 
 export class UpdateLikeStatusPostCommand {
   constructor(
@@ -18,45 +17,37 @@ export class UpdateLikeStatusPostCommand {
 export class UpdateLikeStatusPostUseCase
   implements ICommandHandler<UpdateLikeStatusPostCommand>
 {
-  constructor(
-    protected postsRepository: PostsRepository,
-    protected usersRepo: UsersRepository,
-  ) {}
+  constructor(protected postsRepository: PostsRepository) {}
   async execute(command: UpdateLikeStatusPostCommand) {
     const postId = await this.postsRepository.findPostId(command.postId);
-    if (!postId) return false;
+    if (isError(postId)) return postId;
     // const userLogin = await this.usersRepo.findUserLogin(command.userId);
     // if (!userLogin) return false;
     const likeData = await this.postsRepository.findLikeStatus(
       command.userId,
       command.postId,
     );
-    if (!likeData && command.likeStatusDto.likeStatus === LIKE_STATUS.NONE) {
-      return false;
+    if (
+      isError(likeData) &&
+      command.likeStatusDto.likeStatus === LIKE_STATUS.NONE
+    ) {
+      return RESPONSE_ERROR.SERVER_ERROR;
     }
-    if (!likeData) {
-      const likeStatusIsCreated = await this.postsRepository.createLikeStatus(
+    if (isError(likeData)) {
+      return this.postsRepository.createLikeStatus(
         command.userId,
         command.postId,
         command.likeStatusDto.likeStatus,
       );
-      if (likeStatusIsCreated === null) return false;
-      return true;
     }
     if (command.likeStatusDto.likeStatus === LIKE_STATUS.NONE) {
-      const isUpdated = await this.postsRepository.updateLikeNone(
-        command.postId,
-        likeData,
-      );
-      if (isUpdated === null) return false;
+      return this.postsRepository.updateLikeNone(command.postId, likeData);
     } else {
-      const isUpdated = await this.postsRepository.updateLike(
+      return this.postsRepository.updateLike(
         command.postId,
         command.likeStatusDto.likeStatus,
         likeData,
       );
-      if (!isUpdated === null) return false;
     }
-    return true;
   }
 }

@@ -1,18 +1,19 @@
-import { RESPONSE_OPTIONS } from '../models/ResponseOptionsEnum';
+import { RESPONSE_ERROR } from '../models/RESPONSE_ERROR';
 import {
   ForbiddenException,
-  HttpException,
-  HttpStatus,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 
-export function switchError(error: RESPONSE_OPTIONS) {
+export const switchError = (error: RESPONSE_ERROR) => {
   switch (error) {
-    case RESPONSE_OPTIONS.NOT_FOUND:
+    case RESPONSE_ERROR.NOT_FOUND:
       throw new NotFoundException();
-    case RESPONSE_OPTIONS.FORBIDDEN:
+    case RESPONSE_ERROR.FORBIDDEN:
       throw new ForbiddenException();
-    case RESPONSE_OPTIONS.NO_CONTENT:
-      throw new HttpException('No content', HttpStatus.NO_CONTENT);
+    // case RESPONSE_ERROR.NO_CONTENT:
+    //   throw new HttpException('No content', HttpStatus.NO_CONTENT);
+    case RESPONSE_ERROR.SERVER_ERROR:
+      throw new InternalServerErrorException();
   }
-}
+};

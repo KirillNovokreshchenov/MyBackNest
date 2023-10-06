@@ -1,8 +1,9 @@
 import { UserFromRefreshType } from '../../../auth/api/input-model/user-from-refresh.type';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { DeviceRepository } from '../../infrastructure/device.repository';
-import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
+import { RESPONSE_ERROR } from '../../../models/RESPONSE_ERROR';
 import { IdType } from '../../../models/IdType';
+import { RESPONSE_SUCCESS } from '../../../models/RESPONSE_SUCCESS';
 
 export class DeleteSessionCommand {
   constructor(
@@ -19,13 +20,13 @@ export class DeleteSessionUseCase
     const userId: IdType | null = await this.deviceRepo.findSessionById(
       command.deviceId,
     );
-    if (!userId) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (!userId) return RESPONSE_ERROR.NOT_FOUND;
 
     if (command.userFromRefresh.userId.toString() !== userId.toString()) {
-      return RESPONSE_OPTIONS.FORBIDDEN;
+      return RESPONSE_ERROR.FORBIDDEN;
     }
 
     await this.deviceRepo.deleteSession(command.deviceId);
-    return RESPONSE_OPTIONS.NO_CONTENT;
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 }

@@ -20,6 +20,10 @@ import {
   ParseCurrentIdDecorator,
 } from '../../auth/decorators/create-param-current-id.decarator';
 import { IdType } from '../../models/IdType';
+import { isError } from '../../models/RESPONSE_ERROR';
+import { switchError } from '../../helpers/switch-error';
+import { Types } from 'mongoose';
+import { BlogViewModelAll } from './view-model/BlogViewModelAll';
 
 @Controller('blogs')
 export class BlogsController {
@@ -29,7 +33,9 @@ export class BlogsController {
   ) {}
 
   @Get()
-  async findAllBlogs(@Query() dataQuery: BlogQueryInputType) {
+  async findAllBlogs(
+    @Query() dataQuery: BlogQueryInputType,
+  ): Promise<BlogViewModelAll> {
     return this.blogsQueryRepository.findAllBlogs(dataQuery);
   }
   @Get('/:id')
@@ -37,9 +43,7 @@ export class BlogsController {
     @Param('id', ParseObjectIdPipe) id: IdType,
   ): Promise<BlogViewModel> {
     const findBlog = await this.blogsQueryRepository.findBlog(id);
-    if (!findBlog) {
-      throw new HttpException('Not Found', HttpStatus.NOT_FOUND);
-    }
+    if (isError(findBlog)) return switchError(findBlog);
     return findBlog;
   }
   @UseGuards(JwtLikeAuthGuard)
@@ -50,7 +54,7 @@ export class BlogsController {
     @CurrentUserId(ParseCurrentIdDecorator) userId?: IdType,
   ): Promise<PostViewModelAll> {
     const blog = await this.blogsQueryRepository.findBlog(blogId);
-    if (!blog) throw new HttpException('NOT_FOUND', HttpStatus.NOT_FOUND);
+    if (isError(blog)) return switchError(blog);
     return await this.queryPostsRepository.findAllPost(dataQuery, {
       userId,
       blogId,

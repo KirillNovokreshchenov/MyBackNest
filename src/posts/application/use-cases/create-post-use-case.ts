@@ -1,6 +1,6 @@
 import { CreatePostDto } from '../dto/CreatePostDto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
+import { isError, RESPONSE_ERROR } from '../../../models/RESPONSE_ERROR';
 import { Post, PostModelType } from '../../domain/post.schema';
 import { PostsRepository } from '../../infrastructure/posts.repository';
 import { BlogsRepository } from '../../../blogs/infrastructure/blogs.repository';
@@ -15,18 +15,16 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
   constructor(
     private postsRepository: PostsRepository,
     private blogsRepo: BlogsRepository,
-    @InjectModel(Post.name) private PostModel: PostModelType,
   ) {}
-  async execute(command: CreatePostCommand) {
-    const blogName: string | null = await this.blogsRepo.findBlogName(
+  async execute(command: CreatePostCommand): Promise<IdType | RESPONSE_ERROR> {
+    const blogIsExists: IdType = await this.blogsRepo.findBlogId(
       command.postDto.blogId,
     );
-    if (!blogName) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (isError(blogIsExists)) return blogIsExists;
     // if (blogData.ownerId.toString() !== command.userId.toString())
     //   return RESPONSE_OPTIONS.FORBIDDEN;
     const postId = await this.postsRepository.createPost(
       command.postDto,
-      blogName,
       command.userId,
     );
     return postId;

@@ -20,6 +20,7 @@ import { LIKE_STATUS } from '../../models/LikeStatusEnum';
 import { IdType } from '../../models/IdType';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
 
 @Injectable()
 export class PostsQueryRepository {
@@ -30,22 +31,25 @@ export class PostsQueryRepository {
   async findPost(
     postId: IdType,
     userId?: IdType,
-  ): Promise<PostViewModel | null> {
+  ): Promise<PostViewModel | RESPONSE_ERROR> {
     const newestLikes = await this._newestLikes(postId);
     const like = await this.PostLikeModel.findOne({
       userId,
       postId,
       isBanned: { $ne: true },
     }).lean();
-    const post: Post | null = await this.PostModel.findOne({
+    const post = await this.PostModel.findOne({
       _id: postId,
       isBanned: { $ne: true },
     }).lean();
-    if (!post) return null;
+    if (!post) return RESPONSE_ERROR.NOT_FOUND;
     return new PostMongoViewModel(post, newestLikes, like?.likeStatus);
   }
 
-  async findAllPost(dataQuery: QueryInputType, postFilter: PostFilterType) {
+  async findAllPost(
+    dataQuery: QueryInputType,
+    postFilter: PostFilterType,
+  ): Promise<PostViewModelAll> {
     const query = new QueryModel(dataQuery);
 
     const filter: { blogId?: IdType; isBanned?: any } = {};
@@ -268,7 +272,7 @@ export class PostsSQLQueryRepository {
   async findPost(
     postId: IdType,
     userId?: IdType,
-  ): Promise<PostViewModel | null> {
+  ): Promise<PostViewModel | RESPONSE_ERROR> {
     const extendedLikeInfo: ExtendedLikesInfo = await this._extendedLikeInfo(
       postId,
       userId,
@@ -286,7 +290,7 @@ WHERE post_id = $1 AND p.is_deleted <> true
 
       return new PostSQLViewModel(post[0], extendedLikeInfo);
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.NOT_FOUND;
     }
   }
 
@@ -320,7 +324,7 @@ WHERE post_id = $1 AND p.is_deleted <> true
     };
   }
   async _newestLikes(postId: IdType) {
-    const newestLikes = await this.dataSource.query(
+    return this.dataSource.query(
       `
       SELECT owner_id as "userId", created_at as "addedAt", login
 FROM public.posts_likes
@@ -331,7 +335,6 @@ LIMIT 3;
       `,
       [postId],
     );
-    return newestLikes;
   }
   async _likeStatus(postId: IdType, userId?: IdType) {
     if (userId) {
@@ -347,7 +350,10 @@ LIMIT 3;
       return like;
     }
   }
-  async findAllPost(dataQuery: QueryInputType, postFilter: PostFilterType) {
+  async findAllPost(
+    dataQuery: QueryInputType,
+    postFilter: PostFilterType,
+  ): Promise<PostViewModelAll> {
     const query = new QueryModel(dataQuery);
 
     const totalCount = await this._totalCount(postFilter.blogId);
@@ -380,7 +386,7 @@ LIMIT 3;
     blogId?: IdType,
   ) {
     if (blogId) {
-      const allPostsForBlog = await this.dataSource.query(
+      return this.dataSource.query(
         `
     SELECT post_id, blog_id as "blogId", b.name as "blogName", title, short_description as "shortDescription", content, p.created_at as "createdAt"
 FROM public.sa_posts as p
@@ -391,9 +397,8 @@ LIMIT $2 OFFSET $3
     `,
         [blogId, dataQuery.pageSize, skip],
       );
-      return allPostsForBlog;
     }
-    const allPosts = await this.dataSource.query(
+    return this.dataSource.query(
       `
     SELECT post_id, blog_id as "blogId", b.name as "blogName", title, short_description as "shortDescription", content, p.created_at as "createdAt"
 FROM public.sa_posts as p
@@ -404,7 +409,6 @@ LIMIT $1 OFFSET $2
     `,
       [dataQuery.pageSize, skip],
     );
-    return allPosts;
   }
 
   private async _totalCount(blogId?: IdType) {

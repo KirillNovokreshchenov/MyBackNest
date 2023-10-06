@@ -1,7 +1,8 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
+import { RESPONSE_ERROR } from '../../../models/RESPONSE_ERROR';
 import { CommentsRepository } from '../../infractructure/comments.repository';
 import { IdType } from '../../../models/IdType';
+import { RESPONSE_SUCCESS } from '../../../models/RESPONSE_SUCCESS';
 
 export class DeleteCommentCommand {
   constructor(public userId: IdType, public commentId: IdType) {}
@@ -15,10 +16,10 @@ export class DeleteCommentUseCase
     const commentOwnerId = await this.commentRepo.findCommentOwnerId(
       command.commentId,
     );
-    if (!commentOwnerId) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (!commentOwnerId) return RESPONSE_ERROR.NOT_FOUND;
     if (command.userId.toString() !== commentOwnerId.toString())
-      return RESPONSE_OPTIONS.FORBIDDEN;
+      return RESPONSE_ERROR.FORBIDDEN;
     await this.commentRepo.deleteComment(command.commentId);
-    return RESPONSE_OPTIONS.NO_CONTENT;
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 }

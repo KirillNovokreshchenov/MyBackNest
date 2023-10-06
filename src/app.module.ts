@@ -92,7 +92,7 @@ import { CreateBlogUseCase } from './blogs/application/use-cases/create-blog-use
 import { CqrsModule } from '@nestjs/cqrs';
 import { UpdateBlogUseCase } from './blogs/application/use-cases/update-blog-use-case';
 import { DeleteBlogUseCase } from './blogs/application/use-cases/delete-blog-use-case';
-import { BindBlogUseCase } from './blogs/application/use-cases/bind-blog-use-case';
+// import { BindBlogUseCase } from './blogs/application/use-cases/bind-blog-use-case';
 import { CheckCredentialsUseCase } from './auth/application/use-cases/check-credentials-use-case';
 import { CreateTokensUseCase } from './auth/application/use-cases/create-tokens-use-case';
 import { NewTokensUseCase } from './auth/application/use-cases/new-tokens-use-case';
@@ -127,7 +127,7 @@ const useCases = [
   CreateBlogUseCase,
   UpdateBlogUseCase,
   DeleteBlogUseCase,
-  BindBlogUseCase,
+  // BindBlogUseCase,
   CheckCredentialsUseCase,
   CreateTokensUseCase,
   NewTokensUseCase,

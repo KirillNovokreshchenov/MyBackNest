@@ -1,6 +1,6 @@
 import { CreateCommentDto } from '../dto/CreateCommentDto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
+import { RESPONSE_ERROR } from '../../../models/RESPONSE_ERROR';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { PostsRepository } from '../../../posts/infrastructure/posts.repository';
 import { CommentsRepository } from '../../infractructure/comments.repository';

@@ -1,4 +1,4 @@
-import { BlogUserIdInputType } from '../../api/input-model/BlogUserIdInputType';
+/*import { BlogUserIdInputType } from '../../api/input-model/BlogUserIdInputType';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BlogsRepository } from '../../infrastructure/blogs.repository';
 import { IdType } from '../../../models/IdType';
@@ -28,4 +28,4 @@ export class BindBlogUseCase implements ICommandHandler<BindBlogCommand> {
       return true;
     }
   }
-}
+}*/

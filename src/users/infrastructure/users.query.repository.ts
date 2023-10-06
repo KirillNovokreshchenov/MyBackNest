@@ -16,7 +16,7 @@ import { UserQueryInputType } from '../api/input-model/UserQueryInputType';
 import { UserAuthViewModel } from '../../auth/api/view-model/UserAuthViewModel';
 import { Blog, BlogModelType } from '../../blogs/domain/blog.schema';
 import { BannedUserForBlogViewModel } from '../api/view-model/BannedUserForBlogViewModel';
-import { RESPONSE_OPTIONS } from '../../models/ResponseOptionsEnum';
+import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
 import { IdType } from '../../models/IdType';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -59,9 +59,9 @@ export class UsersQueryRepository {
     userId: IdType,
   ) {
     const blog = await this.BlogModel.findById(blogId);
-    if (!blog) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (!blog) return RESPONSE_ERROR.NOT_FOUND;
     if (blog.blogOwnerInfo.userId.toString() !== userId.toString())
-      return RESPONSE_OPTIONS.FORBIDDEN;
+      return RESPONSE_ERROR.FORBIDDEN;
     const data = await this._dataFindUser(dataQuery, blogId);
     const mapUsers = data.users.map((user) => {
       const banInfo = user.isBannedForBlogs.find(

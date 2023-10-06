@@ -1,9 +1,10 @@
 import { UpdateCommentDto } from '../dto/UpdateCommentDto';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { RESPONSE_OPTIONS } from '../../../models/ResponseOptionsEnum';
+import { RESPONSE_ERROR } from '../../../models/RESPONSE_ERROR';
 import { UsersRepository } from '../../../users/infrastructure/users.repository';
 import { CommentsRepository } from '../../infractructure/comments.repository';
 import { IdType } from '../../../models/IdType';
+import { RESPONSE_SUCCESS } from '../../../models/RESPONSE_SUCCESS';
 
 export class UpdateCommentCommand {
   constructor(
@@ -26,14 +27,14 @@ export class UpdateCommentUseCase
     const commentOwnerId = await this.commentRepo.findCommentOwnerId(
       command.commentId,
     );
-    if (!commentOwnerId) return RESPONSE_OPTIONS.NOT_FOUND;
+    if (!commentOwnerId) return RESPONSE_ERROR.NOT_FOUND;
     if (command.userId.toString() !== commentOwnerId.toString())
-      return RESPONSE_OPTIONS.FORBIDDEN;
+      return RESPONSE_ERROR.FORBIDDEN;
     const isUpdate = await this.commentRepo.updateComment(
       command.commentId,
       command.commentDto,
     );
-    if (isUpdate === null) return RESPONSE_OPTIONS.NOT_FOUND;
-    return RESPONSE_OPTIONS.NO_CONTENT;
+    if (isUpdate === null) return RESPONSE_ERROR.NOT_FOUND;
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 }

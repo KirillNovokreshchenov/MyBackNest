@@ -14,6 +14,9 @@ import { LIKE_STATUS } from '../../models/LikeStatusEnum';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { User, UserModelType } from '../../users/domain/user.schema';
+import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
+import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
+import { LikeStatusBLType } from '../../models/LikeStatusBLType';
 
 @Injectable()
 export class PostsRepository {
@@ -23,27 +26,24 @@ export class PostsRepository {
     @InjectModel(User.name) private UserModel: UserModelType,
     @InjectModel(PostLike.name) private PostLikeModel: PostLikeModelType,
   ) {}
-  async findBlogName(blogId: IdType): Promise<string | null> {
-    const blog = await this.BlogModel.findById(blogId).lean();
-    if (!blog) return null;
-    return blog.name;
-  }
 
   async savePost(newPost: PostDocument) {
     await newPost.save();
   }
 
-  async findPostDocument(postId: IdType): Promise<PostDocument | null> {
+  private async findPostDocument(postId: IdType): Promise<PostDocument | null> {
     return this.PostModel.findById(postId);
   }
-  async findPostId(postId: IdType) {
+  async findPostId(postId: IdType): Promise<IdType | RESPONSE_ERROR> {
     const post = await this.findPostDocument(postId);
-    if (!post) return null;
+    if (!post) return RESPONSE_ERROR.NOT_FOUND;
     return post._id;
   }
 
   async deletePost(postId: IdType) {
-    await this.PostModel.deleteOne({ _id: postId });
+    const isDeleted = await this.PostModel.deleteOne({ _id: postId });
+    if (isDeleted.deletedCount === 0) return RESPONSE_ERROR.SERVER_ERROR;
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
   async saveStatus(likeStatus: PostLikeDocument) {
@@ -88,15 +88,15 @@ export class PostsRepository {
     );
   }
 
-  async findOwnerBlogId(postId: IdType) {
-    const post = await this.findPostDocument(postId);
-    if (!post) return null;
-    return { ownerBlogId: post.userId, blogId: post.blogId };
-  }
-  async createPost(postDto: CreatePostDto, blogName: string, userId: IdType) {
+  async createPost(
+    postDto: CreatePostDto,
+    userId: IdType,
+  ): Promise<IdType | RESPONSE_ERROR> {
+    const blog = await this.BlogModel.findById(postDto.blogId).lean();
+    if (!blog) return RESPONSE_ERROR.SERVER_ERROR;
     const newPost: PostDocument = this.PostModel.createPost(
       postDto,
-      blogName,
+      blog.name,
       this.PostModel,
       userId,
     );
@@ -104,34 +104,36 @@ export class PostsRepository {
     return newPost._id;
   }
 
-  async findPostOwnerId(postId: IdType) {
+  async updatePost(
+    postId: IdType,
+    postDto: UpdatePostDto,
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     const post = await this.findPostDocument(postId);
-    if (!post) return null;
-    return post.userId;
-  }
-  async updatePost(postId: IdType, postDto: UpdatePostDto) {
-    const post = await this.findPostDocument(postId);
-    if (!post) return null;
+    if (!post) return RESPONSE_ERROR.SERVER_ERROR;
     post.updatePost(postDto);
     await this.savePost(post);
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
-  async findLikeStatus(userId: IdType, postId: IdType) {
+  async findLikeStatus(
+    userId: IdType,
+    postId: IdType,
+  ): Promise<LikeStatusBLType | RESPONSE_ERROR> {
     const likeStatus = await this.PostLikeModel.findOne({
       userId,
       postId,
     });
-    if (!likeStatus) return null;
+    if (!likeStatus) return RESPONSE_ERROR.NOT_FOUND;
     return { likeId: likeStatus._id, likeStatus: likeStatus.likeStatus };
   }
   async createLikeStatus(
     userId: IdType,
     postId: IdType,
     likeStatus: LIKE_STATUS,
-  ) {
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     const post = await this.findPostDocument(postId);
-    if (!post) return null;
+    if (!post) return RESPONSE_ERROR.SERVER_ERROR;
     const user = await this.UserModel.findById(userId);
-    if (!user) return null;
+    if (!user) return RESPONSE_ERROR.SERVER_ERROR;
     const likeStatusCreated = post.createLikeStatus(
       userId,
       postId,
@@ -141,36 +143,39 @@ export class PostsRepository {
     );
     await this.saveStatus(likeStatusCreated);
     await this.savePost(post);
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
   async updateLikeNone(
     postId: IdType,
-    likeData: { likeId: IdType; likeStatus: LIKE_STATUS },
-  ) {
+    likeData: LikeStatusBLType,
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     const post = await this.findPostDocument(postId);
-    if (!post) return null;
+    if (!post) return RESPONSE_ERROR.SERVER_ERROR;
     post.updateLikeNone(likeData.likeStatus);
     await this.savePost(post);
     await this.deleteLikeStatus(likeData.likeId);
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
   async updateLike(
     postId: IdType,
-    likeStatus: LIKE_STATUS,
-    likeData: { likeId: IdType; likeStatus: LIKE_STATUS },
-  ) {
+    newLikeStatus: LIKE_STATUS,
+    likeData: LikeStatusBLType,
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     const post = await this.findPostDocument(postId);
-    if (!post) return null;
+    if (!post) return RESPONSE_ERROR.SERVER_ERROR;
     const oldLike = await this.PostLikeModel.findById(likeData.likeId);
-    if (!oldLike) return null;
-    post.updateLike(likeStatus, oldLike);
+    if (!oldLike) return RESPONSE_ERROR.SERVER_ERROR;
+    post.updateLike(newLikeStatus, oldLike);
     await this.savePost(post);
     await this.saveStatus(oldLike);
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 }
 
 @Injectable()
 export class PostsSQLRepository {
   constructor(@InjectDataSource() protected dataSource: DataSource) {}
-  async findPostId(postId: IdType) {
+  async findPostId(postId: IdType): Promise<IdType | RESPONSE_ERROR> {
     // try {
     //   const post = await this.dataSource.query(
     //     `
@@ -195,10 +200,10 @@ export class PostsSQLRepository {
       );
       return post[0].post_id;
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.NOT_FOUND;
     }
   }
-  async findPostOwnerId(postId: IdType) {
+  /*  async findPostOwnerId(postId: IdType) {
     try {
       const post = await this.dataSource.query(
         `
@@ -212,9 +217,12 @@ export class PostsSQLRepository {
     } catch (e) {
       return null;
     }
-  }
+  }*/
 
-  async createPost(postDto: CreatePostDto, blogName: string, userId: IdType) {
+  async createPost(
+    postDto: CreatePostDto,
+    userId: IdType,
+  ): Promise<IdType | RESPONSE_ERROR> {
     //     const newPost = await this.dataSource.query(
     //       `
     //     INSERT INTO public.posts(
@@ -231,24 +239,31 @@ export class PostsSQLRepository {
     //         postDto.content,
     //       ],
     //     );
-    const newPost = await this.dataSource.query(
-      `
+    try {
+      const newPost = await this.dataSource.query(
+        `
     INSERT INTO public.sa_posts(
 blog_id, title, short_description, content)
 SELECT $1, $2, $3, $4
 RETURNING post_id
     `,
-      [
-        postDto.blogId,
-        postDto.title,
-        postDto.shortDescription,
-        postDto.content,
-      ],
-    );
-    return newPost[0].post_id;
+        [
+          postDto.blogId,
+          postDto.title,
+          postDto.shortDescription,
+          postDto.content,
+        ],
+      );
+      return newPost[0].post_id;
+    } catch (e) {
+      return RESPONSE_ERROR.SERVER_ERROR;
+    }
   }
 
-  async updatePost(postId: IdType, postDto: UpdatePostDto) {
+  async updatePost(
+    postId: IdType,
+    postDto: UpdatePostDto,
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     //     const post = await this.dataSource.query(
     //       `
     //     UPDATE public.posts
@@ -265,10 +280,14 @@ WHERE post_id = $1;
     `,
       [postId, postDto.title, postDto.shortDescription, postDto.content],
     );
-    if (post[1] === 0) return null;
+    if (post[1] === 0) return RESPONSE_ERROR.SERVER_ERROR;
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
-  async findLikeStatus(userId: IdType, postId: IdType) {
+  async findLikeStatus(
+    userId: IdType,
+    postId: IdType,
+  ): Promise<LikeStatusBLType | RESPONSE_ERROR> {
     try {
       const likeData = await this.dataSource.query(
         `
@@ -280,14 +299,14 @@ WHERE post_id = $1;
       );
       return likeData[0];
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.NOT_FOUND;
     }
   }
   async createLikeStatus(
     userId: IdType,
     postId: IdType,
     likeStatus: LIKE_STATUS,
-  ) {
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     try {
       await this.dataSource.query(
         `
@@ -297,37 +316,46 @@ VALUES ($1, $2, $3);
      `,
         [userId, postId, likeStatus],
       );
+      return RESPONSE_SUCCESS.NO_CONTENT;
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.SERVER_ERROR;
     }
   }
   async updateLikeNone(
     postId: IdType,
-    likeData: { likeId: IdType; likeStatus: LIKE_STATUS },
-  ) {
-    const isDeleted = await this.dataSource.query(
-      `
+    likeData: LikeStatusBLType,
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
+    try {
+      await this.dataSource.query(
+        `
     DELETE FROM public.posts_likes
     WHERE like_id = $1;
     `,
-      [likeData.likeId],
-    );
-    if (isDeleted[1] !== 1) return null;
+        [likeData.likeId],
+      );
+      return RESPONSE_SUCCESS.NO_CONTENT;
+    } catch (e) {
+      return RESPONSE_ERROR.SERVER_ERROR;
+    }
   }
   async updateLike(
     postId: IdType,
-    likeStatus: LIKE_STATUS,
-    likeData: { likeId: IdType; likeStatus: LIKE_STATUS },
-  ) {
-    const isUpdated = this.dataSource.query(
-      `
+    newLikeStatus: LIKE_STATUS,
+    likeData: LikeStatusBLType,
+  ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
+    try {
+      await this.dataSource.query(
+        `
     UPDATE public.posts_likes
 SET like_status= $1
 WHERE like_id = $2;
     `,
-      [likeStatus, likeData.likeId],
-    );
-    if (isUpdated[1] !== 1) return null;
+        [newLikeStatus, likeData.likeId],
+      );
+      return RESPONSE_SUCCESS.NO_CONTENT;
+    } catch (e) {
+      return RESPONSE_ERROR.SERVER_ERROR;
+    }
   }
   async deletePost(postId: IdType) {
     //     await this.dataSource.query(
@@ -344,8 +372,9 @@ WHERE like_id = $2;
     //       `,
     //       [postId],
     //     );
-    await this.dataSource.query(
-      `
+    try {
+      await this.dataSource.query(
+        `
       WITH 
 comments_update as (
 update comments
@@ -356,7 +385,11 @@ update sa_posts
 SET is_deleted = true
 Where post_id = $1
       `,
-      [postId],
-    );
+        [postId],
+      );
+      return RESPONSE_SUCCESS.NO_CONTENT;
+    } catch (e) {
+      return RESPONSE_ERROR.SERVER_ERROR;
+    }
   }
 }

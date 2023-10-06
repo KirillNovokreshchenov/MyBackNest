@@ -1,0 +1,3 @@
+export enum RESPONSE_SUCCESS {
+  NO_CONTENT = 'NO_CONTENT',
+}

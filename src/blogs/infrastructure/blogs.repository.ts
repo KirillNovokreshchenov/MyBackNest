@@ -10,6 +10,8 @@ import { CreateBlogDto } from '../application/dto/CreateBlogDto';
 import { UpdateBlogDto } from '../application/dto/UpdateBlogDto';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
+import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
 
 @Injectable()
 export class BlogsRepository {
@@ -23,92 +25,75 @@ export class BlogsRepository {
     await newBlog.save();
   }
 
-  async findBlogById(
-    blogId: IdType | Types.ObjectId,
-  ): Promise<BlogDocument | null> {
+  async findBlogDocument(blogId: IdType): Promise<BlogDocument | null> {
     return this.BlogModel.findById(blogId);
   }
-  async findBlogId(blogId: IdType) {
-    const blog = await this.BlogModel.findById(blogId);
-    if (!blog) return null;
+  async findBlogId(blogId: IdType): Promise<IdType | RESPONSE_ERROR> {
+    const blog = await this.findBlogDocument(blogId);
+    if (!blog) return RESPONSE_ERROR.NOT_FOUND;
     return blog._id;
   }
-  async findPostsByBlogName(blogName: string) {
-    return this.PostModel.find({ blogName });
-  }
 
-  async deleteBlog(blogId: IdType): Promise<boolean> {
+  async deleteBlog(blogId: IdType): Promise<RESPONSE_ERROR | RESPONSE_SUCCESS> {
     const res = await this.BlogModel.deleteOne({ _id: blogId });
-    return res.deletedCount === 1;
-  }
-
-  async findUserForBlog(userId: IdType) {
-    const user = await this.UserModel.findById(userId);
-    if (!user) return null;
-    return { userId: user._id, userLogin: user.login };
+    if (res.deletedCount === 0) return RESPONSE_ERROR.NOT_FOUND;
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
   async getOwnerId(blogId: string) {
-    const blog = await this.findBlogById(new Types.ObjectId(blogId));
+    const blog = await this.findBlogDocument(new Types.ObjectId(blogId));
     if (!blog) return null;
     return blog.blogOwnerInfo.userId;
   }
 
   async bunUnbanBlog(blogId: IdType, banBlogDto: BanBlogDto) {
-    const blog = await this.findBlogById(blogId);
+    const blog = await this.findBlogDocument(blogId);
     if (!blog) return null;
     blog.banUnbanBlog(banBlogDto);
     await this.saveBlog(blog);
   }
-  async findDataBlog(blogId: string) {
-    const blog = await this.findBlogById(new Types.ObjectId(blogId));
-    if (!blog) return null;
-    return { ownerId: blog.blogOwnerInfo.userId, blogName: blog.name };
-  }
 
-  async findOwnerId(blogId: IdType) {
-    const blog = await this.findBlogById(blogId);
-    if (!blog) return null;
-    return blog.blogOwnerInfo.userId;
-  }
-  async bindBlog(blogId: IdType, userId: IdType, userLogin: string) {
-    const blog = await this.findBlogById(blogId);
-    if (!blog) return null;
-    blog.bindUser(userId, userLogin);
-    await this.saveBlog(blog);
-  }
-  async createBlog(userId: IdType, blogDto: CreateBlogDto) {
-    const userData: { userId: IdType; userLogin: string } | null =
-      await this.findUserForBlog(userId);
-    if (!userData) return null;
+  // async bindBlog(blogId: IdType, userId: IdType, userLogin: string) {
+  //   const blog = await this.findBlogDocument(blogId);
+  //   if (!blog) return null;
+  //   blog.bindUser(userId, userLogin);
+  //   await this.saveBlog(blog);
+  // }
+  async createBlog(
+    userId: IdType,
+    blogDto: CreateBlogDto,
+  ): Promise<IdType | RESPONSE_ERROR> {
+    const user = await this.UserModel.findById(userId);
+    if (!user) return RESPONSE_ERROR.SERVER_ERROR;
     const newBlog = this.BlogModel.createNewBlog(
       blogDto,
       userId,
-      userData.userLogin,
+      user.login,
       this.BlogModel,
     );
     await this.saveBlog(newBlog);
     return newBlog._id;
   }
-  async updateBlog(blogId: IdType, blogDto: UpdateBlogDto) {
-    const blog = await this.findBlogById(blogId);
-    if (!blog) return null;
-    const posts = await this.findPostsByBlogName(blog.name);
-    this.PostModel.changeBlogName(posts, blogDto.name);
+  async updateBlog(
+    blogId: IdType,
+    blogDto: UpdateBlogDto,
+  ): Promise<RESPONSE_ERROR | RESPONSE_SUCCESS> {
+    const blog = await this.findBlogDocument(blogId);
+    if (!blog) return RESPONSE_ERROR.NOT_FOUND;
+    await this._changeBlogNamePosts(blog.name, blogDto.name);
     await blog.updateBlog(blogDto);
     await this.saveBlog(blog);
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
-
-  async findBlogName(blogId: string) {
-    const blog = await this.findBlogById(new Types.ObjectId(blogId));
-    if (!blog) return null;
-    return blog.name;
+  private async _changeBlogNamePosts(blogOldName: string, newBlogName) {
+    const posts = await this.PostModel.find({ blogOldName });
+    await this.PostModel.changeBlogName(posts, newBlogName);
   }
 }
 @Injectable()
 export class BlogsSQLRepository {
   constructor(@InjectDataSource() protected dataSource: DataSource) {}
-  async findBlogId(blogId: IdType) {
+  async findBlogId(blogId: IdType): Promise<IdType | RESPONSE_ERROR> {
     try {
       const blog = await this.dataSource.query(
         `
@@ -120,10 +105,10 @@ export class BlogsSQLRepository {
       );
       return blog[0].blog_id;
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.NOT_FOUND;
     }
   }
-  async findDataBlog(blogId: string) {
+  /* async findDataBlog(blogId: string) {
     try {
       const blog = await this.dataSource.query(
         `
@@ -168,7 +153,7 @@ WHERE blog_id = $1 AND is_deleted <> true
     } catch (e) {
       return null;
     }
-  }
+  }*/
   async createBlog(userId: IdType, blogDto: CreateBlogDto) {
     try {
       const newBlog = await this.dataSource.query(
@@ -201,28 +186,25 @@ WHERE blog_id = $1 AND is_deleted <> true
       //       );
       return newBlog[0].blog_id;
     } catch (e) {
-      return null;
+      return RESPONSE_ERROR.SERVER_ERROR;
     }
   }
 
   async updateBlog(blogId: IdType, blogDto: UpdateBlogDto) {
-    //     const isUpdated = await this.dataSource.query(
-    //       `
-    //     UPDATE public.blogs
-    // SET name=$2, description=$3, website_url=$4
-    // WHERE blog_id = $1;
-    //     `,
-    //       [blogId, blogDto.name, blogDto.description, blogDto.websiteUrl],
-    //     );
-    const isUpdated = await this.dataSource.query(
-      `
+    try {
+      const isUpdated = await this.dataSource.query(
+        `
     UPDATE public.sa_blogs
 SET name=$2, description=$3, website_url=$4
 WHERE blog_id = $1;
     `,
-      [blogId, blogDto.name, blogDto.description, blogDto.websiteUrl],
-    );
-    if (isUpdated[1] === 0) return null;
+        [blogId, blogDto.name, blogDto.description, blogDto.websiteUrl],
+      );
+      if (isUpdated[1] === 0) return RESPONSE_ERROR.NOT_FOUND;
+      return RESPONSE_SUCCESS.NO_CONTENT;
+    } catch (e) {
+      return RESPONSE_ERROR.SERVER_ERROR;
+    }
   }
   async deleteBlog(blogId: IdType) {
     //     await this.dataSource.query(
@@ -247,8 +229,9 @@ WHERE blog_id = $1;
     //       `,
     //       [blogId],
     //     );
-    const isDeleted = await this.dataSource.query(
-      `
+    try {
+      const isDeleted = await this.dataSource.query(
+        `
       WITH posts_update as (update sa_posts
 SET is_deleted = true
 WHERE blog_id = $1),
@@ -267,8 +250,12 @@ update sa_blogs
 SET is_deleted = true
 Where blog_id = $1
       `,
-      [blogId],
-    );
-    if (isDeleted[1] === 0) return null;
+        [blogId],
+      );
+      if (isDeleted[1] === 0) return RESPONSE_ERROR.NOT_FOUND;
+      return RESPONSE_SUCCESS.NO_CONTENT;
+    } catch (e) {
+      return RESPONSE_ERROR.SERVER_ERROR;
+    }
   }
 }
