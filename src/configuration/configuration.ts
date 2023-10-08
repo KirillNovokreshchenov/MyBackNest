@@ -22,5 +22,14 @@ export const getConfiguration = () => ({
     DB_URL: process.env.DB_URL,
     NAME_TEST_DB: process.env.NAME_TEST_DB,
   },
+  typeORM: {
+    PORT_DB: process.env.PORT_DB,
+    HOST_DB: process.env.HOST_DB,
+    USERNAME_DB: process.env.USERNAME_DB,
+    PASSWORD_DB: process.env.PASSWORD_DB,
+    NAME_DB: process.env.NAME_TYPEORM_DB,
+    DB_URL: process.env.DB_URL,
+    NAME_TEST_DB: process.env.NAME_TEST_DB_TYPEORM,
+  },
 });
 export type ConfigType = ReturnType<typeof getConfiguration>;

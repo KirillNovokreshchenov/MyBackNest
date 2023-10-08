@@ -13,16 +13,16 @@ export class ParseObjectIdPipe implements PipeTransform {
   constructor(private configService: ConfigService<ConfigType>) {}
   transform(value: any, metadata: ArgumentMetadata): Types.ObjectId {
     if (this.configService.get('ID_TYPE') === 'MONGO') {
-      if (typeof value === 'object') {
-        try {
-          for (const key in value) {
-            value[key] = new Types.ObjectId(value[key]);
-          }
-          return value;
-        } catch {
-          throw new NotFoundException();
-        }
-      }
+      // if (typeof value === 'object') {
+      //   try {
+      //     for (const key in value) {
+      //       value[key] = new Types.ObjectId(value[key]);
+      //     }
+      //     return value;
+      //   } catch {
+      //     throw new NotFoundException();
+      //   }
+      // }
       try {
         return new Types.ObjectId(value);
       } catch {

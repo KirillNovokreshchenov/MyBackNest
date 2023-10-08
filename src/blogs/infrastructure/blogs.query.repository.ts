@@ -19,6 +19,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { BlogSQLQueryModel } from './models/BlogSQLQueryModel';
 import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
+import { Types } from 'mongoose';
 
 @Injectable()
 export class BlogsQueryRepository {
@@ -88,7 +89,7 @@ export class BlogsQueryRepository {
 
   async findBlog(blogId: IdType): Promise<BlogViewModel | RESPONSE_ERROR> {
     const blog = await this.BlogModel.findOne({
-      _id: blogId,
+      _id: new Types.ObjectId(blogId),
       'banInfo.isBanned': { $ne: true },
     }).lean();
     if (!blog) return RESPONSE_ERROR.NOT_FOUND;

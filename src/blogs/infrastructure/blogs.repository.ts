@@ -40,8 +40,8 @@ export class BlogsRepository {
     return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
-  async getOwnerId(blogId: string) {
-    const blog = await this.findBlogDocument(new Types.ObjectId(blogId));
+  async getOwnerId(blogId: IdType) {
+    const blog = await this.findBlogDocument(blogId);
     if (!blog) return null;
     return blog.blogOwnerInfo.userId;
   }

@@ -12,7 +12,7 @@ export class BlogExistsRule implements ValidatorConstraintInterface {
   constructor(private queryBlogRepo: BlogsQueryRepository) {}
 
   async validate(value: string) {
-    const blog = await this.queryBlogRepo.findBlog(new Types.ObjectId(value));
+    const blog = await this.queryBlogRepo.findBlog(value);
     if (!blog) return false;
     return true;
   }

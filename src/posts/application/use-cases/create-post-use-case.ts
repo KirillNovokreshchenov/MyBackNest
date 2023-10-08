@@ -17,7 +17,7 @@ export class CreatePostUseCase implements ICommandHandler<CreatePostCommand> {
     private blogsRepo: BlogsRepository,
   ) {}
   async execute(command: CreatePostCommand): Promise<IdType | RESPONSE_ERROR> {
-    const blogIsExists: IdType = await this.blogsRepo.findBlogId(
+    const blogIsExists = await this.blogsRepo.findBlogId(
       command.postDto.blogId,
     );
     if (isError(blogIsExists)) return blogIsExists;

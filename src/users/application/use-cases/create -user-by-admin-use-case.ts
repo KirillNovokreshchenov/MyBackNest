@@ -16,7 +16,6 @@ export class CreateUserByAdminUseCase
   constructor(
     private usersRepository: UsersRepository,
     private bcryptAdapter: BcryptAdapter,
-    @InjectModel(User.name) private UserModel: UserModelType,
   ) {}
   async execute(command: CreateUserByAdminCommand): Promise<IdType> {
     const { login, email, password } = command.userDto;

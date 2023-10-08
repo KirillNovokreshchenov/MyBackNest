@@ -120,7 +120,7 @@ export class UsersQueryRepository {
 @Injectable()
 export class UsersSQLQueryRepository {
   constructor(@InjectDataSource() protected dataSource: DataSource) {}
-  async findUserById(userId: IdType): Promise<UserViewModel | null> {
+  async findUserById(userId: IdType): Promise<UserViewModel | RESPONSE_ERROR> {
     const foundUser = await this.dataSource.query(
       `
     SELECT user_id, login, email, "createdAt"
@@ -129,7 +129,7 @@ WHERE user_id = $1
     `,
       [userId],
     );
-    if (!foundUser) return null;
+    if (!foundUser) return RESPONSE_ERROR.NOT_FOUND;
 
     return new UserSQLViewModel(foundUser[0]);
   }

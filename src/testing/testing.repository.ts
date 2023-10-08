@@ -15,10 +15,10 @@ import {
 import { PostLike, PostLikeModelType } from '../posts/domain/post-like.schema';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { DataSource, getConnection } from 'typeorm';
 
 @Injectable()
-export class TestingService {
+export class TestingRepository {
   constructor(
     @InjectModel(Blog.name) private BlogModel: BlogModelType,
     @InjectModel(Post.name) private PostModel: PostModelType,
@@ -54,7 +54,7 @@ export class TestingService {
   }
 }
 
-export class TestingSQLService {
+export class TestingSQLRepository {
   constructor(@InjectDataSource() protected dataSource: DataSource) {}
   async deleteAllData() {
     await this.dataSource.query(`
@@ -91,6 +91,20 @@ export class TestingSQLService {
     DELETE FROM public.users
     `);
 
+    throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
+  }
+}
+export class TestingTypeORMRepository {
+  constructor(@InjectDataSource() protected dataSource: DataSource) {}
+  async deleteAllData() {
+    const entities = this.dataSource.entityMetadatas;
+
+    for (const entity of entities) {
+      const repository = await this.dataSource.getRepository(entity.name);
+      await repository.query(
+        `TRUNCATE public.${entity.tableName} RESTART IDENTITY CASCADE;`,
+      );
+    }
     throw new HttpException('NO_CONTENT', HttpStatus.NO_CONTENT);
   }
 }

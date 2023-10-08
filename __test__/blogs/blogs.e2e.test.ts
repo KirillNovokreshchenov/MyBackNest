@@ -16,7 +16,6 @@ describe('blogsTests', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [dbConfiguration, AppModule],
-      // providers: [AppService],
     }).compile();
     await testBeforeConfig(moduleFixture);
   });

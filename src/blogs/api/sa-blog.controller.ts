@@ -137,7 +137,7 @@ export class SaBlogController {
     const blogId: RESPONSE_ERROR | IdType = await this.commandBus.execute(
       new CreateBlogCommand(dto, userId),
     );
-    if (isError(blogId)) switchError(blogId);
+    if (isError(blogId)) return switchError(blogId);
     const newBlog = await this.blogsQueryRepository.findBlog(blogId);
     if (isError(newBlog)) {
       return switchError(newBlog);

@@ -8,10 +8,7 @@ import { AppService } from './app.service';
 import { BlogsController } from './blogs/api/blogs.controller';
 import { UsersController } from './users/api/users.controller';
 import { UsersService } from './users/application/users.service';
-import {
-  UsersRepository,
-  UsersSQLRepository,
-} from './users/infrastructure/users.repository';
+import { UsersRepository } from './users/infrastructure/users.repository';
 import {
   UsersQueryRepository,
   UsersSQLQueryRepository,
@@ -119,9 +116,21 @@ import { DeleteCommentUseCase } from './comments/application/use-cases/delete-co
 import { UpdateLikeStatusCommentUseCase } from './comments/application/use-cases/update-like-status-comment-use-case';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as process from 'process';
-import { TestingService, TestingSQLService } from './testing/testing.service';
+import {
+  TestingRepository,
+  TestingSQLRepository,
+  TestingTypeORMRepository,
+} from './testing/testing.repository';
 import { LoginExistsRule } from './users/validators/custom-login-exists.validator';
 import { EmailExistsRule } from './users/validators/custom-email-exists.validator';
+import { UsersTypeORMRepository } from './users/infrastructure/users.typeorm.repo';
+import { UsersQueryTypeormRepoQueryRepository } from './users/infrastructure/users.query.typeorm.repo';
+import {
+  entities,
+  optionsSQL,
+  optionsTypeORM,
+} from './configuration/optionsDB';
+import { UsersSQLRepository } from './users/infrastructure/users-sql.repository';
 
 const useCases = [
   CreateBlogUseCase,
@@ -158,32 +167,16 @@ const useCases = [
   imports: [
     configModule,
     CqrsModule,
-    TypeOrmModule.forRootAsync({
-      imports: [configModule],
-      useFactory: (configService: ConfigService<ConfigType>) => ({
-        type: 'postgres',
-        // url: configService.get('sql.DB_URL', { infer: true }),
-        host: configService.get('sql.HOST_DB', { infer: true }),
-        port: configService.get('sql.PORT_DB', { infer: true }),
-        username: configService.get('sql.USERNAME_DB', { infer: true }),
-        password: configService.get('sql.PASSWORD_DB', { infer: true }),
-        database: configService.get('sql.NAME_DB', { infer: true }),
-        autoLoadEntities: false,
-        synchronize: false,
-        ssl: true,
-      }),
-      inject: [ConfigService],
-    }),
+    TypeOrmModule.forRootAsync(
+      process.env.REPO_TYPE === 'SQL' ? optionsSQL : optionsTypeORM,
+    ),
+    TypeOrmModule.forFeature(entities),
     MongooseModule.forRootAsync({
       imports: [configModule],
       useFactory: (configService: ConfigService<ConfigType>) => ({
         uri: configService.get('mongoUri'),
       }),
       inject: [ConfigService],
-    }),
-    ThrottlerModule.forRoot({
-      ttl: 10,
-      limit: 20,
     }),
     MongooseModule.forFeature([
       {
@@ -219,6 +212,10 @@ const useCases = [
         schema: CommentLikeSchema,
       },
     ]),
+    ThrottlerModule.forRoot({
+      ttl: 10,
+      limit: 20,
+    }),
     JwtModule.registerAsync({
       imports: [configModule],
       useFactory: (configService: ConfigService<ConfigType>) => ({
@@ -281,14 +278,18 @@ const useCases = [
       useClass:
         process.env.REPO_TYPE === 'MONGO'
           ? UsersRepository
-          : UsersSQLRepository,
+          : process.env.REPO_TYPE === 'SQL'
+          ? UsersSQLRepository
+          : UsersTypeORMRepository,
     },
     {
       provide: UsersQueryRepository,
       useClass:
         process.env.REPO_TYPE === 'MONGO'
           ? UsersQueryRepository
-          : UsersSQLQueryRepository,
+          : process.env.REPO_TYPE === 'SQL'
+          ? UsersSQLQueryRepository
+          : UsersQueryTypeormRepoQueryRepository,
     },
     {
       provide: DeviceRepository,
@@ -305,9 +306,13 @@ const useCases = [
           : DeviceSQLQueryRepository,
     },
     {
-      provide: TestingService,
+      provide: TestingRepository,
       useClass:
-        process.env.REPO_TYPE === 'MONGO' ? TestingService : TestingSQLService,
+        process.env.REPO_TYPE === 'MONGO'
+          ? TestingRepository
+          : process.env.REPO_TYPE === 'SQL'
+          ? TestingSQLRepository
+          : TestingTypeORMRepository,
     },
     {
       provide: BlogsQueryRepository,

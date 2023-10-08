@@ -1,9 +1,9 @@
 import { Controller, Delete, HttpException, HttpStatus } from '@nestjs/common';
-import { TestingService } from './testing.service';
+import { TestingRepository } from './testing.repository';
 
 @Controller('testing')
 export class TestingController {
-  constructor(protected testingService: TestingService) {}
+  constructor(protected testingService: TestingRepository) {}
   @Delete('/all-data')
   async deleteAllData() {
     await this.testingService.deleteAllData();
