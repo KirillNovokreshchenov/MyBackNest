@@ -52,7 +52,7 @@ export class UsersQueryTypeormRepoQueryRepository {
       order: {
         [query.sortBy]: query.sortDirection,
       },
-      where: condition,
+      where: { ...condition, isDeleted: false },
       skip: skip,
       take: query.pageSize,
     });

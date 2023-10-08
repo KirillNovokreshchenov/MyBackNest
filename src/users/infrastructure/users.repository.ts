@@ -14,8 +14,8 @@ import { BanDto } from '../application/dto/BanDto';
 import { BanUserForBlogDto } from '../application/dto/BanuserForBlogDto';
 import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
 import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
-import { EmailConfirmDataType } from '../../auth/application/types/EmailConfirmDataType';
-import { RecoveryDataType } from '../../auth/application/types/RecoveryDataType';
+import { EmailConfirmDataType } from '../application/types/EmailConfirmDataType';
+import { RecoveryDataType } from '../application/types/RecoveryDataType';
 
 @Injectable()
 export class UsersRepository {

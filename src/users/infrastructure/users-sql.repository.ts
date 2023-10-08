@@ -6,7 +6,7 @@ import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
 import { TransformCreateUserDto } from '../application/dto/TransformCreateUserDto';
 import { EmailConfirmationDto } from '../application/dto/EmailConfirmationDto';
 import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
-import { EmailConfirmDataType } from '../../auth/application/types/EmailConfirmDataType';
+import { EmailConfirmDataType } from '../application/types/EmailConfirmDataType';
 import { RecoveryPasswordDto } from '../application/dto/RecoveryPasswordDto';
 
 @Injectable()

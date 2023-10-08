@@ -3,6 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import { ConfigType } from './configuration';
 import { TypeOrmModuleAsyncOptions } from '@nestjs/typeorm';
 import { User } from '../users/application/entities-typeorm/user.entity';
+import {
+  EmailConfirmation,
+  Session,
+} from '../users/application/entities-typeorm/email-confirm.entity';
+import { RecoveryPassword } from '../users/application/entities-typeorm/recovery-password.entity';
 
 export const optionsSQL: TypeOrmModuleAsyncOptions = {
   imports: [configModule],
@@ -41,4 +46,4 @@ export const optionsTypeORM: TypeOrmModuleAsyncOptions = {
   inject: [ConfigService],
 };
 
-export const entities = [User];
+export const entities = [User, EmailConfirmation, RecoveryPassword, Session];
