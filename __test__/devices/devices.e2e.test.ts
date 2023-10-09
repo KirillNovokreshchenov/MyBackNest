@@ -1,7 +1,7 @@
 import { HttpStatus } from '@nestjs/common';
 import {
   app,
-  dbConfiguration,
+  dbConfigurationTests,
   httpServer,
   testBeforeConfig,
 } from '../test-config';
@@ -9,12 +9,11 @@ import request from 'supertest';
 import { usersTestManager } from '../users/users-test-manager';
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-
+import { v4 as uuidv4 } from 'uuid';
 describe('devicesTests', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [dbConfiguration, AppModule],
-      // providers: [AppService],
+      imports: [dbConfigurationTests, AppModule],
     }).compile();
     await testBeforeConfig(moduleFixture);
   });
@@ -28,6 +27,7 @@ describe('devicesTests', () => {
   const refreshTokensUserOne: any = {};
   let newRefreshTokenOne;
   let updateSessionOne;
+  const notExistingUuid = uuidv4();
 
   it('should create two user ', async () => {
     userDataOne = {
@@ -161,7 +161,7 @@ describe('devicesTests', () => {
 
   it('delete session two by new refresh token user one for not existing device', async () => {
     await request(httpServer)
-      .delete('/security/devices/-1')
+      .delete('/security/devices/' + notExistingUuid)
       .set('Cookie', 'refreshToken= ' + newRefreshTokenOne)
       .expect(HttpStatus.NOT_FOUND);
   });

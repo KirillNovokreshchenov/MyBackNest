@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { BlogViewModelAll } from '../../src/blogs/api/view-model/BlogViewModelAll';
 import {
   app,
-  dbConfiguration,
+  dbConfigurationTests,
   httpServer,
   testBeforeConfig,
 } from '../test-config';
@@ -15,7 +15,7 @@ import { AppModule } from '../../src/app.module';
 describe('blogsTests', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [dbConfiguration, AppModule],
+      imports: [dbConfigurationTests, AppModule],
     }).compile();
     await testBeforeConfig(moduleFixture);
   });

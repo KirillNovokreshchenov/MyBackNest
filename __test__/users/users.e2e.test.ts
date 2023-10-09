@@ -1,6 +1,6 @@
 import {
   app,
-  dbConfiguration,
+  dbConfigurationTests,
   httpServer,
   testBeforeConfig,
 } from '../test-config';
@@ -15,7 +15,7 @@ import { AppModule } from '../../src/app.module';
 describe('usersTests', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [dbConfiguration, AppModule],
+      imports: [dbConfigurationTests, AppModule],
       // providers: [AppService],
     }).compile();
     await testBeforeConfig(moduleFixture);

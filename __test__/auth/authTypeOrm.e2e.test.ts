@@ -1,21 +1,24 @@
+import { BcryptAdapter } from '../../src/users/infrastructure/adapters/bcryptAdapter';
+import { EmailManagers } from '../../src/auth/application/managers/email.managers';
+import { DataSource } from 'typeorm';
+import { Test, TestingModule } from '@nestjs/testing';
 import {
   app,
   dbConfigurationTests,
   httpServer,
   testBeforeConfig,
 } from '../test-config';
-import { HttpStatus } from '@nestjs/common';
-import request from 'supertest';
-import { Test, TestingModule } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
-import { BcryptAdapter } from '../../src/users/infrastructure/adapters/bcryptAdapter';
-import { EmailManagers } from '../../src/auth/application/managers/email.managers';
-import { v4 as uuidv4 } from 'uuid';
 import { EmailAdapter } from '../../src/auth/infrastructure/adapters/email.adapter';
 import { usersTestManager } from '../users/users-test-manager';
-import { DataSource } from 'typeorm';
-
-describe('authTests', () => {
+import request from 'supertest';
+import { HttpStatus } from '@nestjs/common';
+import { v4 as uuidv4 } from 'uuid';
+import { User } from '../../src/users/application/entities-typeorm/user.entity';
+import { EmailConfirmation } from '../../src/users/application/entities-typeorm/email-confirm.entity';
+import { RecoveryPassword } from '../../src/users/application/entities-typeorm/recovery-password.entity';
+import { entities } from '../../src/configuration/optionsDB';
+describe('authTestsTypeOrm', () => {
   let bcryptAdapter: BcryptAdapter;
   let emailManger: EmailManagers;
   let dataSource: DataSource;
@@ -33,7 +36,8 @@ describe('authTests', () => {
       port: 5432,
       username: 'default',
       password: 'dHrPMyXhz1D7',
-      database: 'testdb',
+      database: 'testdb_typeorm',
+      entities: entities,
       synchronize: false,
       ssl: true,
     });
@@ -66,10 +70,13 @@ describe('authTests', () => {
       await usersTestManager.createUserByRegTest(userData);
       expect(spyEmailManager).toHaveBeenCalledTimes(1);
 
-      const user = await dataSource.query(`SELECT login, email FROM users `);
-      expect(user[0]).toBeTruthy();
-      expect(user[0].login).toBe(login);
-      expect(user[0].email).toBe(email);
+      const user = await dataSource
+        .getRepository(User)
+        .createQueryBuilder('user')
+        .getOne();
+      expect(user).toBeTruthy();
+      expect(user!.login).toBe(login);
+      expect(user!.email).toBe(email);
     });
     it('should not create user by registration with incorrect data', async () => {
       const badUserData = {
@@ -202,34 +209,43 @@ describe('authTests', () => {
       expect(spyBcryptAdapter).toHaveBeenCalledTimes(1);
       expect(spyEmailManager).toHaveBeenCalledTimes(1);
 
-      const emailConfirmation = await dataSource.query(
-        `SELECT * FROM email_confirmation WHERE confirmation_code =$1`,
-        [correctCode],
-      );
-      expect(correctCode).toBe(emailConfirmation[0].confirmation_code);
-      expect(emailConfirmation.is_confirmed).toBeFalsy();
+      const emailConfirmation = await dataSource
+        .getRepository(EmailConfirmation)
+        .createQueryBuilder('emailConfirmation')
+        .where('emailConfirmation.confirmationCode = :confirmationCode', {
+          confirmationCode: correctCode,
+        })
+        .getOne();
+      expect(correctCode).toBe(emailConfirmation!.confirmationCode);
+      expect(emailConfirmation!.isConfirmed).toBeFalsy();
     });
     it('should not confirm registration by incorrect code', async () => {
       await request(httpServer)
         .post('/auth/registration-confirmation')
         .send({ code: incorrectCode })
         .expect(HttpStatus.BAD_REQUEST);
-      const emailConfirmation = await dataSource.query(
-        `SELECT * FROM email_confirmation WHERE confirmation_code =$1`,
-        [correctCode],
-      );
-      expect(emailConfirmation[0].is_confirmed).toBeFalsy();
+      const emailConfirmation = await dataSource
+        .getRepository(EmailConfirmation)
+        .createQueryBuilder('emailConfirmation')
+        .where('emailConfirmation.confirmationCode = :confirmationCode', {
+          confirmationCode: correctCode,
+        })
+        .getOne();
+      expect(emailConfirmation!.isConfirmed).toBeFalsy();
     });
     it('should confirm registration by correct code', async () => {
       await request(httpServer)
         .post('/auth/registration-confirmation')
         .send({ code: correctCode })
         .expect(HttpStatus.NO_CONTENT);
-      const emailConfirmation = await dataSource.query(
-        `SELECT * FROM email_confirmation WHERE confirmation_code =$1`,
-        [correctCode],
-      );
-      expect(emailConfirmation[0].is_confirmed).toBeTruthy();
+      const emailConfirmation = await dataSource
+        .getRepository(EmailConfirmation)
+        .createQueryBuilder('emailConfirmation')
+        .where('emailConfirmation.confirmationCode = :confirmationCode', {
+          confirmationCode: correctCode,
+        })
+        .getOne();
+      expect(emailConfirmation!.isConfirmed).toBeTruthy();
     });
   });
   describe('email resending', () => {
@@ -257,12 +273,15 @@ describe('authTests', () => {
       await usersTestManager.createUserByRegTest(userData);
       expect(spyBcryptAdapter).toHaveBeenCalledTimes(1);
 
-      const emailConfirmation = await dataSource.query(
-        `SELECT * FROM email_confirmation WHERE confirmation_code =$1`,
-        [correctCodeOne],
-      );
-      expect(correctCodeOne).toBe(emailConfirmation[0].confirmation_code);
-      expect(emailConfirmation.is_confirmed).toBeFalsy();
+      const emailConfirmation = await dataSource
+        .getRepository(EmailConfirmation)
+        .createQueryBuilder('emailConfirmation')
+        .where('emailConfirmation.confirmationCode = :confirmationCode', {
+          confirmationCode: correctCodeOne,
+        })
+        .getOne();
+      expect(correctCodeOne).toBe(emailConfirmation!.confirmationCode);
+      expect(emailConfirmation!.isConfirmed).toBeFalsy();
     });
     it('should return bad request by incorrect email', async () => {
       await request(httpServer)
@@ -285,12 +304,15 @@ describe('authTests', () => {
       expect(spyBcryptAdapter).toHaveBeenCalledTimes(1);
       expect(spyEmailManager).toHaveBeenCalledTimes(1);
 
-      const emailConfirmation = await dataSource.query(
-        `SELECT * FROM email_confirmation WHERE confirmation_code =$1`,
-        [correctCodeTwo],
-      );
-      expect(correctCodeTwo).toBe(emailConfirmation[0].confirmation_code);
-      expect(emailConfirmation.is_confirmed).toBeFalsy();
+      const emailConfirmation = await dataSource
+        .getRepository(EmailConfirmation)
+        .createQueryBuilder('emailConfirmation')
+        .where('emailConfirmation.confirmationCode = :confirmationCode', {
+          confirmationCode: correctCodeTwo,
+        })
+        .getOne();
+      expect(correctCodeTwo).toBe(emailConfirmation!.confirmationCode);
+      expect(emailConfirmation!.isConfirmed).toBeFalsy();
     });
 
     it('should not confirm registration by incorrect code', async () => {
@@ -298,22 +320,28 @@ describe('authTests', () => {
         .post('/auth/registration-confirmation')
         .send({ code: incorrectCode })
         .expect(HttpStatus.BAD_REQUEST);
-      const emailConfirmation = await dataSource.query(
-        `SELECT * FROM email_confirmation WHERE confirmation_code =$1`,
-        [correctCodeTwo],
-      );
-      expect(emailConfirmation[0].is_confirmed).toBeFalsy();
+      const emailConfirmation = await dataSource
+        .getRepository(EmailConfirmation)
+        .createQueryBuilder('emailConfirmation')
+        .where('emailConfirmation.confirmationCode = :confirmationCode', {
+          confirmationCode: correctCodeTwo,
+        })
+        .getOne();
+      expect(emailConfirmation!.isConfirmed).toBeFalsy();
     });
     it('should confirm registration by correct code', async () => {
       await request(httpServer)
         .post('/auth/registration-confirmation')
         .send({ code: correctCodeTwo })
         .expect(HttpStatus.NO_CONTENT);
-      const emailConfirmation = await dataSource.query(
-        `SELECT * FROM email_confirmation WHERE confirmation_code =$1`,
-        [correctCodeTwo],
-      );
-      expect(emailConfirmation[0].is_confirmed).toBeTruthy();
+      const emailConfirmation = await dataSource
+        .getRepository(EmailConfirmation)
+        .createQueryBuilder('emailConfirmation')
+        .where('emailConfirmation.confirmationCode = :confirmationCode', {
+          confirmationCode: correctCodeTwo,
+        })
+        .getOne();
+      expect(emailConfirmation!.isConfirmed).toBeTruthy();
     });
   });
   describe('new password', () => {
@@ -365,11 +393,14 @@ describe('authTests', () => {
       expect(spyBcryptAdapter).toHaveBeenCalledTimes(1);
       expect(spyEmailManager).toHaveBeenCalledTimes(1);
 
-      const recovery = await dataSource.query(
-        `SELECT * FROM recovery_password WHERE recovery_code =$1`,
-        [correctCode],
-      );
-      expect(correctCode).toBe(recovery[0].recovery_code);
+      const recovery = await dataSource
+        .getRepository(RecoveryPassword)
+        .createQueryBuilder('recoveryPassword')
+        .where('recoveryPassword.recoveryCode = :recoveryCode', {
+          recoveryCode: correctCode,
+        })
+        .getOne();
+      expect(correctCode).toBe(recovery!.recoveryCode);
     });
     it('should not change password by incorrect new password', async () => {
       const newPassData = {

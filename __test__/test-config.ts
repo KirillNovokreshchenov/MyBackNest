@@ -42,7 +42,7 @@ const optionsTestsTypeORM: TypeOrmModuleAsyncOptions = {
   }),
   inject: [ConfigService],
 };
-export const dbConfiguration = TypeOrmModule.forRootAsync(
+export const dbConfigurationTests = TypeOrmModule.forRootAsync(
   process.env.REPO_TYPE === 'SQL' ? optionsTestsSQL : optionsTestsTypeORM,
 );
 export let httpServer;

@@ -65,20 +65,9 @@ export class UsersQueryTypeormRepoQueryRepository {
       users: allUsers,
     };
   }
-  async findUserAuth(userId: IdType) {
-    try {
-      const user = await this.dataSource.query(
-        `
-SELECT email, login, user_id as "userId"
-FROM public.users
-WHERE user_id = $1;
-`,
-        [userId],
-      );
-      if (!user[0]) return RESPONSE_ERROR.NOT_FOUND;
-      return user[0];
-    } catch (e) {
-      return RESPONSE_ERROR.SERVER_ERROR;
-    }
+  async findUserAuth(userId: string) {
+    const user = await this.usersRepo.findOneBy({ userId });
+    if (!user) return RESPONSE_ERROR.NOT_FOUND;
+    return { userId: user.userId, email: user.email, login: user.login };
   }
 }

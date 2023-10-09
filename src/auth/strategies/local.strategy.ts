@@ -30,7 +30,7 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     const userData = {
       userId,
       ip: req.headers['x-forwarded-for'] ?? req.ip,
-      deviceName: req.headers['user-agent'],
+      deviceName: req.headers['user-agent'] ?? 'Chrome',
     };
     return userData;
   }

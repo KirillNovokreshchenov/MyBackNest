@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   app,
-  dbConfiguration,
+  dbConfigurationTests,
   httpServer,
   testBeforeConfig,
 } from '../test-config';
@@ -18,7 +18,7 @@ import { LIKE_STATUS } from '../../src/models/LikeStatusEnum';
 describe('postsTests', () => {
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [dbConfiguration, AppModule],
+      imports: [dbConfigurationTests, AppModule],
     }).compile();
     await testBeforeConfig(moduleFixture);
   });

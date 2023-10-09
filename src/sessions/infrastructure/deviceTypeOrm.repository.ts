@@ -60,9 +60,9 @@ export class DeviceTypeOrmRepository {
     return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
-  async findSessionById(deviceId: IdType) {
-    const session = await this.sessionRepo.findOneBy({
-      deviceId: deviceId.toString(),
+  async findSessionById(deviceId: string) {
+    const session = await this.sessionRepo.findOne({
+      where: { deviceId: deviceId },
     });
     if (!session) return RESPONSE_ERROR.NOT_FOUND;
     return session.userId;
