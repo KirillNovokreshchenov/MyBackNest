@@ -9,12 +9,18 @@ import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
 import { EmailConfirmDataType } from '../application/types/EmailConfirmDataType';
 import { RecoveryPasswordDto } from '../application/dto/RecoveryPasswordDto';
 import { User } from '../application/entities-typeorm/user.entity';
+import { EmailConfirmation } from '../application/entities-typeorm/email-confirm.entity';
+import { RecoveryPassword } from '../application/entities-typeorm/recovery-password.entity';
 
 @Injectable()
 export class UsersTypeORMRepository {
   constructor(
     @InjectDataSource() protected dataSource: DataSource,
     @InjectRepository(User) protected usersRepo: Repository<User>,
+    @InjectRepository(EmailConfirmation)
+    protected emailConfirmRepo: Repository<EmailConfirmation>,
+    @InjectRepository(RecoveryPassword)
+    protected recoveryPassRepo: Repository<RecoveryPassword>,
   ) {}
   async findUserId(userId: string): Promise<IdType | RESPONSE_ERROR> {
     const user = await this.usersRepo.findOneBy({ userId });
@@ -31,26 +37,16 @@ export class UsersTypeORMRepository {
   }
 
   async createEmailConfirmation(
-    userId: IdType,
+    userId: string,
     emailConfirm: EmailConfirmationDto,
   ) {
-    try {
-      await this.dataSource.query(
-        `
-    INSERT INTO public.email_confirmation(
-user_id, confirmation_code, expiration_date, is_confirmed)
-VALUES ($1, $2, $3, $4);`,
-        [
-          userId,
-          emailConfirm.confirmationCode,
-          emailConfirm.expirationDate,
-          emailConfirm.isConfirmed,
-        ],
-      );
-      return RESPONSE_SUCCESS.NO_CONTENT;
-    } catch (e) {
-      return RESPONSE_ERROR.SERVER_ERROR;
-    }
+    const emailConfirmation = new EmailConfirmation();
+    emailConfirmation.userId = userId;
+    emailConfirmation.confirmationCode = emailConfirm.confirmationCode;
+    emailConfirmation.expirationDate = emailConfirm.expirationDate;
+    emailConfirmation.isConfirmed = emailConfirm.isConfirmed;
+    await this.emailConfirmRepo.save(emailConfirmation);
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
   async deleteUser(userId: string): Promise<RESPONSE_SUCCESS> {
@@ -61,57 +57,35 @@ VALUES ($1, $2, $3, $4);`,
   async findEmailConfirmDataByCode(
     code: string,
   ): Promise<EmailConfirmDataType | RESPONSE_ERROR> {
-    const user = await this.dataSource.query(
-      `
-    SELECT user_id as "userId", expiration_date as "expDate", is_confirmed as "isConfirmed"
-FROM public.email_confirmation
-WHERE confirmation_code = $1;
-    `,
-      [code],
-    );
-    if (!user[0]) return RESPONSE_ERROR.BAD_REQUEST;
-    return user[0];
+    const emailConfirm = await this.emailConfirmRepo.findOneBy({
+      confirmationCode: code,
+    });
+    if (!emailConfirm) return RESPONSE_ERROR.BAD_REQUEST;
+    return {
+      userId: emailConfirm.userId,
+      isConfirmed: emailConfirm.isConfirmed,
+      expDate: emailConfirm.expirationDate,
+    };
   }
 
   async emailConfirmed(userId: IdType) {
-    try {
-      await this.dataSource.query(
-        `
-      UPDATE public.email_confirmation
-SET  is_confirmed= true
-WHERE user_id = $1;
-      `,
-        [userId],
-      );
-      return RESPONSE_SUCCESS.NO_CONTENT;
-    } catch {
-      return RESPONSE_ERROR.SERVER_ERROR;
-    }
+    await this.emailConfirmRepo.update(userId, { isConfirmed: true });
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
   async findDataConfirmedByEmail(
     email: string,
   ): Promise<EmailConfirmDataType | RESPONSE_ERROR> {
-    try {
-      const user = await this.dataSource.query(
-        `
-    SELECT user_id, confirmation_code, expiration_date, is_confirmed, email
-FROM public.email_confirmation
-LEFT JOIN users USING(user_id)
-WHERE email = $1
-ORDER BY is_confirmed desc
-LIMIT 1
-    `,
-        [email],
-      );
-      return {
-        userId: user[0].user_id,
-        expDate: user[0].expiration_date,
-        isConfirmed: user[0].is_confirmed,
-      };
-    } catch (e) {
-      return RESPONSE_ERROR.BAD_REQUEST;
-    }
+    const emailConfirm = await this.emailConfirmRepo.findOne({
+      relations: { user: true },
+      where: { user: { email: email } },
+    });
+    if (!emailConfirm) return RESPONSE_ERROR.BAD_REQUEST;
+    return {
+      userId: emailConfirm.userId,
+      isConfirmed: emailConfirm.isConfirmed,
+      expDate: emailConfirm.expirationDate,
+    };
   }
 
   async findUserByEmailOrLogin(emailOrLogin: string) {
@@ -123,65 +97,37 @@ LIMIT 1
   }
 
   async createRecovery(recoveryPas: RecoveryPasswordDto) {
-    await this.dataSource.query(
-      `
-    INSERT INTO public.recovery_password(
-user_id, recovery_code, expiration_date)
-VALUES ($1, $2, $3);
-    `,
-      [
-        recoveryPas.userId,
-        recoveryPas.recoveryCode,
-        recoveryPas.expirationDate,
-      ],
-    );
+    const newRecoveryPas = new RecoveryPassword();
+    newRecoveryPas.userId = recoveryPas.userId.toString();
+    newRecoveryPas.recoveryCode = recoveryPas.recoveryCode;
+    newRecoveryPas.expirationDate = recoveryPas.expirationDate;
+    await this.recoveryPassRepo.save(newRecoveryPas);
   }
 
   async findRecovery(recoveryCode: string) {
-    const recovery = await this.dataSource.query(
-      `
-      SELECT user_id as "userId", recovery_code as "recCode", expiration_date as "expDate"
-      FROM public.recovery_password
-      WHERE recovery_code = $1;
-      `,
-      [recoveryCode],
-    );
-    if (!recovery[0]) return RESPONSE_ERROR.BAD_REQUEST;
-    return recovery[0];
+    const recovery = await this.recoveryPassRepo.findOneBy({
+      recoveryCode: recoveryCode,
+    });
+    if (!recovery) return RESPONSE_ERROR.BAD_REQUEST;
+    return {
+      userId: recovery.userId,
+      recCode: recovery.recoveryCode,
+      expDate: recovery.expirationDate,
+    };
   }
   async newPass(userId: IdType, newPass: string) {
-    try {
-      await this.dataSource.query(
-        `
-      UPDATE public.users
-SET password= $2
-WHERE user_id = $1;
-      `,
-        [userId, newPass],
-      );
-      return RESPONSE_SUCCESS.NO_CONTENT;
-    } catch (e) {
-      return RESPONSE_ERROR.SERVER_ERROR;
-    }
+    await this.usersRepo.update(userId, { password: newPass });
+    return RESPONSE_SUCCESS.NO_CONTENT;
   }
-  async findUserDataCheckCredentials(loginOrEmail: string) {
-    try {
-      const user = await this.dataSource.query(
-        `
-      SELECT user_id, password
-      FROM public.users
-WHERE login = $1 OR email = $1;
-      `,
-        [loginOrEmail],
-      );
-
-      return {
-        userId: user[0].user_id,
-        hashPassword: user[0].password,
-        isBanned: false,
-      };
-    } catch (e) {
-      return null;
-    }
+  async findUserDataCheckCredentials(emailOrLogin: string) {
+    const user = await this.usersRepo.findOne({
+      where: [{ login: emailOrLogin }, { email: emailOrLogin }],
+    });
+    if (!user) return null;
+    return {
+      userId: user.userId,
+      hashPassword: user.password,
+      isBanned: false,
+    };
   }
 }

@@ -3,19 +3,19 @@ import { SessionDocument } from '../../domain/session.schema';
 export class DeviceViewModel {
   ip: string;
   title: string;
-  lastActiveDate: string;
+  lastActiveDate: Date;
   deviceId: string;
 }
 export class DeviceMongoViewModel extends DeviceViewModel {
   ip: string;
   title: string;
-  lastActiveDate: string;
+  lastActiveDate: Date;
   deviceId: string;
   constructor(deviceSession: SessionDocument) {
     super();
     this.ip = deviceSession.ip;
     this.title = deviceSession.title;
-    this.lastActiveDate = deviceSession.lastActiveDate.toISOString();
+    this.lastActiveDate = deviceSession.lastActiveDate;
     this.deviceId = deviceSession.deviceId.toString();
   }
 }

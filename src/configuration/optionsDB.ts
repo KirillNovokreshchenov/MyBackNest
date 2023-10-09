@@ -3,11 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import { ConfigType } from './configuration';
 import { TypeOrmModuleAsyncOptions } from '@nestjs/typeorm';
 import { User } from '../users/application/entities-typeorm/user.entity';
-import {
-  EmailConfirmation,
-  Session,
-} from '../users/application/entities-typeorm/email-confirm.entity';
+import { EmailConfirmation } from '../users/application/entities-typeorm/email-confirm.entity';
 import { RecoveryPassword } from '../users/application/entities-typeorm/recovery-password.entity';
+import { Session } from '../users/application/entities-typeorm/session.entity';
 
 export const optionsSQL: TypeOrmModuleAsyncOptions = {
   imports: [configModule],

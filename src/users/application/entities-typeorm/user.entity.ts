@@ -1,6 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
-import { EmailConfirmation, Session } from './email-confirm.entity';
+import { EmailConfirmation } from './email-confirm.entity';
 import { RecoveryPassword } from './recovery-password.entity';
+import { Session } from './session.entity';
 
 @Entity()
 export class User {

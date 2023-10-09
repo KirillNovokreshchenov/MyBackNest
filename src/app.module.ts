@@ -60,17 +60,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { LocalStrategy } from './auth/strategies/local.strategy';
 import { JwtStrategy } from './auth/strategies/jwt.strategy';
 import { Session, SessionSchema } from './sessions/domain/session.schema';
-import {
-  DeviceRepository,
-  DeviceSQLRepository,
-} from './sessions/infrastructure/device.repository';
+import { DeviceRepository } from './sessions/infrastructure/device.repository';
 import { JwtRefreshStrategy } from './auth/strategies/jwt.refresh.strategy';
 import { DeviceController } from './sessions/api/device.controller';
 import { DeviceService } from './sessions/application/device.service';
-import {
-  DeviceQueryRepository,
-  DeviceSQLQueryRepository,
-} from './sessions/infrastructure/device.query.repository';
+import { DeviceQueryRepository } from './sessions/infrastructure/device.query.repository';
 import { CommentService } from './comments/application/comment.service';
 import {
   CommentsRepository,
@@ -131,6 +125,10 @@ import {
   optionsTypeORM,
 } from './configuration/optionsDB';
 import { UsersSQLRepository } from './users/infrastructure/users-sql.repository';
+import { DeviceSQLRepository } from './sessions/infrastructure/deviceSQL.repository';
+import { DeviceSQLQueryRepository } from './sessions/infrastructure/deviceSQL.query.repository';
+import { DeviceTypeOrmRepository } from './sessions/infrastructure/deviceTypeOrm.repository';
+import { DeviceTypeOrmQueryRepository } from './sessions/infrastructure/deviceTypeOrm.query.repository';
 
 const useCases = [
   CreateBlogUseCase,
@@ -296,14 +294,18 @@ const useCases = [
       useClass:
         process.env.REPO_TYPE === 'MONGO'
           ? DeviceRepository
-          : DeviceSQLRepository,
+          : process.env.REPO_TYPE === 'SQL'
+          ? DeviceSQLRepository
+          : DeviceTypeOrmRepository,
     },
     {
       provide: DeviceQueryRepository,
       useClass:
         process.env.REPO_TYPE === 'MONGO'
           ? DeviceQueryRepository
-          : DeviceSQLQueryRepository,
+          : process.env.REPO_TYPE === 'SQL'
+          ? DeviceSQLQueryRepository
+          : DeviceTypeOrmQueryRepository,
     },
     {
       provide: TestingRepository,
