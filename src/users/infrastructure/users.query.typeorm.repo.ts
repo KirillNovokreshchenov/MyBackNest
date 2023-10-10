@@ -43,19 +43,34 @@ export class UsersQueryTypeormRepoQueryRepository {
   async _dataFindUser(dataQuery: UserQueryInputType) {
     const query = new UserTypeORMQueryModel(dataQuery);
 
-    const condition = {
-      login: ILike(query.searchLoginTerm),
-      email: ILike(query.searchEmailTerm),
-    };
-    const skip = skipPages(query.pageNumber, query.pageSize);
-    const [allUsers, totalCount] = await this.usersRepo.findAndCount({
-      order: {
-        [query.sortBy]: query.sortDirection,
+    const condition = [
+      {
+        login: ILike(query.searchLoginTerm),
+        email: ILike(query.searchEmailTerm),
       },
-      where: { ...condition, isDeleted: false },
-      skip: skip,
-      take: query.pageSize,
-    });
+    ];
+
+    const skip = skipPages(query.pageNumber, query.pageSize);
+    // const [allUsers, totalCount] = await this.usersRepo.findAndCount({
+    //   order: {
+    //     [query.sortBy]: query.sortDirection,
+    //   },
+    //   where: { ...condition, isDeleted: false },
+    //   skip: skip,
+    //   take: query.pageSize,
+    // });
+    const allUsers = await this.usersRepo
+      .createQueryBuilder('user')
+      .where(condition)
+      .andWhere({ isDeleted: false })
+      .skip(skip)
+      .take(query.pageSize)
+      .getMany();
+    const totalCount = await this.usersRepo
+      .createQueryBuilder('user')
+      .where(condition)
+      .andWhere({ isDeleted: false })
+      .getCount();
     const countPages = pagesCount(totalCount, query.pageSize);
     return {
       totalCount,
