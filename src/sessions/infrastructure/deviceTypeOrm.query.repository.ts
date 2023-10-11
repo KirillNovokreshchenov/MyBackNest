@@ -3,7 +3,7 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { UserFromRefreshType } from '../../auth/api/input-model/user-from-refresh.type';
 import { DeviceViewModel } from '../api/view-model/DeviceViewModel';
-import { Session } from '../../users/application/entities-typeorm/session.entity';
+import { Session } from '../domain/entities-typeorm/session.entity';
 
 @Injectable()
 export class DeviceTypeOrmQueryRepository {

@@ -1,5 +1,5 @@
 import { UserViewModel } from './UserViewModel';
-import { User } from '../../application/entities-typeorm/user.entity';
+import { User } from '../../domain/entities-typeorm/user.entity';
 
 export class UserTypeOrmViewModel extends UserViewModel {
   constructor(user: User) {

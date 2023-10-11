@@ -11,7 +11,7 @@ import { UserViewModelAll } from '../api/view-model/UserViewModelAll';
 import { pagesCount } from '../../helpers/pages-count';
 import { skipPages } from '../../helpers/skip-pages';
 import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
-import { User } from '../application/entities-typeorm/user.entity';
+import { User } from '../domain/entities-typeorm/user.entity';
 import { UserTypeOrmViewModel } from '../api/view-model/UserViewTypeOrmModel';
 import { UserTypeORMQueryModel } from './models/UserTypeORMQueryModel';
 
@@ -22,7 +22,7 @@ export class UsersQueryTypeormRepoQueryRepository {
     @InjectRepository(User) protected usersRepo: Repository<User>,
   ) {}
   async findUserById(userId: string): Promise<UserViewModel | RESPONSE_ERROR> {
-    const user = await this.usersRepo.findOneBy({ userId });
+    const user = await this.usersRepo.findOneBy({ userId, isDeleted: false });
     if (!user) return RESPONSE_ERROR.NOT_FOUND;
     return new UserTypeOrmViewModel(user);
   }
@@ -43,34 +43,23 @@ export class UsersQueryTypeormRepoQueryRepository {
   async _dataFindUser(dataQuery: UserQueryInputType) {
     const query = new UserTypeORMQueryModel(dataQuery);
 
-    const condition = [
-      {
-        login: ILike(query.searchLoginTerm),
-        email: ILike(query.searchEmailTerm),
-      },
-    ];
+    const condition = {
+      login: ILike(query.searchLoginTerm),
+      email: ILike(query.searchEmailTerm),
+    };
 
     const skip = skipPages(query.pageNumber, query.pageSize);
-    // const [allUsers, totalCount] = await this.usersRepo.findAndCount({
-    //   order: {
-    //     [query.sortBy]: query.sortDirection,
-    //   },
-    //   where: { ...condition, isDeleted: false },
-    //   skip: skip,
-    //   take: query.pageSize,
-    // });
-    const allUsers = await this.usersRepo
-      .createQueryBuilder('user')
-      .where(condition)
-      .andWhere({ isDeleted: false })
-      .skip(skip)
-      .take(query.pageSize)
-      .getMany();
-    const totalCount = await this.usersRepo
-      .createQueryBuilder('user')
-      .where(condition)
-      .andWhere({ isDeleted: false })
-      .getCount();
+    const [allUsers, totalCount] = await this.usersRepo.findAndCount({
+      order: {
+        [query.sortBy]: query.sortDirection,
+      },
+      where: [
+        { login: condition.login, isDeleted: false },
+        { email: condition.email, isDeleted: false },
+      ],
+      skip: skip,
+      take: query.pageSize,
+    });
     const countPages = pagesCount(totalCount, query.pageSize);
     return {
       totalCount,

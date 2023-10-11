@@ -2,10 +2,13 @@ import { configModule } from './ConfigModule';
 import { ConfigService } from '@nestjs/config';
 import { ConfigType } from './configuration';
 import { TypeOrmModuleAsyncOptions } from '@nestjs/typeorm';
-import { User } from '../users/application/entities-typeorm/user.entity';
-import { EmailConfirmation } from '../users/application/entities-typeorm/email-confirm.entity';
-import { RecoveryPassword } from '../users/application/entities-typeorm/recovery-password.entity';
-import { Session } from '../users/application/entities-typeorm/session.entity';
+import { User } from '../users/domain/entities-typeorm/user.entity';
+import { EmailConfirmation } from '../users/domain/entities-typeorm/email-confirm.entity';
+import { RecoveryPassword } from '../users/domain/entities-typeorm/recovery-password.entity';
+import { Session } from '../sessions/domain/entities-typeorm/session.entity';
+import { Blog } from '../blogs/domain/entities-typeorm/blog.entity';
+import { Post } from '../posts/domain/entities-typeorm/post.entity';
+import { PostLike } from '../posts/domain/entities-typeorm/post-like.entity';
 
 export const optionsSQL: TypeOrmModuleAsyncOptions = {
   imports: [configModule],
@@ -44,4 +47,12 @@ export const optionsTypeORM: TypeOrmModuleAsyncOptions = {
   inject: [ConfigService],
 };
 
-export const entities = [User, EmailConfirmation, RecoveryPassword, Session];
+export const entities = [
+  User,
+  EmailConfirmation,
+  RecoveryPassword,
+  Session,
+  Blog,
+  Post,
+  PostLike,
+];

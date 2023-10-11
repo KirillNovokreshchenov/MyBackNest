@@ -1,7 +1,8 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { EmailConfirmation } from './email-confirm.entity';
 import { RecoveryPassword } from './recovery-password.entity';
-import { Session } from './session.entity';
+import { Session } from '../../../sessions/domain/entities-typeorm/session.entity';
+import { PostLike } from '../../../posts/domain/entities-typeorm/post-like.entity';
 
 @Entity()
 export class User {
@@ -32,4 +33,6 @@ export class User {
   recoveriesPassword: RecoveryPassword[];
   @OneToMany(() => Session, (s) => s.user)
   sessions: Session[];
+  @OneToMany(() => PostLike, (pl) => pl.user)
+  postLikes: PostLike[];
 }

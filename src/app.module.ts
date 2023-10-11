@@ -19,25 +19,13 @@ import { BcryptAdapter } from './users/infrastructure/adapters/bcryptAdapter';
 
 import { BlogsService } from './blogs/application/blogs.service';
 import { Blog, BlogSchema } from './blogs/domain/blog.schema';
-import {
-  BlogsRepository,
-  BlogsSQLRepository,
-} from './blogs/infrastructure/blogs.repository';
+import { BlogsRepository } from './blogs/infrastructure/blogs.repository';
 
-import {
-  BlogsQueryRepository,
-  BlogsSQLQueryRepository,
-} from './blogs/infrastructure/blogs.query.repository';
+import { BlogsQueryRepository } from './blogs/infrastructure/blogs.query.repository';
 import { PostsController } from './posts/api/posts.controller';
 import { PostsService } from './posts/application/posts.service';
-import {
-  PostsRepository,
-  PostsSQLRepository,
-} from './posts/infrastructure/posts.repository';
-import {
-  PostsQueryRepository,
-  PostsSQLQueryRepository,
-} from './posts/infrastructure/posts.query.repository';
+import { PostsRepository } from './posts/infrastructure/posts.repository';
+import { PostsQueryRepository } from './posts/infrastructure/posts.query.repository';
 import { Post, PostSchema } from './posts/domain/post.schema';
 import { CommentsController } from './comments/api/comments.controller';
 import {
@@ -129,6 +117,12 @@ import { DeviceSQLRepository } from './sessions/infrastructure/deviceSQL.reposit
 import { DeviceSQLQueryRepository } from './sessions/infrastructure/deviceSQL.query.repository';
 import { DeviceTypeOrmRepository } from './sessions/infrastructure/deviceTypeOrm.repository';
 import { DeviceTypeOrmQueryRepository } from './sessions/infrastructure/deviceTypeOrm.query.repository';
+import { BlogsSQLRepository } from './blogs/infrastructure/blogsSQL.repository';
+import { BlogsSQLQueryRepository } from './blogs/infrastructure/blogsSQL.query.repository';
+import { BlogsTypeOrmRepository } from './blogs/infrastructure/blogsTypeORM.repository';
+import { BlogsTypeORMQueryRepository } from './blogs/infrastructure/blogsTypeORM.query.repository';
+import { PostsSQLQueryRepository } from './posts/infrastructure/postsSQL.query.repository';
+import { PostsSQLRepository } from './posts/infrastructure/postsSQL.repository';
 
 const useCases = [
   CreateBlogUseCase,
@@ -212,13 +206,13 @@ const useCases = [
     ]),
     ThrottlerModule.forRoot({
       ttl: 10,
-      limit: 20,
+      limit: 5,
     }),
     JwtModule.registerAsync({
       imports: [configModule],
       useFactory: (configService: ConfigService<ConfigType>) => ({
         secret: configService.get('jwt.secretAT', { infer: true }),
-        signOptions: { expiresIn: '60m' },
+        signOptions: { expiresIn: '10s' },
       }),
       inject: [ConfigService],
     }),
@@ -226,7 +220,7 @@ const useCases = [
       imports: [configModule],
       useFactory: (configService: ConfigService<ConfigType>) => ({
         secret: configService.get('jwt.secretRT', { infer: true }),
-        signOptions: { expiresIn: '90m' },
+        signOptions: { expiresIn: '20s' },
       }),
       inject: [ConfigService],
     }),
@@ -269,7 +263,9 @@ const useCases = [
       useClass:
         process.env.REPO_TYPE === 'MONGO'
           ? BlogsRepository
-          : BlogsSQLRepository,
+          : process.env.REPO_TYPE === 'SQL'
+          ? BlogsSQLRepository
+          : BlogsTypeOrmRepository,
     },
     {
       provide: UsersRepository,
@@ -321,7 +317,9 @@ const useCases = [
       useClass:
         process.env.REPO_TYPE === 'MONGO'
           ? BlogsQueryRepository
-          : BlogsSQLQueryRepository,
+          : process.env.REPO_TYPE === 'SQL'
+          ? BlogsSQLQueryRepository
+          : BlogsTypeORMQueryRepository,
     },
     {
       provide: PostsRepository,

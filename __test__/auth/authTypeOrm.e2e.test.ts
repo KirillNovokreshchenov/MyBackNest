@@ -14,9 +14,9 @@ import { usersTestManager } from '../users/users-test-manager';
 import request from 'supertest';
 import { HttpStatus } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
-import { User } from '../../src/users/application/entities-typeorm/user.entity';
-import { EmailConfirmation } from '../../src/users/application/entities-typeorm/email-confirm.entity';
-import { RecoveryPassword } from '../../src/users/application/entities-typeorm/recovery-password.entity';
+import { User } from '../../src/users/domain/entities-typeorm/user.entity';
+import { EmailConfirmation } from '../../src/users/domain/entities-typeorm/email-confirm.entity';
+import { RecoveryPassword } from '../../src/users/domain/entities-typeorm/recovery-password.entity';
 import { entities } from '../../src/configuration/optionsDB';
 describe('authTestsTypeOrm', () => {
   let bcryptAdapter: BcryptAdapter;

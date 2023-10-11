@@ -31,7 +31,7 @@ export class DeviceRepository {
 
   async logout(userFromRefresh: UserFromRefreshType) {
     const isDeleted = await this.SessionModel.deleteOne(userFromRefresh);
-    if (isDeleted.deletedCount !== 1) return RESPONSE_ERROR.SERVER_ERROR;
+    if (isDeleted.deletedCount !== 1) return RESPONSE_ERROR.UNAUTHORIZED;
     return RESPONSE_SUCCESS.NO_CONTENT;
   }
 

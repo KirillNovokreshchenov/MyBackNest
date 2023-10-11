@@ -5,7 +5,7 @@ import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
 import { SessionDto } from '../application/dto/SessionDto';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Not, Repository } from 'typeorm';
-import { Session } from '../../users/application/entities-typeorm/session.entity';
+import { Session } from '../domain/entities-typeorm/session.entity';
 
 export class DeviceTypeOrmRepository {
   constructor(
@@ -36,7 +36,7 @@ export class DeviceTypeOrmRepository {
         lastActiveDate: userData.lastActiveDate,
       },
     });
-    if (!session) return RESPONSE_ERROR.NOT_FOUND;
+    if (!session) return RESPONSE_ERROR.UNAUTHORIZED;
     session.lastActiveDate = newLastActiveDate;
     session.expirationDate = expDate;
     await this.sessionRepo.save(session);
@@ -56,7 +56,7 @@ export class DeviceTypeOrmRepository {
       deviceId: userFromRefresh.deviceId.toString(),
       lastActiveDate: userFromRefresh.lastActiveDate,
     });
-    if (!isDeleted.affected) return RESPONSE_ERROR.SERVER_ERROR;
+    if (!isDeleted.affected) return RESPONSE_ERROR.UNAUTHORIZED;
     return RESPONSE_SUCCESS.NO_CONTENT;
   }
 

@@ -8,9 +8,9 @@ import { EmailConfirmationDto } from '../application/dto/EmailConfirmationDto';
 import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
 import { EmailConfirmDataType } from '../application/types/EmailConfirmDataType';
 import { RecoveryPasswordDto } from '../application/dto/RecoveryPasswordDto';
-import { User } from '../application/entities-typeorm/user.entity';
-import { EmailConfirmation } from '../application/entities-typeorm/email-confirm.entity';
-import { RecoveryPassword } from '../application/entities-typeorm/recovery-password.entity';
+import { User } from '../domain/entities-typeorm/user.entity';
+import { EmailConfirmation } from '../domain/entities-typeorm/email-confirm.entity';
+import { RecoveryPassword } from '../domain/entities-typeorm/recovery-password.entity';
 
 @Injectable()
 export class UsersTypeORMRepository {
