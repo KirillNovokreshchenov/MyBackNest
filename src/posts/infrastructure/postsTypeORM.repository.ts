@@ -74,29 +74,33 @@ export class PostsTypeORMRepository {
     postLike.postId = postId;
     postLike.likeStatus = likeStatus;
     await this.postLikesRepo.save(postLike);
+    await this._incrementLikeDislike(postId, likeStatus);
     return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
   async updateLikeNone(
-    postId: IdType,
+    postId: string,
     likeData: LikeStatusBLType,
   ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
     const isDeleted = await this.postLikesRepo.delete({
       likeId: likeData.likeId.toString(),
     });
     if (isDeleted.affected !== 1) return RESPONSE_ERROR.SERVER_ERROR;
+    await this._decrementLikeDislike(postId, likeData.likeStatus);
     return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
   async updateLike(
-    postId: IdType,
+    postId: string,
     newLikeStatus: LIKE_STATUS,
-    likeData: LikeStatusBLType,
+    oldLikeData: LikeStatusBLType,
   ): Promise<RESPONSE_SUCCESS | RESPONSE_ERROR> {
-    const isUpdated = await this.postLikesRepo.update(likeData.likeId, {
+    const isUpdated = await this.postLikesRepo.update(oldLikeData.likeId, {
       likeStatus: newLikeStatus,
     });
     if (isUpdated.affected !== 1) return RESPONSE_ERROR.SERVER_ERROR;
+    await this._incrementLikeDislike(postId, newLikeStatus);
+    await this._decrementLikeDislike(postId, oldLikeData.likeStatus);
     return RESPONSE_SUCCESS.NO_CONTENT;
   }
 
@@ -104,5 +108,30 @@ export class PostsTypeORMRepository {
     const isUpdated = await this.postsRepo.update(postId, { isDeleted: true });
     if (isUpdated.affected !== 1) return RESPONSE_ERROR.SERVER_ERROR;
     return RESPONSE_SUCCESS.NO_CONTENT;
+  }
+  private async _incrementLikeDislike(postId: string, likeStatus: LIKE_STATUS) {
+    if (likeStatus === LIKE_STATUS.LIKE) {
+      await this.postsRepo.update(postId, {
+        likesCount: () => 'likesCount + 1',
+      });
+    } else {
+      await this.postsRepo.update(postId, {
+        dislikesCount: () => 'dislikesCount + 1',
+      });
+    }
+  }
+  private async _decrementLikeDislike(
+    postId: string,
+    oldLikeStatus: LIKE_STATUS,
+  ) {
+    if (oldLikeStatus === LIKE_STATUS.LIKE) {
+      await this.postsRepo.update(postId, {
+        likesCount: () => 'likesCount - 1',
+      });
+    } else {
+      await this.postsRepo.update(postId, {
+        dislikesCount: () => 'dislikesCount - 1',
+      });
+    }
   }
 }

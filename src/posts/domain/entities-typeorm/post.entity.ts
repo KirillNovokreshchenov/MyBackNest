@@ -35,6 +35,12 @@ export class Post {
   @Column('uuid')
   blogId: string;
 
+  @Column({ default: 0 })
+  likesCount: number;
+
+  @Column({ default: 0 })
+  dislikesCount: number;
+
   @ManyToOne(() => Blog, (b) => b.blogId)
   @JoinColumn({ name: 'blogId' })
   blog: Blog;

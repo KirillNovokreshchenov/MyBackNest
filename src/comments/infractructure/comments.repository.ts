@@ -332,7 +332,7 @@ WHERE like_id = $1;
   async updateLike(
     commentId: IdType,
     likeStatus: LIKE_STATUS,
-    likeData: LikeStatusBLType,
+    oldLikeData: LikeStatusBLType,
   ) {
     try {
       await this.dataSource.query(
@@ -341,10 +341,10 @@ WHERE like_id = $1;
 SET like_status= $1
 WHERE like_id = $2;
     `,
-        [likeStatus, likeData.likeId],
+        [likeStatus, oldLikeData.likeId],
       );
       await this._incrementLikeCount(likeStatus, commentId);
-      await this._decrementLikeCount(likeData.likeStatus, commentId);
+      await this._decrementLikeCount(oldLikeData.likeStatus, commentId);
       return RESPONSE_SUCCESS.NO_CONTENT;
     } catch (e) {
       return RESPONSE_ERROR.SERVER_ERROR;

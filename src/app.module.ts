@@ -123,6 +123,8 @@ import { BlogsTypeOrmRepository } from './blogs/infrastructure/blogsTypeORM.repo
 import { BlogsTypeORMQueryRepository } from './blogs/infrastructure/blogsTypeORM.query.repository';
 import { PostsSQLQueryRepository } from './posts/infrastructure/postsSQL.query.repository';
 import { PostsSQLRepository } from './posts/infrastructure/postsSQL.repository';
+import { PostsTypeORMRepository } from './posts/infrastructure/postsTypeORM.repository';
+import { PostsTypeORMQueryRepository } from './posts/infrastructure/postsTypeORM.query.repository';
 
 const useCases = [
   CreateBlogUseCase,
@@ -205,14 +207,14 @@ const useCases = [
       },
     ]),
     ThrottlerModule.forRoot({
-      ttl: 10,
-      limit: 5,
+      /*  ttl: 10,
+      limit: 5,*/
     }),
     JwtModule.registerAsync({
       imports: [configModule],
       useFactory: (configService: ConfigService<ConfigType>) => ({
         secret: configService.get('jwt.secretAT', { infer: true }),
-        signOptions: { expiresIn: '10s' },
+        signOptions: { expiresIn: '10m' },
       }),
       inject: [ConfigService],
     }),
@@ -220,7 +222,7 @@ const useCases = [
       imports: [configModule],
       useFactory: (configService: ConfigService<ConfigType>) => ({
         secret: configService.get('jwt.secretRT', { infer: true }),
-        signOptions: { expiresIn: '20s' },
+        signOptions: { expiresIn: '20m' },
       }),
       inject: [ConfigService],
     }),
@@ -326,14 +328,18 @@ const useCases = [
       useClass:
         process.env.REPO_TYPE === 'MONGO'
           ? PostsRepository
-          : PostsSQLRepository,
+          : process.env.REPO_TYPE === 'SQL'
+          ? PostsSQLRepository
+          : PostsTypeORMRepository,
     },
     {
       provide: PostsQueryRepository,
       useClass:
         process.env.REPO_TYPE === 'MONGO'
           ? PostsQueryRepository
-          : PostsSQLQueryRepository,
+          : process.env.REPO_TYPE === 'SQL'
+          ? PostsSQLQueryRepository
+          : PostsTypeORMQueryRepository,
     },
     {
       provide: CommentsRepository,

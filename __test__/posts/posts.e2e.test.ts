@@ -9,11 +9,11 @@ import { AppModule } from '../../src/app.module';
 import request from 'supertest';
 import { HttpStatus } from '@nestjs/common';
 import { blogTestManager } from '../blogs/blog-test-manager';
-import { BlogViewModelAll } from '../../src/blogs/api/view-model/BlogViewModelAll';
 import { v4 as uuidv4 } from 'uuid';
 import { postTestManager } from './post-test-manager';
 import { usersTestManager } from '../users/users-test-manager';
 import { LIKE_STATUS } from '../../src/models/LikeStatusEnum';
+import { PostViewModelAll } from '../../src/posts/api/view-models/PostViewModelAll';
 
 describe('postsTests', () => {
   beforeAll(async () => {
@@ -342,7 +342,7 @@ describe('postsTests', () => {
       const page = 1;
       const pageSize = 10;
       const totalCount = 4;
-      const allPosts = new BlogViewModelAll(
+      const allPosts = new PostViewModelAll(
         pagesCount,
         page,
         pageSize,
@@ -366,7 +366,7 @@ describe('postsTests', () => {
       const page = 1;
       const pageSize = 10;
       const totalCount = 3;
-      const allPosts = new BlogViewModelAll(
+      const allPosts = new PostViewModelAll(
         pagesCount,
         page,
         pageSize,
@@ -385,7 +385,7 @@ describe('postsTests', () => {
       const page = 1;
       const pageSize = 10;
       const totalCount = 3;
-      const allPosts = new BlogViewModelAll(
+      const allPosts = new PostViewModelAll(
         pagesCount,
         page,
         pageSize,
@@ -398,12 +398,12 @@ describe('postsTests', () => {
         .query({ sortBy: 'title', sortDirection: 'asc' })
         .expect(HttpStatus.OK, { ...allPosts });
     });
-    it('should return second blog with page size equal 1 and page equal 2', async () => {
+    it('should return second post with page size equal 1 and page equal 2', async () => {
       const pagesCount = 3;
       const page = 2;
       const pageSize = 1;
       const totalCount = 3;
-      const allPosts = new BlogViewModelAll(
+      const allPosts = new PostViewModelAll(
         pagesCount,
         page,
         pageSize,
@@ -605,6 +605,7 @@ describe('postsTests', () => {
         .get('/posts/' + post.id)
         .set('Authorization', `Bearer ${userOneAccessToken}`)
         .expect(HttpStatus.OK);
+      console.log(resWithSet.body);
       expect(resWithSet.body.extendedLikesInfo.myStatus).toBe(LIKE_STATUS.NONE);
       expect(resWithSet.body.extendedLikesInfo.likesCount).toBe(0);
       expect(resWithSet.body.extendedLikesInfo.dislikesCount).toBe(1);

@@ -1,125 +1,73 @@
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { IdType } from '../../models/IdType';
-import {
-  ExtendedLikesInfo,
-  PostSQLViewModel,
-  PostViewModel,
-} from '../api/view-models/PostViewModel';
 import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
 import { LIKE_STATUS } from '../../models/LikeStatusEnum';
+import { Post } from '../domain/entities-typeorm/post.entity';
+import { PostLike } from '../domain/entities-typeorm/post-like.entity';
+import { PostTypeORMViewType } from '../api/view-types/PostTypeORMViewType';
+import { PostTypeORMViewModel } from '../api/view-models/PostTypeORMViewModel';
+import { NewestLikes } from '../api/view-models/NewestLikeModel';
+import { QueryModel } from '../../models/QueryModel';
 import { QueryInputType } from '../../models/QueryInputType';
 import { PostFilterType } from './types/filter-query.types';
 import { PostViewModelAll } from '../api/view-models/PostViewModelAll';
-import { QueryModel } from '../../models/QueryModel';
 import { pagesCount } from '../../helpers/pages-count';
 import { skipPages } from '../../helpers/skip-pages';
+import { PostViewModel } from '../api/view-models/PostViewModel';
 
 export class PostsTypeORMQueryRepository {
-  constructor(@InjectDataSource() protected dataSource: DataSource) {}
+  constructor(
+    @InjectDataSource() protected dataSource: DataSource,
+    @InjectRepository(Post) protected postsRepo: Repository<Post>,
+    @InjectRepository(PostLike) protected postLikesRepo: Repository<PostLike>,
+  ) {}
 
   async findPost(
-    postId: IdType,
-    userId?: IdType,
+    postId: string,
+    userId?: string,
   ): Promise<PostViewModel | RESPONSE_ERROR> {
-    const extendedLikeInfo: ExtendedLikesInfo = await this._extendedLikeInfo(
-      postId,
-      userId,
-    );
-    try {
-      const post = await this.dataSource.query(
-        `
-      SELECT post_id, blog_id as "blogId", b.name as "blogName", title, short_description as "shortDescription", content, p.created_at as "createdAt"
-FROM public.sa_posts as p
-LEFT JOIN sa_blogs b USING(blog_id)
-WHERE post_id = $1 AND p.is_deleted <> true
-      `,
-        [postId],
-      );
-
-      return new PostSQLViewModel(post[0], extendedLikeInfo);
-    } catch (e) {
-      return RESPONSE_ERROR.NOT_FOUND;
-    }
-  }
-
-  private async _extendedLikeInfo(postId: IdType, userId?: IdType) {
-    let myLikeStatus = await this._likeStatus(postId, userId);
-    if (!myLikeStatus) myLikeStatus = LIKE_STATUS.NONE;
+    const post: PostTypeORMViewType | null = await this.postsRepo.findOne({
+      relations: { blog: true },
+      select: { blog: { name: true } },
+      where: { postId: postId, isDeleted: false },
+    });
+    if (!post) return RESPONSE_ERROR.NOT_FOUND;
     const newestLikes = await this._newestLikes(postId);
-    let likeCount = await this.dataSource.query(
-      `
-           SELECT COUNT(*)
-           FROM public.posts_likes
-           WHERE post_id = $1 AND like_status = 'Like';
-            `,
-      [postId],
-    );
-    likeCount = +likeCount[0].count;
-    let dislikeCount = await this.dataSource.query(
-      `
-           SELECT COUNT(*)
-           FROM public.posts_likes
-           WHERE post_id = $1 AND like_status = 'Dislike';
-            `,
-      [postId],
-    );
-    dislikeCount = +dislikeCount[0].count;
-    return {
-      likesCount: likeCount,
-      dislikesCount: dislikeCount,
-      myStatus: myLikeStatus,
-      newestLikes: newestLikes,
-    };
-  }
-
-  async _newestLikes(postId: IdType) {
-    return this.dataSource.query(
-      `
-      SELECT owner_id as "userId", created_at as "addedAt", login
-FROM public.posts_likes
-LEFT JOIN public.users ON owner_id = user_id
-WHERE post_id = $1 AND like_status = 'Like'
-ORDER BY "addedAt" DESC
-LIMIT 3;
-      `,
-      [postId],
-    );
-  }
-
-  async _likeStatus(postId: IdType, userId?: IdType) {
-    if (userId) {
-      let like = await this.dataSource.query(
-        `
-        SELECT like_status
-        FROM public.posts_likes
-        WHERE post_id = $1 AND owner_id = $2;
-        `,
-        [postId, userId],
-      );
-      like = like[0]?.like_status;
-      return like;
-    }
+    const myLikeStatus = await this._likeStatus(postId, userId);
+    return new PostTypeORMViewModel(post, newestLikes, myLikeStatus);
   }
 
   async findAllPost(
     dataQuery: QueryInputType,
     postFilter: PostFilterType,
-  ): Promise<PostViewModelAll> {
+  ): Promise<any> {
     const query = new QueryModel(dataQuery);
-
-    const totalCount = await this._totalCount(postFilter.blogId);
-    const countPages = pagesCount(totalCount, query.pageSize);
+    let condition = {};
+    if (postFilter.blogId) {
+      condition = { blogId: postFilter.blogId };
+    }
     const skip = skipPages(query.pageNumber, query.pageSize);
-    const allPosts = await this._getAllPosts(query, skip, postFilter.blogId);
+    const [allPosts, totalCount] = await this.postsRepo.findAndCount({
+      relations: { blog: true },
+      select: { blog: { name: true } },
+      order: {
+        [query.sortBy]: query.sortDirection,
+      },
+      where: condition,
+      skip: skip,
+      take: query.pageSize,
+    });
+    const countPages = pagesCount(totalCount, query.pageSize);
 
     const mapPosts = await Promise.all(
       allPosts.map(async (post) => {
-        const extendedLikeInfo = await this._extendedLikeInfo(
-          post.post_id,
-          postFilter.userId,
+        const newestLikes = await this._newestLikes(post.postId);
+        const myLikeStatus = await this._likeStatus(
+          post.postId,
+          postFilter.userId as string,
         );
-        return new PostSQLViewModel(post, extendedLikeInfo);
+        return new PostTypeORMViewModel(post, newestLikes, myLikeStatus);
       }),
     );
 
@@ -131,59 +79,29 @@ LIMIT 3;
       mapPosts,
     );
   }
-
-  private async _getAllPosts(
-    dataQuery: QueryModel,
-    skip: number,
-    blogId?: IdType,
-  ) {
-    if (blogId) {
-      return this.dataSource.query(
-        `
-    SELECT post_id, blog_id as "blogId", b.name as "blogName", title, short_description as "shortDescription", content, p.created_at as "createdAt"
-FROM public.sa_posts as p
-LEFT JOIN sa_blogs b USING(blog_id)
-WHERE blog_id = $1 AND p.is_deleted <> true
-ORDER BY "${dataQuery.sortBy}" ${dataQuery.sortDirection}
-LIMIT $2 OFFSET $3
-    `,
-        [blogId, dataQuery.pageSize, skip],
-      );
-    }
-    return this.dataSource.query(
-      `
-    SELECT post_id, blog_id as "blogId", b.name as "blogName", title, short_description as "shortDescription", content, p.created_at as "createdAt"
-FROM public.sa_posts as p
-LEFT JOIN sa_blogs b USING(blog_id)
-WHERE p.is_deleted <> true
-ORDER BY "${dataQuery.sortBy}" ${dataQuery.sortDirection}
-LIMIT $1 OFFSET $2
-    `,
-      [dataQuery.pageSize, skip],
-    );
+  async _newestLikes(postId: string): Promise<NewestLikes[]> {
+    const newestLikes = await this.postLikesRepo.find({
+      relations: { user: true },
+      select: { user: { login: true } },
+      where: { postId: postId, likeStatus: LIKE_STATUS.LIKE },
+      order: { createdAt: 'DESC' },
+      take: 3,
+    });
+    return newestLikes.map((like) => {
+      return {
+        userId: like.ownerId,
+        login: like.user.login,
+        addedAt: like.createdAt,
+      };
+    });
   }
 
-  private async _totalCount(blogId?: IdType) {
-    if (blogId) {
-      let totalCount = await this.dataSource.query(
-        `
-           SELECT COUNT(*)
-           FROM public.sa_posts
-           WHERE blog_id = $1 AND is_deleted <> true;
-            `,
-        [blogId],
-      );
-      totalCount = +totalCount[0].count;
-      return totalCount;
+  async _likeStatus(postId: string, userId?: string) {
+    if (userId) {
+      const like = await this.postLikesRepo.findOne({
+        where: { postId: postId, ownerId: userId },
+      });
+      return like?.likeStatus;
     }
-    let totalCount = await this.dataSource.query(
-      `
-           SELECT COUNT(*)
-           FROM public.sa_posts
-           WHERE is_deleted <> true;
-            `,
-    );
-    totalCount = +totalCount[0].count;
-    return totalCount;
   }
 }
