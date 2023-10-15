@@ -9,6 +9,7 @@ import { Session } from '../sessions/domain/entities-typeorm/session.entity';
 import { Blog } from '../blogs/domain/entities-typeorm/blog.entity';
 import { Post } from '../posts/domain/entities-typeorm/post.entity';
 import { PostLike } from '../posts/domain/entities-typeorm/post-like.entity';
+import { Comment } from '../comments/domain/entities-typeorm/comment.entity';
 
 export const optionsSQL: TypeOrmModuleAsyncOptions = {
   imports: [configModule],
@@ -41,7 +42,7 @@ export const optionsTypeORM: TypeOrmModuleAsyncOptions = {
     }),
     database: configService.get('typeORM.NAME_DB', { infer: true }),
     autoLoadEntities: true,
-    synchronize: true,
+    synchronize: false,
     ssl: true,
   }),
   inject: [ConfigService],
@@ -55,4 +56,5 @@ export const entities = [
   Blog,
   Post,
   PostLike,
+  Comment,
 ];
