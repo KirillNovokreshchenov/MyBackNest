@@ -179,7 +179,7 @@ import { QueryModel } from '../../models/QueryModel';
 import { pagesCount } from '../../helpers/pages-count';
 import { skipPages } from '../../helpers/skip-pages';
 
-export class PostsSQLQueryRepository {
+/*export class PostsSQLQueryRepository {
   constructor(@InjectDataSource() protected dataSource: DataSource) {}
 
   async findPost(
@@ -349,5 +349,203 @@ LIMIT $1 OFFSET $2
     );
     totalCount = +totalCount[0].count;
     return totalCount;
+  }
+}*/
+export class PostsSQLQueryRepository {
+  constructor(@InjectDataSource() protected dataSource: DataSource) {}
+
+  async findPost(
+    postId: IdType,
+    userId?: IdType,
+  ): Promise<PostViewModel | RESPONSE_ERROR> {
+    const extendedLikeInfo: ExtendedLikesInfo = await this._extendedLikeInfo(
+      postId,
+      userId,
+    );
+    try {
+      const post = await this.dataSource.query(
+        `
+      SELECT post_id, blog_id as "blogId", b.name as "blogName", title, short_description as "shortDescription", content, p.created_at as "createdAt"
+FROM public.sa_posts as p
+LEFT JOIN sa_blogs b USING(blog_id)
+WHERE post_id = $1 AND p.is_deleted <> true
+      `,
+        [postId],
+      );
+
+      return new PostSQLViewModel(post[0], extendedLikeInfo);
+    } catch (e) {
+      return RESPONSE_ERROR.NOT_FOUND;
+    }
+  }
+
+  private async _extendedLikeInfo(postId: IdType, userId?: IdType) {
+    let myLikeStatus = await this._likeStatus(postId, userId);
+    if (!myLikeStatus) myLikeStatus = LIKE_STATUS.NONE;
+    const newestLikes = await this._newestLikes(postId);
+    let likeCount = await this.dataSource.query(
+      `
+           SELECT COUNT(*)
+           FROM public.posts_likes
+           WHERE post_id = $1 AND like_status = 'Like';
+            `,
+      [postId],
+    );
+    likeCount = +likeCount[0].count;
+    let dislikeCount = await this.dataSource.query(
+      `
+           SELECT COUNT(*)
+           FROM public.posts_likes
+           WHERE post_id = $1 AND like_status = 'Dislike';
+            `,
+      [postId],
+    );
+    dislikeCount = +dislikeCount[0].count;
+    return {
+      likesCount: likeCount,
+      dislikesCount: dislikeCount,
+      myStatus: myLikeStatus,
+      newestLikes: newestLikes,
+    };
+  }
+
+  async _newestLikes(postId: IdType) {
+    return this.dataSource.query(
+      `
+      SELECT owner_id as "userId", created_at as "addedAt", login
+FROM public.posts_likes
+LEFT JOIN public.users ON owner_id = user_id
+WHERE post_id = $1 AND like_status = 'Like'
+ORDER BY "addedAt" DESC
+LIMIT 3;
+      `,
+      [postId],
+    );
+  }
+
+  async _likeStatus(postId: IdType, userId?: IdType) {
+    if (userId) {
+      let like = await this.dataSource.query(
+        `
+        SELECT like_status
+        FROM public.posts_likes
+        WHERE post_id = $1 AND owner_id = $2;
+        `,
+        [postId, userId],
+      );
+      like = like[0]?.like_status;
+      return like;
+    }
+  }
+
+  async findAllPost(
+    dataQuery: QueryInputType,
+    postFilter: PostFilterType,
+  ): Promise<PostViewModelAll> {
+    const query = new QueryModel(dataQuery);
+    const skip = skipPages(query.pageNumber, query.pageSize);
+    const allPostsRaw = await this.dataSource.query(
+      `
+    SELECT p."postId", p."title", p."shortDescription", p."content", p."createdAt", p."blogId", p."blogName",
+     l."like_status", l."created_at" as "addedAt", l.login, l."owner_id" as "userId",
+(SELECT COUNT(*) FROM posts_likes WHERE "post_id" = p."postId" AND "like_status" = 'Like') as "likesCount",
+(SELECT COUNT(*) FROM posts_likes WHERE "post_id" = p."postId" AND "like_status" = 'Dislike') as "dislikesCount",
+(SELECT COUNT(*) FROM sa_posts WHERE blog_id = COALESCE($1, blog_id)) as "totalCount",
+(SELECT "like_status" FROM posts_likes WHERE "post_id" = p."postId" AND "owner_id" = $4) as "myStatus"
+FROM (
+SELECT post_id as "postId", title, short_description as "shortDescription", content, sa_p.created_at as "createdAt", sa_p.blog_id as "blogId", name as "blogName"
+ FROM sa_posts sa_p
+   LEFT JOIN public.sa_blogs USING (blog_id)
+	 WHERE sa_p.blog_id = COALESCE($1, sa_p.blog_id)
+	 ORDER BY "${query.sortBy}" ${query.sortDirection}
+	 LIMIT $2 OFFSET $3
+	 ) as p
+LEFT JOIN (
+    SELECT "like_id", "post_id", "like_status", pl."created_at", login, "owner_id"
+    FROM posts_likes as pl
+	LEFT JOIN public.users u ON "owner_id" = u."user_id"
+    WHERE "like_id" IN (
+        SELECT "like_id"
+        FROM posts_likes
+        WHERE "post_id" = pl."post_id" AND "like_status" = 'Like'
+        ORDER BY "created_at" desc
+        LIMIT 3
+    )
+    ORDER BY "created_at" desc
+) l ON p."postId" = l."post_id"
+ORDER BY "${query.sortBy}" ${query.sortDirection}
+
+    `,
+      [
+        postFilter.blogId ?? null,
+        query.pageSize,
+        skip,
+        postFilter.userId ?? null,
+      ],
+    );
+    const mapPosts = await this._mapPosts(allPostsRaw, postFilter.userId);
+    const totalCount = Number(allPostsRaw[0].totalCount) ?? 0;
+    const countPages = pagesCount(totalCount, query.pageSize);
+
+    return new PostViewModelAll(
+      countPages,
+      query.pageNumber,
+      query.pageSize,
+      totalCount,
+      mapPosts,
+    );
+  }
+  /*{
+  postId: '3b70aacc-a0fc-43d1-b729-4f2b3bbae459',
+  title: 'stringg',
+  shortDescription: 'stringg',
+  content: 'stringg',
+  createdAt: 2023-10-15T11:13:07.931Z,
+  blogId: '8aada13b-5dc5-41f0-a91f-3803db88cddb',
+  blogName: 'BlogGame',
+  like_status: 'Like',
+  addedAt: 2023-10-15T11:16:41.256Z,
+  login: 'Kira',
+  userId: '0f52f57b-f3d6-47c9-82ee-463072679355',
+  likesCount: '3',
+  dislikesCount: '2',
+  totalCount: '5'
+}*/
+
+  private async _mapPosts(postsRaw, userId?: IdType) {
+    console.log(postsRaw);
+    const mapPosts: PostSQLViewModel[] = [];
+    const addedPosts = {};
+    for (const postRaw of postsRaw) {
+      let postWithLikes: PostViewModel = addedPosts[postRaw.postId];
+      if (!postWithLikes) {
+        postWithLikes = {
+          id: postRaw.postId,
+          title: postRaw.title,
+          shortDescription: postRaw.shortDescription,
+          content: postRaw.content,
+          blogId: postRaw.blogId,
+          blogName: postRaw.blogName,
+          createdAt: postRaw.createdAt,
+          extendedLikesInfo: {
+            likesCount: Number(postRaw.likesCount),
+            dislikesCount: Number(postRaw.dislikesCount),
+            myStatus: postRaw.myStatus ?? LIKE_STATUS.NONE,
+            newestLikes: [],
+          },
+        };
+        mapPosts.push(postWithLikes);
+        addedPosts[postRaw.postId] = postWithLikes;
+      }
+
+      if (postRaw.like_status) {
+        postWithLikes.extendedLikesInfo.newestLikes.push({
+          userId: postRaw.userId,
+          login: postRaw.login,
+          addedAt: postRaw.addedAt,
+        });
+      }
+    }
+    return mapPosts;
   }
 }
