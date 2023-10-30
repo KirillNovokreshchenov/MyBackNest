@@ -166,7 +166,6 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { IdType } from '../../models/IdType';
 import {
-  ExtendedLikesInfo,
   PostSQLViewModel,
   PostViewModel,
 } from '../api/view-models/PostViewModel';
@@ -358,84 +357,38 @@ export class PostsSQLQueryRepository {
     postId: IdType,
     userId?: IdType,
   ): Promise<PostViewModel | RESPONSE_ERROR> {
-    const extendedLikeInfo: ExtendedLikesInfo = await this._extendedLikeInfo(
-      postId,
-      userId,
-    );
-    try {
-      const post = await this.dataSource.query(
-        `
-      SELECT post_id, blog_id as "blogId", b.name as "blogName", title, short_description as "shortDescription", content, p.created_at as "createdAt"
-FROM public.sa_posts as p
-LEFT JOIN sa_blogs b USING(blog_id)
-WHERE post_id = $1 AND p.is_deleted <> true
+    console.log(userId);
+    const postRaw = await this.dataSource.query(
+      `
+        SELECT p."postId", p."title", p."shortDescription", p."content", p."createdAt", p."blogId", p."blogName",
+         l."like_status", l."created_at" as "addedAt", l.login, l."owner_id" as "userId",
+    (SELECT COUNT(*) FROM posts_likes WHERE "post_id" = p."postId" AND "like_status" = 'Like') as "likesCount",
+    (SELECT COUNT(*) FROM posts_likes WHERE "post_id" = p."postId" AND "like_status" = 'Dislike') as "dislikesCount",
+    (SELECT "like_status" FROM posts_likes WHERE "post_id" = p."postId" AND "owner_id" = $2) as "myStatus"
+    FROM (
+    SELECT post_id as "postId", title, short_description as "shortDescription", content, sa_p.created_at as "createdAt", sa_p.blog_id as "blogId", name as "blogName", sa_p.is_deleted
+     FROM sa_posts sa_p
+       LEFT JOIN public.sa_blogs USING (blog_id)
+    	 ) as p
+    LEFT JOIN (
+        SELECT "like_id", "post_id", "like_status", pl."created_at", login, "owner_id"
+        FROM posts_likes as pl
+        LEFT JOIN public.users u ON "owner_id" = u."user_id"
+        WHERE "like_id" IN (
+            SELECT "like_id"
+            FROM posts_likes
+            WHERE "post_id" = pl."post_id" AND "like_status" = 'Like'
+            ORDER BY "created_at" desc
+            LIMIT 3
+        )
+        ORDER BY "created_at" desc
+    ) l ON p."postId" = l."post_id"
+    WHERE p."postId" = $1 AND p.is_deleted <> true
       `,
-        [postId],
-      );
-
-      return new PostSQLViewModel(post[0], extendedLikeInfo);
-    } catch (e) {
-      return RESPONSE_ERROR.NOT_FOUND;
-    }
-  }
-
-  private async _extendedLikeInfo(postId: IdType, userId?: IdType) {
-    let myLikeStatus = await this._likeStatus(postId, userId);
-    if (!myLikeStatus) myLikeStatus = LIKE_STATUS.NONE;
-    const newestLikes = await this._newestLikes(postId);
-    let likeCount = await this.dataSource.query(
-      `
-           SELECT COUNT(*)
-           FROM public.posts_likes
-           WHERE post_id = $1 AND like_status = 'Like';
-            `,
-      [postId],
+      [postId, userId ?? null],
     );
-    likeCount = +likeCount[0].count;
-    let dislikeCount = await this.dataSource.query(
-      `
-           SELECT COUNT(*)
-           FROM public.posts_likes
-           WHERE post_id = $1 AND like_status = 'Dislike';
-            `,
-      [postId],
-    );
-    dislikeCount = +dislikeCount[0].count;
-    return {
-      likesCount: likeCount,
-      dislikesCount: dislikeCount,
-      myStatus: myLikeStatus,
-      newestLikes: newestLikes,
-    };
-  }
-
-  async _newestLikes(postId: IdType) {
-    return this.dataSource.query(
-      `
-      SELECT owner_id as "userId", created_at as "addedAt", login
-FROM public.posts_likes
-LEFT JOIN public.users ON owner_id = user_id
-WHERE post_id = $1 AND like_status = 'Like'
-ORDER BY "addedAt" DESC
-LIMIT 3;
-      `,
-      [postId],
-    );
-  }
-
-  async _likeStatus(postId: IdType, userId?: IdType) {
-    if (userId) {
-      let like = await this.dataSource.query(
-        `
-        SELECT like_status
-        FROM public.posts_likes
-        WHERE post_id = $1 AND owner_id = $2;
-        `,
-        [postId, userId],
-      );
-      like = like[0]?.like_status;
-      return like;
-    }
+    if (!postRaw[0]) return RESPONSE_ERROR.NOT_FOUND;
+    return (await this._mapPosts(postRaw))[0];
   }
 
   async findAllPost(
@@ -446,31 +399,37 @@ LIMIT 3;
     const skip = skipPages(query.pageNumber, query.pageSize);
     const allPostsRaw = await this.dataSource.query(
       `
-    SELECT p."postId", p."title", p."shortDescription", p."content", p."createdAt", p."blogId", p."blogName",
-     l."like_status", l."created_at" as "addedAt", l.login, l."owner_id" as "userId",
-(SELECT COUNT(*) FROM posts_likes WHERE "post_id" = p."postId" AND "like_status" = 'Like') as "likesCount",
-(SELECT COUNT(*) FROM posts_likes WHERE "post_id" = p."postId" AND "like_status" = 'Dislike') as "dislikesCount",
-(SELECT COUNT(*) FROM sa_posts WHERE blog_id = COALESCE($1, blog_id)) as "totalCount",
-(SELECT "like_status" FROM posts_likes WHERE "post_id" = p."postId" AND "owner_id" = $4) as "myStatus"
-FROM (
-SELECT post_id as "postId", title, short_description as "shortDescription", content, sa_p.created_at as "createdAt", sa_p.blog_id as "blogId", name as "blogName"
- FROM sa_posts sa_p
-   LEFT JOIN public.sa_blogs USING (blog_id)
-	 WHERE sa_p.blog_id = COALESCE($1, sa_p.blog_id)
-	 ORDER BY "${query.sortBy}" ${query.sortDirection}
-	 LIMIT $2 OFFSET $3
-	 ) as p
-LEFT JOIN (
-    SELECT "like_id", "post_id", "like_status", pl."created_at", login, "owner_id"
-    FROM posts_likes as pl
-	LEFT JOIN public.users u ON "owner_id" = u."user_id"
-        WHERE "post_id" = pl."post_id" AND "like_status" = 'Like'
+        SELECT p."postId", p."title", p."shortDescription", p."content", p."createdAt", p."blogId", p."blogName",
+         l."like_status", l."created_at" as "addedAt", l.login, l."owner_id" as "userId",
+    (SELECT COUNT(*) FROM posts_likes WHERE "post_id" = p."postId" AND "like_status" = 'Like') as "likesCount",
+    (SELECT COUNT(*) FROM posts_likes WHERE "post_id" = p."postId" AND "like_status" = 'Dislike') as "dislikesCount",
+    (SELECT COUNT(*) FROM sa_posts WHERE blog_id = COALESCE($1, blog_id)) as "totalCount",
+    (SELECT "like_status" FROM posts_likes WHERE "post_id" = p."postId" AND "owner_id" = $4) as "myStatus"
+    FROM (
+    SELECT post_id as "postId", title, short_description as "shortDescription", content, sa_p.created_at as "createdAt", sa_p.blog_id as "blogId", name as "blogName", sa_p.is_deleted
+     FROM sa_posts sa_p
+       LEFT JOIN public.sa_blogs USING (blog_id)
+    	 WHERE sa_p.blog_id = COALESCE($1, sa_p.blog_id)
+    	 ORDER BY "${query.sortBy}" ${query.sortDirection}
+    	 LIMIT $2 OFFSET $3
+    	 ) as p
+    LEFT JOIN (
+        SELECT "like_id", "post_id", "like_status", pl."created_at", login, "owner_id"
+        FROM posts_likes as pl
+        LEFT JOIN public.users u ON "owner_id" = u."user_id"
+        WHERE "like_id" IN (
+            SELECT "like_id"
+            FROM posts_likes
+            WHERE "post_id" = pl."post_id" AND "like_status" = 'Like'
+            ORDER BY "created_at" desc
+            LIMIT 3
+        )
         ORDER BY "created_at" desc
-        LIMIT 3
-) l ON p."postId" = l."post_id"
-ORDER BY "${query.sortBy}" ${query.sortDirection}
+    ) l ON p."postId" = l."post_id"
+    WHERE p.is_deleted <> true
+    ORDER BY "${query.sortBy}" ${query.sortDirection}
 
-    `,
+        `,
       [
         postFilter.blogId ?? null,
         query.pageSize,
@@ -478,7 +437,8 @@ ORDER BY "${query.sortBy}" ${query.sortDirection}
         postFilter.userId ?? null,
       ],
     );
-    const mapPosts = await this._mapPosts(allPostsRaw, postFilter.userId);
+
+    const mapPosts = await this._mapPosts(allPostsRaw);
     const totalCount = Number(allPostsRaw[0].totalCount) ?? 0;
     const countPages = pagesCount(totalCount, query.pageSize);
 
@@ -490,25 +450,8 @@ ORDER BY "${query.sortBy}" ${query.sortDirection}
       mapPosts,
     );
   }
-  /*{
-  postId: '3b70aacc-a0fc-43d1-b729-4f2b3bbae459',
-  title: 'stringg',
-  shortDescription: 'stringg',
-  content: 'stringg',
-  createdAt: 2023-10-15T11:13:07.931Z,
-  blogId: '8aada13b-5dc5-41f0-a91f-3803db88cddb',
-  blogName: 'BlogGame',
-  like_status: 'Like',
-  addedAt: 2023-10-15T11:16:41.256Z,
-  login: 'Kira',
-  userId: '0f52f57b-f3d6-47c9-82ee-463072679355',
-  likesCount: '3',
-  dislikesCount: '2',
-  totalCount: '5'
-}*/
 
-  private async _mapPosts(postsRaw, userId?: IdType) {
-    console.log(postsRaw);
+  private async _mapPosts(postsRaw) {
     const mapPosts: PostSQLViewModel[] = [];
     const addedPosts = {};
     for (const postRaw of postsRaw) {
