@@ -464,14 +464,9 @@ LEFT JOIN (
     SELECT "like_id", "post_id", "like_status", pl."created_at", login, "owner_id"
     FROM posts_likes as pl
 	LEFT JOIN public.users u ON "owner_id" = u."user_id"
-    WHERE "like_id" IN (
-        SELECT "like_id"
-        FROM posts_likes
         WHERE "post_id" = pl."post_id" AND "like_status" = 'Like'
         ORDER BY "created_at" desc
         LIMIT 3
-    )
-    ORDER BY "created_at" desc
 ) l ON p."postId" = l."post_id"
 ORDER BY "${query.sortBy}" ${query.sortDirection}
 
