@@ -113,12 +113,43 @@ export class PostsTypeORMQueryRepository {
     @InjectRepository(PostLike) protected postLikesRepo: Repository<PostLike>,
   ) {}
   // Promise<PostViewModel | RESPONSE_ERROR>
-  async findPost(postId: string, userId?: string) {
+  async findPost(postId: string, userId?: string, blogId?) {
     const post = this.postsRepo
       .createQueryBuilder('p')
-      .leftJoinAndSelect('p.postLikes', 'pl')
-      .getMany();
+      // .addSelect((sq) => {
+      //   return sq
+      //     .select('count(*)', 'totalCount')
+      //     .from('post', 'p')
+      //     .where('p.blogId = COALESCE(:blogId, p.blogId)', { blogId: blogId });
+      // })
+
+      .leftJoinAndSelect(
+        (sq) => {
+          return sq
+            .select()
+            .from('post_like', 'pl')
+            .where((qb) => {
+              const subQuery = qb
+                .subQuery()
+                .select('l.likeId')
+                .from('post_like', 'l')
+                .where("pl.likeStatus = 'Like'")
+                .andWhere('l.postId = p.postId')
+                .limit(3)
+                .getQuery();
+              return 'pl.likeId IN ' + subQuery;
+            })
+            .orderBy({ 'pl.createdAt': 'DESC' });
+        },
+        'newestLikes',
+        '"newestLikes"."postId" = p.postId',
+      )
+      // .leftJoin('p.blog', 'b')
+      .getSql();
+
     return post;
+    // .addSelect('b.name', 'blogName')
+    // .where('p.blogId = COALESCE(:blogId, p.blogId)', { blogId: blogId })
   }
   private async _mapPosts(postsRaw) {
     const mapPosts: PostSQLViewModel[] = [];
