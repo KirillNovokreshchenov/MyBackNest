@@ -18,8 +18,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config __test__/jest-e2e.json",
     "add-migration" : "node ./src/migration/tools/add-migration.js",
-    "applay-migration" : "yarn typeorm-ts-node-esm migration:run -- -d ./src/migration/data-source.ts",
-    "revert-migration" : "yarn typeorm-ts-node-esm migration:revert -- -d ./src/migration/data-source.ts"
+    "applay-migration" : "yarn typeorm-ts-node-esm migration:run -d ./src/migration/data-source.ts",
+    "revert-migration" : "yarn typeorm-ts-node-esm migration:revert -d ./src/migration/data-source.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^1.9.1",

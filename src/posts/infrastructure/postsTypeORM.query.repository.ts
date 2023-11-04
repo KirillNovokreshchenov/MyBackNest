@@ -113,7 +113,7 @@ export class PostsTypeORMQueryRepository {
     @InjectRepository(PostLike) protected postLikesRepo: Repository<PostLike>,
   ) {}
   // Promise<PostViewModel | RESPONSE_ERROR>
-  async findPost(postId: string, userId?: string, blogId?) {
+  async findPost(postId: string, userId?: string) {
     const post = this.postsRepo
       .createQueryBuilder('p')
       // .addSelect((sq) => {
@@ -134,7 +134,8 @@ export class PostsTypeORMQueryRepository {
                 .select('l.likeId')
                 .from('post_like', 'l')
                 .where("pl.likeStatus = 'Like'")
-                .andWhere('l.postId = p.postId')
+                .andWhere('l.postId = pl.postId')
+                .orderBy({ 'l.createdAt': 'DESC' })
                 .limit(3)
                 .getQuery();
               return 'pl.likeId IN ' + subQuery;
@@ -144,6 +145,7 @@ export class PostsTypeORMQueryRepository {
         'newestLikes',
         '"newestLikes"."postId" = p.postId',
       )
+      .orderBy()
       // .leftJoin('p.blog', 'b')
       .getSql();
 
@@ -192,65 +194,85 @@ export class PostsTypeORMQueryRepository {
     postFilter: PostFilterType,
   ): Promise<any> {
     const query = new QueryModel(dataQuery);
-    let condition = {};
-    if (postFilter.blogId) {
-      condition = { blogId: postFilter.blogId };
-    }
     const skip = skipPages(query.pageNumber, query.pageSize);
-    const [allPosts, totalCount] = await this.postsRepo.findAndCount({
-      relations: { blog: true },
-      select: { blog: { name: true } },
-      order: {
-        [query.sortBy]: query.sortDirection,
-      },
-      where: condition,
-      skip: skip,
-      take: query.pageSize,
-    });
-    const countPages = pagesCount(totalCount, query.pageSize);
+    const post = this.dataSource
+      .createQueryBuilder()
+      .from((subQuery) => {
+        return subQuery.from('post', 'p');
+      }, 'p')
+      // .addSelect((sq) => {
+      //   return sq
+      //     .select('count(*)', 'totalCount')
+      //     .from('post', 'p')
+      //     .where('p.blogId = COALESCE(:blogId, p.blogId)', {
+      //       blogId: postFilter.blogId,
+      //     });
+      // })
+      // .addSelect((sq) => {
+      //   return sq
+      //     .select('count(*)', 'likeCount')
+      //     .from('post_like', 'pl')
+      //     .where("pl.likeStatus = 'Like'")
+      //     .andWhere('pl.postId = p.postId');
+      // })
+      // .addSelect((sq) => {
+      //   return sq
+      //     .select('count(*)', 'dislikeCount')
+      //     .from('post_like', 'pl')
+      //     .where("pl.likeStatus = 'Dislike'")
+      //     .andWhere('pl.postId = p.postId');
+      // })
+      // .addSelect((sq) => {
+      //   return sq
+      //     .select('pl.likeStatus', 'myStatus')
+      //     .from('post_like', 'pl')
+      //     .where('pl.postId = p.postId')
+      //     .andWhere('pl.ownerId = :ownerId', { ownerId: postFilter.userId });
+      // })
+      // .addSelect('b.name')
+      // .leftJoin('p.blog', 'b')
+      .leftJoinAndSelect(
+        (sq) => {
+          return sq
+            .select('pl.*')
+            .addSelect('u.login')
+            .from('post_like', 'pl')
+            .leftJoin('pl.user', 'u')
+            .where((qb) => {
+              const subQuery = qb
+                .subQuery()
+                .select('l.likeId')
+                .from('post_like', 'l')
+                .where("pl.likeStatus = 'Like'")
+                .andWhere('l.postId = pl.postId')
+                .orderBy({ 'l.createdAt': 'DESC' })
+                .limit(3)
+                .getQuery();
+              return 'pl.likeId IN ' + subQuery;
+            })
+            .orderBy({ 'pl.createdAt': 'DESC' });
+        },
+        'nl',
+        '"nl"."postId" = "p"."postId"',
+      )
+      // .where('p.blogId = COALESCE(:blogId, p.blogId)', {
+      //   blogId: postFilter.blogId,
+      // })
+      // .orderBy({
+      //   ['p.' + `${query.sortBy}`]:
+      //     query.sortDirection.toUpperCase() === 'DESC' ? 'DESC' : 'ASC',
+      // })
+      .getSql();
+    return post;
 
-    const mapPosts = await Promise.all(
-      allPosts.map(async (post) => {
-        const newestLikes = await this._newestLikes(post.postId);
-        const myLikeStatus = await this._likeStatus(
-          post.postId,
-          postFilter.userId as string,
-        );
-        return new PostTypeORMViewModel(post, newestLikes, myLikeStatus);
-      }),
-    );
+    // const countPages = pagesCount(totalCount, query.pageSize);
 
-    return new PostViewModelAll(
-      countPages,
-      query.pageNumber,
-      query.pageSize,
-      totalCount,
-      mapPosts,
-    );
-  }
-  async _newestLikes(postId: string): Promise<NewestLikes[]> {
-    const newestLikes = await this.postLikesRepo.find({
-      relations: { user: true },
-      select: { user: { login: true } },
-      where: { postId: postId, likeStatus: LIKE_STATUS.LIKE },
-      order: { createdAt: 'DESC' },
-      take: 3,
-    });
-    return newestLikes.map((like) => {
-      return {
-        userId: like.ownerId,
-        login: like.user.login,
-        addedAt: like.createdAt,
-      };
-    });
-  }
-
-  async _likeStatus(postId: string, userId?: string) {
-    if (userId) {
-      const like = await this.postLikesRepo.findOne({
-        where: { postId: postId, ownerId: userId },
-      });
-      return like?.likeStatus;
-    }
+    // return new PostViewModelAll(
+    //   countPages,
+    //   query.pageNumber,
+    //   query.pageSize,
+    //   totalCount,
+    //   mapPosts,
+    // );
   }
 }
