@@ -197,44 +197,57 @@ export class PostsTypeORMQueryRepository {
     const skip = skipPages(query.pageNumber, query.pageSize);
     const post = this.dataSource
       .createQueryBuilder()
+      .select('"p".*')
       .from((subQuery) => {
-        return subQuery.from('post', 'p');
+        return subQuery
+          .from('post', 'p')
+          .where('"p"."blogId" = COALESCE(:blogId, "p"."blogId")', {
+            blogId: postFilter.blogId,
+          })
+          .orderBy({
+            ['"p".' + `"` + `${query.sortBy}` + `"`]:
+              query.sortDirection.toUpperCase() === 'DESC' ? 'DESC' : 'ASC',
+          })
+          .skip(skip)
+          .take(query.pageSize);
       }, 'p')
-      // .addSelect((sq) => {
-      //   return sq
-      //     .select('count(*)', 'totalCount')
-      //     .from('post', 'p')
-      //     .where('p.blogId = COALESCE(:blogId, p.blogId)', {
-      //       blogId: postFilter.blogId,
-      //     });
-      // })
-      // .addSelect((sq) => {
-      //   return sq
-      //     .select('count(*)', 'likeCount')
-      //     .from('post_like', 'pl')
-      //     .where("pl.likeStatus = 'Like'")
-      //     .andWhere('pl.postId = p.postId');
-      // })
-      // .addSelect((sq) => {
-      //   return sq
-      //     .select('count(*)', 'dislikeCount')
-      //     .from('post_like', 'pl')
-      //     .where("pl.likeStatus = 'Dislike'")
-      //     .andWhere('pl.postId = p.postId');
-      // })
-      // .addSelect((sq) => {
-      //   return sq
-      //     .select('pl.likeStatus', 'myStatus')
-      //     .from('post_like', 'pl')
-      //     .where('pl.postId = p.postId')
-      //     .andWhere('pl.ownerId = :ownerId', { ownerId: postFilter.userId });
-      // })
-      // .addSelect('b.name')
-      // .leftJoin('p.blog', 'b')
+      .addSelect((sq) => {
+        return sq
+          .select('count(*)', 'totalCount')
+          .from('post', 'p')
+          .where('"p"."blogId" = COALESCE(:blogId, "p"."blogId")', {
+            blogId: postFilter.blogId,
+          });
+      })
+      .addSelect((sq) => {
+        return sq
+          .select('count(*)', 'likeCount')
+          .from('post_like', 'pl')
+          .where("pl.likeStatus = 'Like'")
+          .andWhere('"pl"."postId" = "p"."postId"');
+      })
+      .addSelect((sq) => {
+        return sq
+          .select('count(*)', 'dislikeCount')
+          .from('post_like', 'pl')
+          .where("pl.likeStatus = 'Dislike'")
+          .andWhere('pl."postId" = "p"."postId"');
+      })
+      .addSelect((sq) => {
+        return sq
+          .select('pl.likeStatus', 'myStatus')
+          .from('post_like', 'pl')
+          .where('"pl"."postId" = "p"."postId"')
+          .andWhere('"pl"."ownerId" = :ownerId', {
+            ownerId: postFilter.userId,
+          });
+      })
+      .addSelect('b.name')
+      .leftJoin('blog', 'b', '"b"."blogId" = "p"."blogId"')
       .leftJoinAndSelect(
         (sq) => {
           return sq
-            .select('pl.*')
+            .select('"pl".*')
             .addSelect('u.login')
             .from('post_like', 'pl')
             .leftJoin('pl.user', 'u')
@@ -243,26 +256,25 @@ export class PostsTypeORMQueryRepository {
                 .subQuery()
                 .select('l.likeId')
                 .from('post_like', 'l')
-                .where("pl.likeStatus = 'Like'")
+                .where("l.likeStatus = 'Like'")
                 .andWhere('l.postId = pl.postId')
                 .orderBy({ 'l.createdAt': 'DESC' })
                 .limit(3)
                 .getQuery();
               return 'pl.likeId IN ' + subQuery;
-            })
-            .orderBy({ 'pl.createdAt': 'DESC' });
+            });
         },
         'nl',
         '"nl"."postId" = "p"."postId"',
       )
-      // .where('p.blogId = COALESCE(:blogId, p.blogId)', {
-      //   blogId: postFilter.blogId,
-      // })
-      // .orderBy({
-      //   ['p.' + `${query.sortBy}`]:
-      //     query.sortDirection.toUpperCase() === 'DESC' ? 'DESC' : 'ASC',
-      // })
-      .getSql();
+      .where('"p"."blogId" = COALESCE(:blogId, "p"."blogId")', {
+        blogId: postFilter.blogId,
+      })
+      .orderBy({
+        ['"p".' + `"` + `${query.sortBy}` + `"`]:
+          query.sortDirection.toUpperCase() === 'DESC' ? 'DESC' : 'ASC',
+      })
+      .getRawMany();
     return post;
 
     // const countPages = pagesCount(totalCount, query.pageSize);
