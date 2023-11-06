@@ -10,6 +10,7 @@ import { Blog } from '../blogs/domain/entities-typeorm/blog.entity';
 import { Post } from '../posts/domain/entities-typeorm/post.entity';
 import { PostLike } from '../posts/domain/entities-typeorm/post-like.entity';
 import { Comment } from '../comments/domain/entities-typeorm/comment.entity';
+import { CommentLike } from '../comments/domain/entities-typeorm/comment-like.entity';
 
 export const optionsSQL: TypeOrmModuleAsyncOptions = {
   imports: [configModule],
@@ -57,4 +58,5 @@ export const entities = [
   Post,
   PostLike,
   Comment,
+  CommentLike,
 ];

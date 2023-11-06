@@ -28,10 +28,7 @@ import { PostsRepository } from './posts/infrastructure/posts.repository';
 import { PostsQueryRepository } from './posts/infrastructure/posts.query.repository';
 import { Post, PostSchema } from './posts/domain/post.schema';
 import { CommentsController } from './comments/api/comments.controller';
-import {
-  CommentsQueryRepository,
-  CommentsSQLQueryRepository,
-} from './comments/infractructure/comments.query.repository';
+import { CommentsQueryRepository } from './comments/infractructure/comments.query.repository';
 import { Comment, CommentSchema } from './comments/domain/comment.schema';
 import { TestingController } from './testing/testing.controller';
 import { AuthController } from './auth/api/auth.controller';
@@ -54,10 +51,7 @@ import { DeviceController } from './sessions/api/device.controller';
 import { DeviceService } from './sessions/application/device.service';
 import { DeviceQueryRepository } from './sessions/infrastructure/device.query.repository';
 import { CommentService } from './comments/application/comment.service';
-import {
-  CommentsRepository,
-  CommentsSQLRepository,
-} from './comments/infractructure/comments.repository';
+import { CommentsRepository } from './comments/infractructure/comments.repository';
 import { PostLike, PostLikeSchema } from './posts/domain/post-like.schema';
 import {
   CommentLike,
@@ -125,6 +119,8 @@ import { PostsSQLQueryRepository } from './posts/infrastructure/postsSQL.query.r
 import { PostsSQLRepository } from './posts/infrastructure/postsSQL.repository';
 import { PostsTypeORMRepository } from './posts/infrastructure/postsTypeORM.repository';
 import { PostsTypeORMQueryRepository } from './posts/infrastructure/postsTypeORM.query.repository';
+import { CommentsSQLQueryRepository } from './comments/infractructure/commentsSQL.query.repository';
+import { CommentsSQLRepository } from './comments/infractructure/commentsSQL.repository';
 
 const useCases = [
   CreateBlogUseCase,

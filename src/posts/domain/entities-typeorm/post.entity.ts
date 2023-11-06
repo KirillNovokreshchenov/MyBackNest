@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { Blog } from '../../../blogs/domain/entities-typeorm/blog.entity';
 import { PostLike } from './post-like.entity';
+import { Comment } from '../../../comments/domain/entities-typeorm/comment.entity';
 
 @Entity()
 export class Post {
@@ -40,4 +41,6 @@ export class Post {
   blog: Blog;
   @OneToMany(() => PostLike, (pl) => pl.post)
   postLikes: PostLike[];
+  @OneToMany(() => Comment, (c) => c.post)
+  comments: Comment[];
 }
