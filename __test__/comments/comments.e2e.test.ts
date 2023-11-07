@@ -36,7 +36,7 @@ describe('commentsTests', () => {
       post = preparationData.post;
       user = preparationData.userOne;
       userAccessToken = preparationData.userAccessTokenOne;
-    });
+    }, 10000);
 
     it('should return unauthorised status for incorrect token', async () => {
       const commentData = {

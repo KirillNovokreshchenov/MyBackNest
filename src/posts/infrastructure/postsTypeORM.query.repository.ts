@@ -129,7 +129,7 @@ export class PostsTypeORMQueryRepository {
   ): Promise<any> {
     const query = new QueryModel(dataQuery);
     const skip = skipPages(query.pageNumber, query.pageSize);
-    const rawPosts = await this.dataSource
+    const rawPosts = await this.postsRepo
       .createQueryBuilder()
       .select('"p".*')
       .from((subQuery) => {

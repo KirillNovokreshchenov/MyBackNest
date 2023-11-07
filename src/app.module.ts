@@ -121,6 +121,8 @@ import { PostsTypeORMRepository } from './posts/infrastructure/postsTypeORM.repo
 import { PostsTypeORMQueryRepository } from './posts/infrastructure/postsTypeORM.query.repository';
 import { CommentsSQLQueryRepository } from './comments/infractructure/commentsSQL.query.repository';
 import { CommentsSQLRepository } from './comments/infractructure/commentsSQL.repository';
+import { CommentsTypeOrmRepository } from './comments/infractructure/commentsTypeORM.repository';
+import { CommentsTypeORMQueryRepository } from './comments/infractructure/commentsTypeORM.query.repository';
 
 const useCases = [
   CreateBlogUseCase,
@@ -342,14 +344,18 @@ const useCases = [
       useClass:
         process.env.REPO_TYPE === 'MONGO'
           ? CommentsRepository
-          : CommentsSQLRepository,
+          : process.env.REPO_TYPE === 'SQL'
+          ? CommentsSQLRepository
+          : CommentsTypeOrmRepository,
     },
     {
       provide: CommentsQueryRepository,
       useClass:
         process.env.REPO_TYPE === 'MONGO'
           ? CommentsQueryRepository
-          : CommentsSQLQueryRepository,
+          : process.env.REPO_TYPE === 'SQL'
+          ? CommentsSQLQueryRepository
+          : CommentsTypeORMQueryRepository,
     },
     PostsService,
     AuthService,

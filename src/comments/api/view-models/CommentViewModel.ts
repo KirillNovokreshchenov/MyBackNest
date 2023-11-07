@@ -53,3 +53,20 @@ export class CommentSQLViewModel extends CommentViewModel {
     };
   }
 }
+export class CommentTypeORMViewModel extends CommentViewModel {
+  constructor(commentTypeORM) {
+    super();
+    this.id = commentTypeORM.commentId;
+    this.content = commentTypeORM.content;
+    this.commentatorInfo = {
+      userId: commentTypeORM.userId,
+      userLogin: commentTypeORM.login,
+    };
+    this.createdAt = commentTypeORM.createdAt;
+    this.likesInfo = {
+      likesCount: Number(commentTypeORM.likesCount),
+      dislikesCount: Number(commentTypeORM.dislikesCount),
+      myStatus: commentTypeORM.myStatus ?? LIKE_STATUS.NONE,
+    };
+  }
+}

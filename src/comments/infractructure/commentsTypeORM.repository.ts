@@ -7,8 +7,6 @@ import { CreateCommentDto } from '../application/dto/CreateCommentDto';
 import { UpdateCommentDto } from '../application/dto/UpdateCommentDto';
 import { RESPONSE_SUCCESS } from '../../models/RESPONSE_SUCCESS';
 import { LIKE_STATUS } from '../../models/LikeStatusEnum';
-import { Post } from '../../posts/domain/entities-typeorm/post.entity';
-import { PostLike } from '../../posts/domain/entities-typeorm/post-like.entity';
 import { Comment } from '../domain/entities-typeorm/comment.entity';
 import { CommentLike } from '../domain/entities-typeorm/comment-like.entity';
 
