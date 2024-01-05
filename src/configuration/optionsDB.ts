@@ -43,7 +43,7 @@ export const optionsTypeORM: TypeOrmModuleAsyncOptions = {
     }),
     database: configService.get('typeORM.NAME_DB', { infer: true }),
     autoLoadEntities: true,
-    synchronize: false,
+    synchronize: true,
     ssl: true,
   }),
   inject: [ConfigService],

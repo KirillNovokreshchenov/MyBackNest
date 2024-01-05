@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -13,6 +14,7 @@ import { Comment } from '../../../comments/domain/entities-typeorm/comment.entit
 @Entity()
 export class Post {
   @PrimaryGeneratedColumn('uuid')
+  @Index()
   postId: string;
 
   @Column()
