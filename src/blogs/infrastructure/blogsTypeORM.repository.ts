@@ -21,14 +21,14 @@ export class BlogsTypeOrmRepository {
     return blog.blogId;
   }
 
-  async createBlog(userId: IdType, blogDto: CreateBlogDto) {
-    const blog = new Blog();
-    blog.name = blogDto.name;
-    blog.description = blogDto.description;
-    blog.websiteUrl = blogDto.websiteUrl;
-    await this.blogsRepo.save(blog);
-    return blog.blogId;
-  }
+  // async createBlog(userId: IdType, blogDto: CreateBlogDto) {
+  //   const blog = new Blog();
+  //   blog.name = blogDto.name;
+  //   blog.description = blogDto.description;
+  //   blog.websiteUrl = blogDto.websiteUrl;
+  //   await this.blogsRepo.save(blog);
+  //   return blog.blogId;
+  // }
 
   async updateBlog(blogId: IdType, blogDto: UpdateBlogDto) {
     const isUpdated = await this.blogsRepo.update(blogId, {

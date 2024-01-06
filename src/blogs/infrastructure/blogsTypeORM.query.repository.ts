@@ -3,14 +3,12 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, ILike, Repository } from 'typeorm';
 import { IdType } from '../../models/IdType';
 import {
-  BlogSQLViewModel,
   BlogTypeORMViewModel,
   BlogViewModel,
 } from '../api/view-model/BlogViewModel';
 import { RESPONSE_ERROR } from '../../models/RESPONSE_ERROR';
 import { BlogQueryInputType } from '../api/input-model/BlogQueryInputType';
 import { BlogViewModelAll } from '../api/view-model/BlogViewModelAll';
-import { BlogSQLQueryModel } from './models/BlogSQLQueryModel';
 import { pagesCount } from '../../helpers/pages-count';
 import { skipPages } from '../../helpers/skip-pages';
 import { Blog } from '../domain/entities-typeorm/blog.entity';
