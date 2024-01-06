@@ -27,52 +27,6 @@ export class BlogsSQLRepository {
     }
   }
 
-  /* async findDataBlog(blogId: string) {
-    try {
-      const blog = await this.dataSource.query(
-        `
-    SELECT owner_id as "ownerId", name as "blogName"
-FROM public.blogs
-WHERE blog_id = $1 AND is_deleted <> true
-    `,
-        [blogId],
-      );
-      return blog[0];
-    } catch (e) {
-      return null;
-    }
-  }
-
-  async findBlogName(blogId: string) {
-    try {
-      const blog = await this.dataSource.query(
-        `
-    SELECT name as "blogName"
-FROM public.sa_blogs
-WHERE blog_id = $1 AND is_deleted <> true
-    `,
-        [blogId],
-      );
-      return blog[0];
-    } catch (e) {
-      return null;
-    }
-  }
-  async findOwnerId(blogId: IdType) {
-    try {
-      const blog = await this.dataSource.query(
-        `
-    SELECT owner_id
-    FROM public.blogs
-    WHERE blog_id =$1;
-    `,
-        [blogId],
-      );
-      return blog[0].owner_id;
-    } catch (e) {
-      return null;
-    }
-  }*/
   async createBlog(userId: IdType, blogDto: CreateBlogDto) {
     try {
       const newBlog = await this.dataSource.query(
