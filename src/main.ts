@@ -3,8 +3,6 @@ import { AppModule } from './app.module';
 import { ConfigType } from './configuration/configuration';
 import { ConfigService } from '@nestjs/config';
 import { appSettings } from './app.settings';
-import { IdType } from './models/IdType';
-import { Types } from 'mongoose';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
