@@ -73,41 +73,41 @@ WHERE blog_id = $1 AND is_deleted <> true
       return null;
     }
   }*/
-  async createBlog(userId: IdType, blogDto: CreateBlogDto) {
-    try {
-      const newBlog = await this.dataSource.query(
-        `
-            INSERT INTO public.sa_blogs(
-      name, description, website_url)
-      VALUES ( $1, $2, $3)
-      RETURNING blog_id;
-            `,
-        [blogDto.name, blogDto.description, blogDto.websiteUrl],
-      );
-      // const newBlog = await this.dataSource.query(
-      //   `
-      //       INSERT INTO public.blogs(
-      // owner_id, name, description, website_url)
-      // VALUES ( $1, $2, $3, $4)
-      // RETURNING blog_id;
-      //       `,
-      //   [userId, blogDto.name, blogDto.description, blogDto.websiteUrl],
-      // );
-      //       console.log(blogDto);
-      //       const newBlog = await this.dataSource.query(
-      //         `
-      // INSERT INTO public.blogs(owner_id, name, description, website_url)
-      // SELECT $1, $2, $3,$4
-      // WHERE NOT EXISTS(SELECT user_id FROM users WHERE user_id = $1 AND is_deleted = true)
-      // RETURNING blog_id;
-      //       `,
-      //         [userId, blogDto.name, blogDto.description, blogDto.websiteUrl],
-      //       );
-      return newBlog[0].blog_id;
-    } catch (e) {
-      return RESPONSE_ERROR.SERVER_ERROR;
-    }
-  }
+  // async createBlog(userId: IdType, blogDto: CreateBlogDto) {
+  //   try {
+  //     const newBlog = await this.dataSource.query(
+  //       `
+  //           INSERT INTO public.sa_blogs(
+  //     name, description, website_url)
+  //     VALUES ( $1, $2, $3)
+  //     RETURNING blog_id;
+  //           `,
+  //       [blogDto.name, blogDto.description, blogDto.websiteUrl],
+  //     );
+  //     // const newBlog = await this.dataSource.query(
+  //     //   `
+  //     //       INSERT INTO public.blogs(
+  //     // owner_id, name, description, website_url)
+  //     // VALUES ( $1, $2, $3, $4)
+  //     // RETURNING blog_id;
+  //     //       `,
+  //     //   [userId, blogDto.name, blogDto.description, blogDto.websiteUrl],
+  //     // );
+  //     //       console.log(blogDto);
+  //     //       const newBlog = await this.dataSource.query(
+  //     //         `
+  //     // INSERT INTO public.blogs(owner_id, name, description, website_url)
+  //     // SELECT $1, $2, $3,$4
+  //     // WHERE NOT EXISTS(SELECT user_id FROM users WHERE user_id = $1 AND is_deleted = true)
+  //     // RETURNING blog_id;
+  //     //       `,
+  //     //         [userId, blogDto.name, blogDto.description, blogDto.websiteUrl],
+  //     //       );
+  //     return newBlog[0].blog_id;
+  //   } catch (e) {
+  //     return RESPONSE_ERROR.SERVER_ERROR;
+  //   }
+  // }
 
   async updateBlog(blogId: IdType, blogDto: UpdateBlogDto) {
     try {
